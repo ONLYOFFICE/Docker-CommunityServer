@@ -15,6 +15,7 @@ RUN echo "#!/bin/sh\nexit 0" > /usr/sbin/policy-rc.d && \
     apt-get update && \    
     apt-get install --force-yes -yq software-properties-common && \
     add-apt-repository -y ppa:builds/sphinxsearch-rel22 && \
+    echo "Start=No" >> /etc/init.d/sphinxsearch && \
     apt-get install --force-yes -yq sphinxsearch onlyoffice-communityserver && \
     rm -rf /var/lib/apt/lists/*
 
