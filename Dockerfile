@@ -15,7 +15,7 @@ RUN echo "#!/bin/sh\nexit 0" > /usr/sbin/policy-rc.d && \
     apt-get update && \    
     apt-get install --force-yes -yq software-properties-common && \
     add-apt-repository -y ppa:builds/sphinxsearch-rel22 && \
-    apt-get install --force-yes -yq sphinxsearch onlyoffice && \
+    apt-get install --force-yes -yq sphinxsearch onlyoffice-communityserver && \
     rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update && apt-get install -yq wget htop nano dnsutils monit
