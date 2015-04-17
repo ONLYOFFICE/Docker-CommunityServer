@@ -187,7 +187,7 @@ Official website: [http://www.onlyoffice.org](http://onlyoffice.org "http://www.
 
 Code repository: [https://github.com/ONLYOFFICE/CommunityServer](https://github.com/ONLYOFFICE/CommunityServer "https://github.com/ONLYOFFICE/CommunityServer")
 
-License: [GNU Affero GPL 3](http://www.gnu.org/licenses/agpl.html "GNU Affero GPL 3")
+License: [GNU GPL 3](https://www.gnu.org/copyleft/gpl.html "GNU GPL 3")
 
 SaaS version: [http://www.onlyoffice.com](http://www.onlyoffice.com "http://www.onlyoffice.com")
 
