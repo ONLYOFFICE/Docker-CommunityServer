@@ -1,0 +1,8 @@
+check process monoserve
+    matching "fastcgi-mono-server4"
+    start program = "/etc/init.d/monoserve start" with timeout 60 seconds
+    stop program  = "/etc/init.d/monoserve stop"
+    if memory usage > 80% then restart
+    if cpu > 80% for 5 cycles then restart
+    if loadavg(5min) greater than 10 for 8 cycles then stop
+

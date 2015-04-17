@@ -1,0 +1,28 @@
+communityserver:
+  build: CommunityServer/
+  links:
+   - documentserver:document_server
+   - mailserver:mail_server
+  ports:
+   - "80:80"
+   - "443:443"  
+  volumes:
+   - /root/Data:/var/www/onlyoffice/Data
+  stdin_open: true
+  tty: true
+documentserver:
+  build: DocumentServer/
+  stdin_open: true
+  tty: true
+mailserver:
+  build: MailServer/
+  hostname: mx-docker.teamlab.info
+  privileged: true
+  ports:
+   - "25:25"
+   - "143:143"
+   - "587:587"
+  volumes:
+   - /root/Data:/etc/pki/tls/mailserver
+  stdin_open: true
+  tty: true

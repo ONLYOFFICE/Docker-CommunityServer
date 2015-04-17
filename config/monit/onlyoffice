@@ -1,0 +1,8 @@
+check process {{ONLYOFFICE_SERVICE_NAME}} with pidfile /tmp/{{ONLYOFFICE_SERVICE_NAME}}
+    start program = "/etc/init.d/{{ONLYOFFICE_SERVICE_NAME}} start" with timeout 60 seconds
+    stop program  = "/etc/init.d/{{ONLYOFFICE_SERVICE_NAME}} stop"
+    if cpu > 70% for 2 cycles then alert
+    if cpu > 80% for 5 cycles then restart
+    if totalmem > 500.0 MB for 5 cycles then restart
+    if children > 250 then restart
+    if loadavg(5min) greater than 10 for 8 cycles then stop
