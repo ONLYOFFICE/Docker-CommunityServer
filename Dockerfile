@@ -12,10 +12,11 @@ RUN echo "#!/bin/sh\nexit 0" > /usr/sbin/policy-rc.d && \
     apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF && \
     DEBIAN_FRONTEND=noninteractive  && \
     locale-gen en_US.UTF-8 && \
-    apt-get update && \    
+    apt-get -y update && \    
     apt-get install --force-yes -yq software-properties-common && \
     add-apt-repository -y ppa:builds/sphinxsearch-rel22 && \
     echo "Start=No" >> /etc/init.d/sphinxsearch && \
+    apt-get -y update && \  
     apt-get install --force-yes -yq sphinxsearch onlyoffice-communityserver && \
     rm -rf /var/lib/apt/lists/*
 
