@@ -195,6 +195,7 @@ END
                 mysql -D "onlyoffice" -e "INSERT INTO mail_server_server (mx_record, connection_string, server_type, smtp_settings_id, imap_settings_id) VALUES ('${MAIL_SERVER_HOSTNAME}', '{\"DbConnection\" : \"Server=${MAIL_SERVER_PORT_3306_TCP_ADDR};Database=onlyoffice_mailserver;User ID=mail_admin;Password=Isadmin123;Pooling=True;Character Set=utf8;AutoEnlist=false\", \"Api\":{\"Protocol\":\"http\", \"Server\":\"${MAIL_SERVER_PORT_3306_TCP_ADDR}\", \"Port\":\"${MAIL_SERVER_PORT_8081_TCP_PORT}\", \"Version\":\"v1\",\"Token\":\"${MYSQL_MAIL_SERVER_ACCESS_TOKEN}\"}}', 2, '${id2}', '${id1}');"
 
 	        sed '/mail\.certificate-permit/s/\(value *= *\"\).*\"/\1true\"/' -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
+	        sed '/mail\.certificate-permit/s/\(value *= *\"\).*\"/\1true\"/' -i  ${ONLYOFFICE_DIR}/Services/MailAggregator/ASC.Mail.Aggregator.CollectionService.exe.config
 
         fi
 
