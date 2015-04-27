@@ -32,5 +32,6 @@ VOLUME ["/var/lib/mysql"]
 
 EXPOSE 80
 EXPOSE 443
+EXPOSE 5222
 
 CMD bash -C '/app/onlyoffice/run-community-server.sh';'bash'
