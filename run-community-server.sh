@@ -38,7 +38,6 @@ sed 's/# *allow localhost/allow localhost/' -i /etc/monit/monitrc
 # configure monit
 cp ${SYSCONF_TEMPLATES_DIR}/monit/nginx /etc/monit/conf.d/nginx
 cp ${SYSCONF_TEMPLATES_DIR}/monit/mysql /etc/monit/conf.d/mysql
-cp ${SYSCONF_TEMPLATES_DIR}/monit/monoserve /etc/monit/conf.d/monoserve
 
 cp ${SYSCONF_TEMPLATES_DIR}/monit/onlyoffice /etc/monit/conf.d/onlyofficeFeed
 cp ${SYSCONF_TEMPLATES_DIR}/monit/onlyoffice /etc/monit/conf.d/onlyofficeJabber
