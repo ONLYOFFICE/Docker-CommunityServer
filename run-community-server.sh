@@ -31,13 +31,14 @@ fi
 # configuration service monit
 service monit stop
 
-sed 's/# *set httpd port 2812 and/set httpd port 2812 and/' -i /etc/monit/monitrc
-sed 's/# *use address localhost/use address localhost/' -i /etc/monit/monitrc
-sed 's/# *allow localhost/allow localhost/' -i /etc/monit/monitrc
+sed 's/# *set httpd port 2812 and.*/set httpd port 2812 and/' -i /etc/monit/monitrc
+sed 's/# *use address localhost.*/use address localhost/' -i /etc/monit/monitrc
+sed 's/# *allow localhost.*/allow localhost/' -i /etc/monit/monitrc
 
 # configure monit
 cp ${SYSCONF_TEMPLATES_DIR}/monit/nginx /etc/monit/conf.d/nginx
 cp ${SYSCONF_TEMPLATES_DIR}/monit/mysql /etc/monit/conf.d/mysql
+# cp ${SYSCONF_TEMPLATES_DIR}/monit/monoserve /etc/monit/conf.d/monoserve
 
 cp ${SYSCONF_TEMPLATES_DIR}/monit/onlyoffice /etc/monit/conf.d/onlyofficeFeed
 cp ${SYSCONF_TEMPLATES_DIR}/monit/onlyoffice /etc/monit/conf.d/onlyofficeJabber
@@ -57,7 +58,6 @@ sed 's/{{ONLYOFFICE_SERVICE_NAME}}/onlyofficeNotify/g'  -i /etc/monit/conf.d/onl
 # stop services
 service monoserve stop
 service nginx stop
-
 
 # setup HTTPS
 if [ -f "${SSL_CERTIFICATE_PATH}" -a -f "${SSL_KEY_PATH}" ]; then
@@ -95,6 +95,16 @@ fi
 
 echo "Start=No" >> /etc/init.d/sphinxsearch 
 sed -i 's/.*<add name="default".*connectionString=.*/&\n<add name="textindex" connectionString="Server=localhost;Port=9306;Pooling=True;Character Set=utf8;AutoEnlist=false" providerName="MySql.Data.MySqlClient"\/>/' /var/www/onlyoffice/Services/TeamLabSvc/TeamLabSvc.exe.Config 
+
+if [ ! -f /var/lib/mysql/ibdata1 ]; then
+        mysql_install_db
+        service mysql start
+
+	echo "CREATE DATABASE onlyoffice CHARACTER SET utf8 COLLATE utf8_general_ci" | mysql;
+        mysql -D "onlyoffice" </app/onlyoffice/setup/data/mysql/onlyoffice.sql
+        service mysql stop
+
+fi
 
 service mysql start
 
