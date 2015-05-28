@@ -3,13 +3,18 @@
 * [Recommended System Requirements](#recommended-system-requirements)
 * [Running Docker Image](#running-docker-image)
 * [Configuring Docker Image](#configuring-docker-image)
+    - [Storing Data](#storing-data)
     - [Running ONLYOFFICE Community Server on Different Port](#running-onlyoffice-community-server-on-different-port)
+    - [Exposing Additional Ports](#exposing-additional-ports)
     - [Running ONLYOFFICE Community Server using HTTPS](#running-onlyoffice-community-server-using-https)
         + [Generation of Self Signed Certificates](#generation-of-self-signed-certificates)
         + [Strengthening the Server Security](#strengthening-the-server-security)
         + [Installation of the SSL Certificates](#installation-of-the-ssl-certificates)
         + [Available Configuration Parameters](#available-configuration-parameters)
 * [Installing ONLYOFFICE Community Server integrated with Document and Mail Servers](#installing-onlyoffice-community-server-integrated-with-document-and-mail-servers)
+* [Issues](#issues)
+    - [Docker Issues](#docker-issues)
+    - [Mono Issues](#mono-issues)
 * [Project Information](#project-information)
 * [User Feedback and Support](#user-feedback-and-support)
 
@@ -56,12 +61,53 @@ ONLYOFFICE Community Server is a free open source collaborative system developed
 This command will install ONLYOFFICE Community Server and all the dependencies it needs.
 
 ## Configuring Docker Image
+### Storing Data
+
+All the data are stored in the specially-designated directories, **data volumes**, at the following location:
+* **/var/log/onlyoffice** for ONLYOFFICE Community Server logs
+* **/var/www/onlyoffice/Data** for ONLYOFFICE Community Server data
+* **/var/lib/mysql** for MySQL database data
+
+To get access to your data from outside the container, you need to mount the volumes. It can be done by specifying the '-v' option in the docker run command.
+
+    sudo docker run -i -t -d -p 80:80 \
+        -v /opt/onlyoffice/Logs:/var/log/onlyoffice  \
+        -v /opt/onlyoffice/Data:/var/www/onlyoffice/Data  \
+        -v /opt/onlyoffice/MySQL:/var/lib/mysql  onlyoffice/communityserver
+
+Storing the data on the host machine allows you to easily update ONLYOFFICE once the new version is released without losing your data.
 
 ### Running ONLYOFFICE Community Server on Different Port
 
 To change the port, use the -p command. E.g.: to make your portal accessible via port 8080 execute the following command:
 
     sudo docker run -i -t -d -p 8080:80 onlyoffice/communityserver
+
+### Exposing Additional Ports
+
+The container ports to be exposed for **incoming connections** are the folloing:
+
+* **80** for plain HTTP
+* **443** when HTTPS is enabled (see below)
+* **5222** for XMPP-compatible instant messaging client (for ONLYOFFICE Talk correct work)
+
+You can expose ports by specifying the '-p' option in the docker run command.
+
+    sudo docker run -i -t -d -p 80:80  -p 443:443  -p 5222:5222   onlyoffice/communityserver
+
+For **outgoing connections** you need to expose the following ports:
+
+* **80** for HTTP
+* **443** for HTTPS
+
+Additional ports to be exposed for the mail client correct work:
+
+* **25** for SMTP
+* **465** for SMTPS
+* **143** for IMAP
+* **993** for IMAPS
+* **110** for POP3
+* **995** for POP3S
 
 ### Running ONLYOFFICE Community Server using HTTPS
 
@@ -169,7 +215,7 @@ sudo docker run --privileged -i -t -d --name onlyoffice-mail-server -p 25:25 -p 
 **STEP 3**: Installing ONLYOFFICE Community Server
 
 ```bash
-sudo docker run -i -t -d -p 80:80  -p 443:443 \
+sudo docker run -i -t -d -p 80:80 -p 5222:5222 -p 443:443 \
 --link onlyoffice-mail-server:mail_server \
 --link onlyoffice-document-server:document_server \
 onlyoffice/communityserver
@@ -181,6 +227,19 @@ Alternatively, you can use [docker-compose](https://docs.docker.com/compose/inst
 wget https://raw.githubusercontent.com/ONLYOFFICE/Docker-CommunityServer/master/docker-compose.yml
 docker-compose up -d
 ```
+
+## Issues
+
+### Docker Issues
+
+As a relatively new project Docker is being worked on and actively developed by its community. So it's recommended to use the latest version of Docker, because the issues that you encounter might have already been fixed with a newer Docker release.
+
+Fedora and RHEL/CentOS users should try disabling selinux with setenforce 0. If it does not fix the issue, you can either stick with selinux disabled (not recommended by RedHat) or switch to using Ubuntu.
+
+### Mono Issues
+
+ONLYOFFICE installation requires the presence of mono (tested for version 3.12.1 or [older](http://www.mono-project.com/docs/getting-started/install/linux/#accessing-older-releases "older")) that may cause problems for some Linux kernel versions. The full list of supported kernel versions is available [here](http://onlyo.co/1PABPEI "here").
+
 
 ## Project Information
 
