@@ -3,7 +3,11 @@
 * [Recommended System Requirements](#recommended-system-requirements)
 * [Running Docker Image](#running-docker-image)
 * [Configuring Docker Image](#configuring-docker-image)
+    - [Automatic Restart](#auto-restart)
     - [Storing Data](#storing-data)
+    - [Using MySQL](#using-mysql)
+        + [Using a Linked MySQL Container](#using-a-linked-mysql-container)
+        + [Connecting to an External MySQL Server](#connecting-to-an-external-mysql-server)
     - [Running ONLYOFFICE Community Server on Different Port](#running-onlyoffice-community-server-on-different-port)
     - [Exposing Additional Ports](#exposing-additional-ports)
     - [Running ONLYOFFICE Community Server using HTTPS](#running-onlyoffice-community-server-using-https)
@@ -12,6 +16,7 @@
         + [Installation of the SSL Certificates](#installation-of-the-ssl-certificates)
         + [Available Configuration Parameters](#available-configuration-parameters)
 * [Installing ONLYOFFICE Community Server integrated with Document and Mail Servers](#installing-onlyoffice-community-server-integrated-with-document-and-mail-servers)
+* [Upgrading ONLYOFFICE Community Server](#upgrading-onlyoffice-community-server)
 * [Issues](#issues)
     - [Docker Issues](#docker-issues)
     - [Mono Issues](#mono-issues)
@@ -61,6 +66,13 @@ ONLYOFFICE Community Server is a free open source collaborative system developed
 This command will install ONLYOFFICE Community Server and all the dependencies it needs.
 
 ## Configuring Docker Image
+
+###Auto-restart
+
+To make Docker auto-restart containers on reboot, please use the --restart=always in the docker run command:
+
+	sudo docker run -i -t -d -p 80:80 --restart=always onlyoffice/communityserver
+
 ### Storing Data
 
 All the data are stored in the specially-designated directories, **data volumes**, at the following location:
@@ -76,6 +88,45 @@ To get access to your data from outside the container, you need to mount the vol
         -v /opt/onlyoffice/MySQL:/var/lib/mysql  onlyoffice/communityserver
 
 Storing the data on the host machine allows you to easily update ONLYOFFICE once the new version is released without losing your data.
+
+### Using MySQL
+ONLYOFFICE uses **MySQL 5.5** to store its data.
+
+By default the MySQL server is started internally. But you can easily configure the image to use an external MySQL database. 
+
+####Using a Linked MySQL Container
+
+First of all you will need to run the MySQL image configuring the available environment variables. We use the image from the [official MySQL repository](https://registry.hub.docker.com/_/mysql/ "official MySQL repository").
+
+```bash
+	sudo docker run --name onlyoffice-mysql-server \
+	-e MYSQL_ROOT_PASSWORD=my-secret-pw \
+	-e MYSQL_DATABASE="onlyoffice" \
+	-e MYSQL_USER="usr_onlyoffice" \
+	-e MYSQL_PASSWORD="onlyoffice123" \
+	-d mysql:5.5
+```
+
+Then run the ONLYOFFICE Community Server image and link it with a MySQL container:
+
+```bash
+	sudo docker run -i -t -d -p 80:80 -p 5222:5222 -p 443:443 \
+	--link onlyoffice-mysql-server:mysql_server \
+	onlyoffice/communityserver
+```
+
+####Connecting to an External MySQL Server
+If you have an external MySQL server installed on your machine, execute the following command:
+
+```bash
+	sudo docker run -i -t -d -p 80:80 -p 5222:5222 -p 443:443 \
+	-e MYSQL_SERVER_HOST="127.0.0.1" \
+	-e MYSQL_SERVER_PORT="3306" \
+	-e MYSQL_SERVER_DB_NAME="onlyoffice" \
+	-e MYSQL_SERVER_USER="usr_onlyoffice" \
+	-e MYSQL_SERVER_PASS="onlyoffice123" \
+	onlyoffice/communityserver
+```
 
 ### Running ONLYOFFICE Community Server on Different Port
 
@@ -191,6 +242,11 @@ Below is the complete list of parameters that can be set using environment varia
 - **SSL_KEY_PATH**: The path to the SSL certificate's private key. Defaults to `/var/www/onlyoffice/Data/certs/onlyoffice.key`.
 - **SSL_DHPARAM_PATH**: The path to the Diffie-Hellman parameter. Defaults to `/var/www/onlyoffice/Data/certs/dhparam.pem`.
 - **SSL_VERIFY_CLIENT**: Enable verification of client certificates using the `CA_CERTIFICATES_PATH` file. Defaults to `false`
+- **MYSQL_SERVER_HOST**: The IP address or the name of the host where the server is running.
+- **MYSQL_SERVER_PORT**: The port number.
+- **MYSQL_SERVER_DB_NAME**: The name of a MySQL database to be created on image startup.
+- **MYSQL_SERVER_USER**: The new user name with superuser permissions for the MySQL account.
+- **MYSQL_SERVER_PASS**: The password set for the MySQL account. 
 
 ## Installing ONLYOFFICE Community Server integrated with Document and Mail Servers
 
@@ -228,6 +284,31 @@ wget https://raw.githubusercontent.com/ONLYOFFICE/Docker-CommunityServer/master/
 docker-compose up -d
 ```
 
+## Upgrading ONLYOFFICE Community Server
+
+To upgrade to a newer release, please follow there easy steps:
+
+**STEP 1**: Make sure that all the container volumes are mounted following the **Storing Data** section instructions:
+ 
+	sudo docker inspect --format='{{range $p,$conf:=.HostConfig.Binds}}{{$conf}};{{end}}' {{COMMUNITY_SERVER_ID}} 
+
+where
+	{{COMMUNITY_SERVER_ID}} stands for a container name or ID
+
+**STEP 2** Remove the current container
+	sudo docker rm -f {{COMMUNITY_SERVER_ID}}
+
+**STEP 3** Remove the current image
+	sudo docker rmi -f $(sudo docker images | grep onlyoffice/communityserver | awk '{ print $3 }')
+
+**STEP 4** Run the new image with the same map paths
+
+	sudo docker run -i -t -d -p 80:80 \
+	-v /opt/onlyoffice/Logs:/var/log/onlyoffice  \
+	-v /opt/onlyoffice/Data:/var/www/onlyoffice/Data  \
+	-v /opt/onlyoffice/MySQL:/var/lib/mysql  onlyoffice/communityserver
+
+
 ## Issues
 
 ### Docker Issues
@@ -257,3 +338,4 @@ SaaS version: [http://www.onlyoffice.com](http://www.onlyoffice.com "http://www.
 If you have any problems with or questions about this image, please contact us through a [dev.onlyoffice.org][1].
 
   [1]: http://dev.onlyoffice.org
+

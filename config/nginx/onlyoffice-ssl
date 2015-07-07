@@ -1,115 +1,181 @@
+upstream fastcgi_backend {
+	server unix:/var/run/onlyoffice/onlyoffice.socket;
+	keepalive 64;
+}
+
+fastcgi_cache_path /var/cache/nginx/onlyoffice
+	levels=1:2
+	keys_zone=onlyoffice:16m
+	max_size=256m
+	inactive=1d;
+
 ## Normal HTTP host
 server {
-  listen 0.0.0.0:80;
-  listen [::]:80 default_server;
-  server_name _;
-  server_tokens off;
-  
-  ## Redirects all traffic to the HTTPS host
-  root /nowhere; ## root doesn't have to be a valid path since we are redirecting
-  rewrite ^ https://$host$request_uri? permanent;
+	listen 0.0.0.0:80;
+	listen [::]:80 default_server;
+	server_name _;
+	server_tokens off;
+	 
+	## Redirects all traffic to the HTTPS host
+	root /nowhere; ## root doesn't have to be a valid path since we are redirecting
+	rewrite ^ https://$host$request_uri? permanent;
 }
 
 ## HTTPS host
 server {
-  listen 0.0.0.0:443 ssl spdy;
-  listen [::]:443 ssl spdy default_server;
-  server_tokens off;
-  root /usr/share/nginx/html;
+	listen 0.0.0.0:443 ssl spdy;
+	listen [::]:443 ssl spdy default_server;
+	server_tokens off;
+	root /usr/share/nginx/html;
 
-  ## Increase this if you want to upload large attachments
-  client_max_body_size 100m;
+	## Increase this if you want to upload large attachments
+	client_max_body_size 100m;
 
-  ## Strong SSL Security
-  ## https://raymii.org/s/tutorials/Strong_SSL_Security_On_nginx.html
-  ssl on;
-  ssl_certificate {{SSL_CERTIFICATE_PATH}};
-  ssl_certificate_key {{SSL_KEY_PATH}};
-  ssl_verify_client {{SSL_VERIFY_CLIENT}};
-  ssl_client_certificate {{CA_CERTIFICATES_PATH}};
+	## Strong SSL Security
+	## https://raymii.org/s/tutorials/Strong_SSL_Security_On_nginx.html
+	ssl on;
+	ssl_certificate {{SSL_CERTIFICATE_PATH}};
+	ssl_certificate_key {{SSL_KEY_PATH}};
+	ssl_verify_client {{SSL_VERIFY_CLIENT}};
+	ssl_client_certificate {{CA_CERTIFICATES_PATH}};
 
-  ssl_ciphers "ECDHE-RSA-AES128-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA128:DHE-RSA-AES128-GCM-SHA384:DHE-RSA-AES128-GCM-SHA128:ECDHE-RSA-AES128-SHA384:ECDHE-RSA-AES128-SHA128:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES128-SHA:DHE-RSA-AES128-SHA128:DHE-RSA-AES128-SHA128:DHE-RSA-AES128-SHA:DHE-RSA-AES128-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES128-GCM-SHA384:AES128-GCM-SHA128:AES128-SHA128:AES128-SHA128:AES128-SHA:AES128-SHA:DES-CBC3-SHA:HIGH:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4";
+	ssl_ciphers "ECDHE-RSA-AES128-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA128:DHE-RSA-AES128-GCM-SHA384:DHE-RSA-AES128-GCM-SHA128:ECDHE-RSA-AES128-SHA384:ECDHE-RSA-AES128-SHA128:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES128-SHA:DHE-RSA-AES128-SHA128:DHE-RSA-AES128-SHA128:DHE-RSA-AES128-SHA:DHE-RSA-AES128-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES128-GCM-SHA384:AES128-GCM-SHA128:AES128-SHA128:AES128-SHA128:AES128-SHA:AES128-SHA:DES-CBC3-SHA:HIGH:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4";
 
-  ssl_protocols  TLSv1 TLSv1.1 TLSv1.2;
-  ssl_session_cache  builtin:1000  shared:SSL:10m;
+	ssl_protocols  TLSv1 TLSv1.1 TLSv1.2;
+	ssl_session_cache  builtin:1000  shared:SSL:10m;
 
-  ssl_prefer_server_ciphers   on;
+	ssl_prefer_server_ciphers   on;
 
-  add_header Strict-Transport-Security max-age={{ONLYOFFICE_HTTPS_HSTS_MAXAGE}};
-  # add_header X-Frame-Options SAMEORIGIN;
-  add_header X-Content-Type-Options nosniff;
+	add_header Strict-Transport-Security max-age={{ONLYOFFICE_HTTPS_HSTS_MAXAGE}};
+	# add_header X-Frame-Options SAMEORIGIN;
+	add_header X-Content-Type-Options nosniff;
 
-  ## [Optional] If your certficate has OCSP, enable OCSP stapling to reduce the overhead and latency of running SSL.
-  ## Replace with your ssl_trusted_certificate. For more info see:
-  ## - https://medium.com/devops-programming/4445f4862461
-  ## - https://www.ruby-forum.com/topic/4419319
-  ## - https://www.digitalocean.com/community/tutorials/how-to-configure-ocsp-stapling-on-apache-and-nginx
-  # ssl_stapling on;
-  # ssl_stapling_verify on;
-  # ssl_trusted_certificate /etc/nginx/ssl/stapling.trusted.crt;
-  # resolver 208.67.222.222 208.67.222.220 valid=300s; # Can change to your DNS resolver if desired
-  # resolver_timeout 10s;
+	## [Optional] If your certficate has OCSP, enable OCSP stapling to reduce the overhead and latency of running SSL.
+	## Replace with your ssl_trusted_certificate. For more info see:
+	## - https://medium.com/devops-programming/4445f4862461
+	## - https://www.ruby-forum.com/topic/4419319
+	## - https://www.digitalocean.com/community/tutorials/how-to-configure-ocsp-stapling-on-apache-and-nginx
+	# ssl_stapling on;
+	# ssl_stapling_verify on;
+	# ssl_trusted_certificate /etc/nginx/ssl/stapling.trusted.crt;
+	# resolver 208.67.222.222 208.67.222.220 valid=300s; # Can change to your DNS resolver if desired
+	# resolver_timeout 10s;
 
-  ## [Optional] Generate a stronger DHE parameter:
-  ##   cd /etc/ssl/certs
-  ##   sudo openssl dhparam -out dhparam.pem 4096
-  ##
-  ssl_dhparam {{SSL_DHPARAM_PATH}};
+	## [Optional] Generate a stronger DHE parameter:
+	## cd /etc/ssl/certs
+	## sudo openssl dhparam -out dhparam.pem 4096
+	##
+	ssl_dhparam {{SSL_DHPARAM_PATH}};
+
+	location ~* (\.(?:jpg|jpeg|gif|png|svg|ico)$)|(.*bundle/(?!clientscript).*) {
+		root    /var/www/onlyoffice/WebStudio/;
+		add_header      Access-Control-Allow-Origin *;
+
+		fastcgi_keep_conn on;
+		fastcgi_pass fastcgi_backend;
+
+		gzip             off;
+		gzip_comp_level  2;
+		gzip_min_length  1000;
+		gzip_proxied     expired no-cache no-store private auth;
+		gzip_types       text/plain application/x-javascript text/xml text/css application/xml;
+
+		fastcgi_param   HTTP_X_REWRITER_URL             $scheme://$http_host;
+		fastcgi_param   SERVER_NAME                     $host;
+		fastcgi_param   SCRIPT_FILENAME                 $document_root$fastcgi_script_name;
+		fastcgi_param   PATH_INFO                       "";
+		fastcgi_param   QUERY_STRING                    $query_string;
+		fastcgi_param   REQUEST_METHOD                  $request_method;
+		fastcgi_param   CONTENT_TYPE                    $content_type;
+		fastcgi_param   CONTENT_LENGTH                  $content_length;
+		fastcgi_param   SCRIPT_NAME                     $fastcgi_script_name;
+		fastcgi_param   REQUEST_URI                     $request_uri;
+		fastcgi_param   DOCUMENT_URI                    $document_uri;
+		fastcgi_param   DOCUMENT_ROOT                   $document_root;
+		fastcgi_param   SERVER_PROTOCOL                 $server_protocol;
+		fastcgi_param   GATEWAY_INTERFACE               CGI/1.1;
+		fastcgi_param   SERVER_SOFTWARE                 nginx/$nginx_version;
+		fastcgi_param   REMOTE_ADDR                     $remote_addr;
+		fastcgi_param   REMOTE_PORT                     $remote_port;
+		fastcgi_param   SERVER_ADDR                     $server_addr;
+		fastcgi_param   SERVER_PORT                     $server_port;
+		fastcgi_param   HTTPS                           $https if_not_empty;
+		fastcgi_read_timeout    600;
+		fastcgi_send_timeout    600;
+
+		fastcgi_temp_path        /var/cache/nginx/tmp 1 2;
+		fastcgi_cache            onlyoffice;
+		fastcgi_cache_key        "$scheme|$request_method|$host|$request_uri|$query_string";
+		fastcgi_cache_use_stale  updating error timeout invalid_header http_500;
+		fastcgi_cache_valid      1d;
+		fastcgi_ignore_headers   Cache-Control Expires Set-Cookie;
+		
+		add_header X-Fastcgi-Cache $upstream_cache_status;
+		access_log off;
+		log_not_found off;
+		expires max;
+	}
 
 	location / {
-    ## If you use HTTPS make sure you disable gzip compression
-    ## to be safe against BREACH attack.
-		gzip off;
-		root	/var/www/onlyoffice/WebStudio/;
-		index	index.html index.htm default.aspx Default.aspx;
+		root    /var/www/onlyoffice/WebStudio/;
+		index   index.html index.htm default.aspx Default.aspx;
 
-		add_header	Access-Control-Allow-Origin *;
+		add_header      Access-Control-Allow-Origin *;
 
-		client_max_body_size	4G;
+		client_max_body_size    4G;
 
-		access_log	/var/log/onlyoffice/nginx.access.log;
-		error_log	/var/log/onlyoffice/nginx.error.log;
+		access_log      /var/log/onlyoffice/nginx.access.log;
+		error_log       /var/log/onlyoffice/nginx.error.log;
 
-		fastcgi_index	Default.aspx;
-		fastcgi_pass	127.0.0.1:8086;
-		fastcgi_param	HTTP_X_REWRITER_URL		$scheme://$host:$server_port;
-		fastcgi_param	SERVER_NAME				$host;
-		fastcgi_param	SCRIPT_FILENAME			$document_root$fastcgi_script_name;
-		fastcgi_param	PATH_INFO				"";
-		fastcgi_param	QUERY_STRING			$query_string;
-		fastcgi_param	REQUEST_METHOD			$request_method;
-		fastcgi_param	CONTENT_TYPE			$content_type;
-		fastcgi_param	CONTENT_LENGTH			$content_length;
-		fastcgi_param	SCRIPT_NAME				$fastcgi_script_name;
-		fastcgi_param	REQUEST_URI				$request_uri;
-		fastcgi_param	DOCUMENT_URI			$document_uri;
-		fastcgi_param	DOCUMENT_ROOT			$document_root;
-		fastcgi_param	SERVER_PROTOCOL			$server_protocol;
-		fastcgi_param	GATEWAY_INTERFACE		CGI/1.1;
-		fastcgi_param	SERVER_SOFTWARE			nginx/$nginx_version;
-		fastcgi_param	REMOTE_ADDR				$remote_addr;
-		fastcgi_param	REMOTE_PORT				$remote_port;
-		fastcgi_param	SERVER_ADDR				$server_addr;
-		fastcgi_param	SERVER_PORT				$server_port;
-		fastcgi_param	HTTPS					$https if_not_empty;
-		fastcgi_read_timeout	600;
-		fastcgi_send_timeout	600;
+		fastcgi_keep_conn on;
+		fastcgi_pass fastcgi_backend;
+
+		gzip             off;
+		gzip_comp_level  2;
+		gzip_min_length  1000;
+		gzip_proxied     expired no-cache no-store private auth;
+		gzip_types       text/html application/x-javascript text/xml text/css application/xml;
+
+		fastcgi_index   Default.aspx;
+		fastcgi_param   HTTP_X_REWRITER_URL             $scheme://$http_host;
+		fastcgi_param   SERVER_NAME                     $host;
+		fastcgi_param   SCRIPT_FILENAME                 $document_root$fastcgi_script_name;
+		fastcgi_param   PATH_INFO                       "";
+		fastcgi_param   QUERY_STRING                    $query_string;
+		fastcgi_param   REQUEST_METHOD                  $request_method;
+		fastcgi_param   CONTENT_TYPE                    $content_type;
+		fastcgi_param   CONTENT_LENGTH                  $content_length;
+		fastcgi_param   SCRIPT_NAME                     $fastcgi_script_name;
+		fastcgi_param   REQUEST_URI                     $request_uri;
+		fastcgi_param   DOCUMENT_URI                    $document_uri;
+		fastcgi_param   DOCUMENT_ROOT                   $document_root;
+		fastcgi_param   SERVER_PROTOCOL                 $server_protocol;
+		fastcgi_param   GATEWAY_INTERFACE               CGI/1.1;
+		fastcgi_param   SERVER_SOFTWARE                 nginx/$nginx_version;
+		fastcgi_param   REMOTE_ADDR                     $remote_addr;
+		fastcgi_param   REMOTE_PORT                     $remote_port;
+		fastcgi_param   SERVER_ADDR                     $server_addr;
+		fastcgi_param   SERVER_PORT                     $server_port;
+		fastcgi_param   HTTPS                           $https if_not_empty;
+		fastcgi_read_timeout    600;
+		fastcgi_send_timeout    600;
 	}
-        location ~ ^/(coauthoring|spellchecker|OfficeWeb|OnlineEditorsExample|CanvasService\.ashx|ConvertService\.ashx|fileDownloader\.ashx|FileUploader\.ashx|FontService\.ashx|ResourceService\.ashx|TrackingService\.ashx|UploadService\.ashx) {
-                proxy_pass {{DOCUMENT_SERVER_HOST_ADDR}};
-                proxy_redirect     off;
 
-                client_max_body_size 100m;
+	location ~ ^/(coauthoring|spellchecker|OfficeWeb|OnlineEditorsExample|CanvasService\.ashx|ConvertService\.ashx|fileDownloader\.ashx|FileUploader\.ashx|FontService\.ashx|ResourceService\.ashx|TrackingService\.ashx|UploadService\.ashx) {
+		proxy_pass {{DOCUMENT_SERVER_HOST_ADDR}};
+		proxy_redirect off;
 
-                proxy_http_version 1.1;
-                proxy_set_header Upgrade $http_upgrade;
-                proxy_set_header Connection "upgrade";
+		client_max_body_size 100m;
 
-                proxy_set_header Host $host;
-                proxy_set_header X-Real-IP $remote_addr;
-                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                proxy_set_header X-Forwarded-Host $server_name;
-                proxy_set_header X-Forwarded-Proto $scheme;
-        }
+		proxy_http_version 1.1;
+		proxy_set_header Upgrade $http_upgrade;
+		proxy_set_header Connection "upgrade";
+
+		proxy_set_header Host $host;
+		proxy_set_header X-Real-IP $remote_addr;
+		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+		proxy_set_header X-Forwarded-Host $server_name;
+		proxy_set_header X-Forwarded-Proto $scheme;
+	}
 }
 
