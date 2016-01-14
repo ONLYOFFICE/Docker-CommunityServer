@@ -32,11 +32,11 @@ MYSQL_SERVER_USER=${MYSQL_SERVER_USER:-"root"}
 MYSQL_SERVER_PASS=${MYSQL_SERVER_PASS:-""}
 MYSQL_SERVER_EXTERNAL=false;
 
-if [ ${MYSQL_SERVER_HOST} != "localhost" ]; then
+if [ "${MYSQL_SERVER_HOST}" != "localhost" ]; then
 	MYSQL_SERVER_EXTERNAL=true;
 fi
 
-if [ ${MYSQL_SERVER_PORT_3306_TCP} ]; then
+if [ "${MYSQL_SERVER_PORT_3306_TCP}" ]; then
 	MYSQL_SERVER_EXTERNAL=true;
 	MYSQL_SERVER_HOST=${MYSQL_SERVER_PORT_3306_TCP_ADDR};
 	MYSQL_SERVER_PORT=${MYSQL_SERVER_PORT_3306_TCP_PORT};
@@ -53,14 +53,14 @@ if [ ${MYSQL_SERVER_PORT_3306_TCP} ]; then
 	fi
 fi
 
-if [ ${DOCUMENT_SERVER_PORT_80_TCP} ]; then
+if [ "${DOCUMENT_SERVER_PORT_80_TCP}" ]; then
 	DOCUMENT_SERVER_ENABLED=true;
 fi
 
-if [ ${MAIL_SERVER_PORT_8081_TCP} ]; then
+if [ "${MAIL_SERVER_PORT_8081_TCP}" ]; then
 	MAIL_SERVER_ENABLED=true;
 
-	if [ ${MAIL_SERVER_ENV_MYSQL_EXTERNAL} == "true" ];then
+	if [ "${MAIL_SERVER_ENV_MYSQL_EXTERNAL}" == "true" ];then
 		MAIL_SERVER_DB_HOST=${MAIL_SERVER_ENV_MYSQL_SERVER};
 		MAIL_SERVER_DB_PORT=${MAIL_SERVER_ENV_MYSQL_SERVER_PORT};
 		MAIL_SERVER_DB_NAME=${MAIL_SERVER_ENV_MYSQL_SERVER_NAME};
@@ -113,7 +113,7 @@ mysql_batch_exec(){
 }
 
 change_connections(){
-	if [ ${LOG_DEBUG} ]; then
+	if [ "${LOG_DEBUG}" ]; then
 		echo "change connections for ${1} then ${2}";
 	fi
 	sed '/'${1}'/s/\(connectionString\s*=\s*\"\)[^\"]*\"/\1Server='${MYSQL_SERVER_HOST}';Port='${MYSQL_SERVER_PORT}';Database='${MYSQL_SERVER_DB_NAME}';User ID='${MYSQL_SERVER_USER}';Password='${MYSQL_SERVER_PASS}';Pooling=true;Character Set=utf8;AutoEnlist=false\"/' -i ${2}
@@ -133,19 +133,19 @@ if [ "${MYSQL_SERVER_EXTERNAL}" == "true" ]; then
 	#		DB_COLLATION_NAME=${#DB_INFO[2]};
 	#	fi
 
-	if [ ${LOG_DEBUG} ]; then
+	if [ "${LOG_DEBUG}" ]; then
 		echo "DB_IS_EXIST: ${DB_IS_EXIST}";
 		echo "DB_CHARACTER_SET_NAME: ${DB_CHARACTER_SET_NAME}";
 		echo "DB_COLLATION_NAME: ${DB_COLLATION_NAME}";
 	fi
 
-	if [ -z ${DB_IS_EXIST} ]; then
+	if [ -z "${DB_IS_EXIST}" ]; then
 		mysql_scalar_exec "CREATE DATABASE ${MYSQL_SERVER_DB_NAME} CHARACTER SET utf8 COLLATE utf8_general_ci" "opt_ignore_db_name";
 		DB_CHARACTER_SET_NAME="utf8";	
 		DB_COLLATION_NAME="utf8_general_ci";
 	fi
 
-	if [ ${DB_CHARACTER_SET_NAME} != "utf8" ]; then
+	if [ "${DB_CHARACTER_SET_NAME}" != "utf8" ]; then
 		mysql_scalar_exec "ALTER DATABASE ${MYSQL_SERVER_DB_NAME} CHARACTER SET utf8 COLLATE utf8_general_ci";
 	fi
 
@@ -273,7 +273,7 @@ done
 MYSQL_MAIL_SERVER_ID=$(mysql_scalar_exec "select id from mail_server_server where mx_record='${MAIL_SERVER_HOSTNAME}' limit 1");
 
 echo "MYSQL mail server id '${MYSQL_MAIL_SERVER_ID}'";
-	if [ -z ${MYSQL_MAIL_SERVER_ID} ]; then
+	if [ -z "${MYSQL_MAIL_SERVER_ID}" ]; then
 		# change web.appsettings link to editor
 		sed -r '/web\.hide-settings/s/,AdministrationPage//' -i ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
 		VALID_IP_ADDRESS_REGEX="^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$";
@@ -297,13 +297,13 @@ echo "MYSQL mail server id '${MYSQL_MAIL_SERVER_ID}'";
 END
 
 		id1=$(mysql_scalar_exec "INSERT INTO mail_mailbox_server (id_provider, type, hostname, port, socket_type, username, authentication, is_user_data) VALUES (-1, 'imap', '${MAIL_SERVER_HOSTNAME}', 143, 'STARTTLS', '%EMAILADDRESS%', '', 0);SELECT LAST_INSERT_ID();");
-		if [ ${LOG_DEBUG} ]; then
+		if [ "${LOG_DEBUG}" ]; then
 			echo "id1 is '${id1}'";
 		fi
 
 		id2=$(mysql_scalar_exec "INSERT INTO mail_mailbox_server (id_provider, type, hostname, port, socket_type, username, authentication, is_user_data) VALUES (-1, 'smtp', '${MAIL_SERVER_HOSTNAME}', 587, 'STARTTLS', '%EMAILADDRESS%', '', 0);SELECT LAST_INSERT_ID();");
 
-		if [ ${LOG_DEBUG} ]; then
+		if [ "${LOG_DEBUG}" ]; then
 			echo "id2 is '${id2}'";
 		fi
 
@@ -312,7 +312,7 @@ END
 			--password="${MAIL_SERVER_DB_PASS}" -D "${MAIL_SERVER_DB_NAME}" \
 			-e "select access_token from api_keys where id=1;");
 
-		if [ ${LOG_DEBUG} ]; then
+		if [ "${LOG_DEBUG}" ]; then
 			echo "mysql mail server access token is ${MYSQL_MAIL_SERVER_ACCESS_TOKEN}";
 		fi
 
