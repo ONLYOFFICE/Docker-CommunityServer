@@ -5,6 +5,7 @@ ONLYOFFICE_DATA_DIR="${ONLYOFFICE_DIR}/Data"
 ONLYOFFICE_SERVICES_DIR="${ONLYOFFICE_DIR}/Services"
 ONLYOFFICE_SQL_DIR="${ONLYOFFICE_DIR}/Sql"
 ONLYOFFICE_ROOT_DIR="${ONLYOFFICE_DIR}/WebStudio"
+ONLYOFFICE_ROOT_DIR2="${ONLYOFFICE_DIR}/WebStudio2"
 ONLYOFFICE_MYSQL_DB_SCHEME_PATH="/app/onlyoffice/setup/data/mysql/onlyoffice.sql"
 
 LOG_DEBUG="DEBUG";
@@ -21,7 +22,14 @@ SSL_VERIFY_CLIENT=${SSL_VERIFY_CLIENT:-off}
 ONLYOFFICE_HTTPS_HSTS_ENABLED=${ONLYOFFICE_HTTPS_HSTS_ENABLED:-true}
 ONLYOFFICE_HTTPS_HSTS_MAXAGE=${ONLYOFFICE_HTTPS_HSTS_MAXAG:-31536000}
 SYSCONF_TEMPLATES_DIR="/app/onlyoffice/setup/config"
+
 DOCUMENT_SERVER_ENABLED=false
+
+DOCUMENT_SERVER_HOST=${DOCUMENT_SERVER_HOST:-""};
+DOCUMENT_SERVER_PROTOCOL=${DOCUMENT_SERVER_PROTOCOL:-"http"};
+DOCUMENT_SERVER_API_URL="\/OfficeWeb\/apps\/api\/documents\/api\.js";
+
+CONTROL_PANEL_ENABLED=false
 MAIL_SERVER_ENABLED=false
 EXTERNAL_IP=${EXTERNAL_IP:-$(dig +short myip.opendns.com @resolver1.opendns.com)};
 
@@ -31,6 +39,14 @@ MYSQL_SERVER_DB_NAME=${MYSQL_SERVER_DB_NAME:-"onlyoffice"}
 MYSQL_SERVER_USER=${MYSQL_SERVER_USER:-"root"}
 MYSQL_SERVER_PASS=${MYSQL_SERVER_PASS:-""}
 MYSQL_SERVER_EXTERNAL=false;
+
+if [ ${DOCUMENT_SERVER_HOST} ]; then
+	DOCUMENT_SERVER_ENABLED=true;
+	DOCUMENT_SERVER_API_URL="${DOCUMENT_SERVER_PROTOCOL}://${DOCUMENT_SERVER_HOST}${DOCUMENT_SERVER_API_URL}";
+elif [ ${DOCUMENT_SERVER_PORT_80_TCP_ADDR} ]; then
+	DOCUMENT_SERVER_ENABLED=true;
+	DOCUMENT_SERVER_HOST=${DOCUMENT_SERVER_PORT_80_TCP_ADDR};
+fi
 
 if [ ${MYSQL_SERVER_HOST} != "localhost" ]; then
 	MYSQL_SERVER_EXTERNAL=true;
@@ -53,34 +69,23 @@ if [ ${MYSQL_SERVER_PORT_3306_TCP} ]; then
 	fi
 fi
 
-if [ ${DOCUMENT_SERVER_PORT_80_TCP} ]; then
-	DOCUMENT_SERVER_ENABLED=true;
+
+if [ ${CONTROL_PANEL_PORT_80_TCP} ]; then
+	CONTROL_PANEL_ENABLED=true;
 fi
 
-if [ ${MAIL_SERVER_PORT_8081_TCP} ]; then
+MAIL_SERVER_API_PORT=${MAIL_SERVER_PORT_8081_TCP_PORT:-8081};
+MAIL_SERVER_DB_HOST=${MAIL_SERVER_DB_HOST:-${MAIL_SERVER_PORT_3306_TCP_ADDR}};
+MAIL_SERVER_DB_PORT=${MAIL_SERVER_DB_PORT:-${MAIL_SERVER_PORT_3306_TCP_PORT:-3306}};
+MAIL_SERVER_DB_NAME=${MAIL_SERVER_DB_NAME:-"onlyoffice_mailserver"};
+MAIL_SERVER_DB_USER=${MAIL_SERVER_DB_USER:-"mail_admin"};
+MAIL_SERVER_DB_PASS=${MAIL_SERVER_DB_PASS:-"Isadmin123"};
+
+if [ ${MAIL_SERVER_DB_HOST} ]; then
 	MAIL_SERVER_ENABLED=true;
-
-	if [ ${MAIL_SERVER_ENV_MYSQL_EXTERNAL} == "true" ];then
-		MAIL_SERVER_DB_HOST=${MAIL_SERVER_ENV_MYSQL_SERVER};
-		MAIL_SERVER_DB_PORT=${MAIL_SERVER_ENV_MYSQL_SERVER_PORT};
-		MAIL_SERVER_DB_NAME=${MAIL_SERVER_ENV_MYSQL_SERVER_NAME};
-		MAIL_SERVER_DB_USER=${MAIL_SERVER_ENV_MYSQL_ROOT_USER};
-		MAIL_SERVER_DB_PASS=${MAIL_SERVER_ENV_MYSQL_ROOT_PASSWD};
-	else
-		MAIL_SERVER_DB_HOST=${MAIL_SERVER_PORT_3306_TCP_ADDR};
-		MAIL_SERVER_DB_PORT=${MAIL_SERVER_PORT_3306_TCP_PORT};
-		MAIL_SERVER_DB_NAME="onlyoffice_mailserver";
-		MAIL_SERVER_DB_USER="mail_admin";
-		MAIL_SERVER_DB_PASS="Isadmin123";
-	fi
 fi
 
-# configuration service monit
-service monit stop
-
-sed 's/# *set httpd port 2812 and.*/set httpd port 2812 and/' -i /etc/monit/monitrc
-sed 's/# *use address localhost.*/use address localhost/' -i /etc/monit/monitrc
-sed 's/# *allow localhost.*/allow localhost/' -i /etc/monit/monitrc
+service god stop
 
 mysql_scalar_exec(){
 	local queryResult="";
@@ -175,6 +180,7 @@ else
 		mysql -D "onlyoffice" < ${ONLYOFFICE_SQL_DIR}/onlyoffice.data.sql
 		mysql -D "onlyoffice" < ${ONLYOFFICE_SQL_DIR}/onlyoffice.resources.sql
 	else
+		myisamchk -q -r /var/lib/mysql/mysql/proc || true
 		service mysql start
 	fi
 fi
@@ -186,6 +192,7 @@ done
 
 # stop services
 service monoserve stop
+service monoserve2 stop
 service nginx stop
 
 # setup HTTPS
@@ -229,24 +236,20 @@ if ! grep -q "name=\"textindex\"" ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/TeamLabS
 fi
 
 if [ "${DOCUMENT_SERVER_ENABLED}" == "true" ]; then
-	sed 's,{{DOCUMENT_SERVER_HOST_ADDR}},'"http:\/\/${DOCUMENT_SERVER_PORT_80_TCP_ADDR}"',' -i /etc/nginx/sites-enabled/onlyoffice
+	sed 's,{{DOCUMENT_SERVER_HOST_ADDR}},'"${DOCUMENT_SERVER_PROTOCOL}:\/\/${DOCUMENT_SERVER_HOST}"',' -i /etc/nginx/sites-enabled/onlyoffice
 
 	# change web.appsettings link to editor
-	sed '/files\.docservice\.url\.converter/s/\(value\s*=\s*\"\)[^\"]*\"/\1http:\/\/'${DOCUMENT_SERVER_PORT_80_TCP_ADDR}'\/ConvertService\.ashx\"/' -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
-	sed '/files\.docservice\.url\.api/s/\(value\s*=\s*\"\)[^\"]*\"/\1\/OfficeWeb\/apps\/api\/documents\/api\.js\"/' -i ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
-	sed '/files\.docservice\.url\.storage/s/\(value\s*=\s*\"\)[^\"]*\"/\1http:\/\/'${DOCUMENT_SERVER_PORT_80_TCP_ADDR}'\/FileUploader\.ashx\"/' -i ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
-	sed '/files\.docservice\.url\.command/s/\(value\s*=\s*\"\)[^\"]*\"/\1http:\/\/'${DOCUMENT_SERVER_PORT_80_TCP_ADDR}'\/coauthoring\/CommandService\.ashx\"/' -i ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
+    sed '/files\.docservice\.url\.converter/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_PROTOCOL}':\/\/'${DOCUMENT_SERVER_HOST}'\/ConvertService\.ashx\"!' -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
+    sed '/files\.docservice\.url\.api/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_API_URL}'\"!' -i ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
+    sed '/files\.docservice\.url\.storage/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_PROTOCOL}':\/\/'${DOCUMENT_SERVER_HOST}'\/FileUploader\.ashx\"!' -i ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
+    sed '/files\.docservice\.url\.command/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_PROTOCOL}':\/\/'${DOCUMENT_SERVER_HOST}'\/coauthoring\/CommandService\.ashx\"!' -i ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
 
-	# need deleted
-	if ! grep -q "files\.docservice\.new" ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config; then
-		sed '/files\.docservice\.url\.storage/a <add key=\"files\.docservice\.new\" value=\"\.xlsx\|\.xlst\|\.xls\|\.ods\|\.gsheet\|\.csv\|\.docx\|\.doct\|\.doc\|\.odt\|\.gdoc\|\.txt\|\.rtf\|\.mht\|\.html\|\.htm\|\.fb2\|\.epub\|\.pdf\|\.djvu\|\.xps"\/>/' -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
-	fi
-	if ! grep -q "files\.docservice\.url\.command" ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config; then
-		sed '/files\.docservice\.url\.storage/a <add key=\"files\.docservice\.url\.command\" value=\"http:\/\/'${DOCUMENT_SERVER_PORT_80_TCP_ADDR}'\/coauthoring\/CommandService\.ashx\" \/>/' -i ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
-	else
-		sed '/files\.docservice\.url\.command/s/\(value\s*=\s*\"\)[^\"]*\"/\1http:\/\/'${DOCUMENT_SERVER_PORT_80_TCP_ADDR}'\/coauthoring\/CommandService\.ashx\" \/>/' -i ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
-	fi
-
+    if ! grep -q "files\.docservice\.url\.command" ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config; then
+          sed '/files\.docservice\.url\.storage/a <add key=\"files\.docservice\.url\.command\" value=\"'${DOCUMENT_SERVER_PROTOCOL}':\/\/'${DOCUMENT_SERVER_HOST}'\/coauthoring\/CommandService\.ashx\" \/>/' -i ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
+    else
+          sed '/files\.docservice\.url\.command/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_PROTOCOL}':\/\/'${DOCUMENT_SERVER_HOST}'\/coauthoring\/CommandService\.ashx\"!' -i ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
+    fi
+	
 	mysql_scalar_exec "REPLACE INTO webstudio_settings (TenantID, ID, UserID, Data) VALUES (-1, 'a3acbfc4-155b-4ea8-8367-bbc586319553', '00000000-0000-0000-0000-000000000000', '{\"NewScheme\":true,\"RequestedScheme\":true}');";
 else
 	# delete documentserver section
@@ -316,17 +319,46 @@ END
 			echo "mysql mail server access token is ${MYSQL_MAIL_SERVER_ACCESS_TOKEN}";
 		fi
 
-		mysql_scalar_exec "INSERT INTO mail_server_server (mx_record, connection_string, server_type, smtp_settings_id, imap_settings_id) VALUES ('${MAIL_SERVER_HOSTNAME}', '{\"DbConnection\" : \"Server=${MAIL_SERVER_PORT_3306_TCP_ADDR};Database=onlyoffice_mailserver;User ID=mail_admin;Password=Isadmin123;Pooling=True;Character Set=utf8;AutoEnlist=false\", \"Api\":{\"Protocol\":\"http\", \"Server\":\"${MAIL_SERVER_PORT_3306_TCP_ADDR}\", \"Port\":\"${MAIL_SERVER_PORT_8081_TCP_PORT}\", \"Version\":\"v1\",\"Token\":\"${MYSQL_MAIL_SERVER_ACCESS_TOKEN}\"}}', 2, '${id2}', '${id1}');"
+		mysql_scalar_exec "DELETE FROM mail_server_server;"
+		mysql_scalar_exec "INSERT INTO mail_server_server (mx_record, connection_string, server_type, smtp_settings_id, imap_settings_id) \
+						   VALUES ('${MAIL_SERVER_HOSTNAME}', '{\"DbConnection\" : \"Server=${MAIL_SERVER_DB_HOST};Database=${MAIL_SERVER_DB_NAME};User ID=${MAIL_SERVER_DB_USER};Password=${MAIL_SERVER_DB_PASS};Pooling=True;Character Set=utf8;AutoEnlist=false\", \"Api\":{\"Protocol\":\"http\", \"Server\":\"${MAIL_SERVER_DB_HOST}\", \"Port\":\"${MAIL_SERVER_API_PORT}\", \"Version\":\"v1\",\"Token\":\"${MYSQL_MAIL_SERVER_ACCESS_TOKEN}\"}}', 2, '${id2}', '${id1}');"
 
 		sed '/mail\.certificate-permit/s/\(value *= *\"\).*\"/\1true\"/' -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
 		sed '/mail\.certificate-permit/s/\(value *= *\"\).*\"/\1true\"/' -i  ${ONLYOFFICE_DIR}/Services/MailAggregator/ASC.Mail.Aggregator.CollectionService.exe.config
 	fi
 fi
 
+if [ "${CONTROL_PANEL_ENABLED}" == "true" ]; then
+	sed 's,{{CONTROL_PANEL_HOST_ADDR}},'"http:\/\/${CONTROL_PANEL_PORT_80_TCP_ADDR}"',' -i /etc/nginx/sites-enabled/onlyoffice
+
+	# change web.appsettings link to editor
+	sed '/web\.controlpanel\.url/s/\(value\s*=\s*\"\)[^\"]*\"/\1\/controlpanel\/\"/' -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
+	
+	sed '/license.service.url/s/value=\"\s*\"/value=\"https:\/\/license\.onlyoffice.com\/v1\.1\"/g' -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
+
+else
+	# delete documentserver section
+	sed '/controlpanel/,/}$/d' -i /etc/nginx/sites-enabled/onlyoffice
+fi
+
+sed '/web.warmup.count/s/value=\"\S*\"/value=\"2\"/g' -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
+
+# copy config to second instanse
+cp -f ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config ${ONLYOFFICE_ROOT_DIR2}/web.appsettings.config
+cp -f ${ONLYOFFICE_ROOT_DIR}/web.connections.config ${ONLYOFFICE_ROOT_DIR2}/web.connections.config
+
+sed '/web.warmup.domain/s/value=\"\S*\"/value=\"localhost\/warmup1\"/g' -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
+sed '/web.warmup.domain/s/value=\"\S*\"/value=\"localhost\/warmup2\"/g' -i  ${ONLYOFFICE_ROOT_DIR2}/web.appsettings.config
+bash -c 'echo "onlyoffice ALL=(ALL) NOPASSWD: /usr/sbin/service" | (EDITOR="tee -a" visudo)'
+
+service redis-server start
 service nginx stop
 service monoserve start
+service monoserve2 start
 service monoserve stop
+service monoserve2 stop
 service monoserve start
+service monoserve2 start
 service nginx start
 service onlyofficeFeed start
 service onlyofficeIndex start
@@ -335,4 +367,8 @@ service onlyofficeMailAggregator start
 service onlyofficeMailWatchdog start
 service onlyofficeNotify start
 service onlyofficeBackup start
-service monit start
+service god start
+
+sleep 10s
+wget -b http://localhost/warmup1
+wget -b http://localhost/warmup2

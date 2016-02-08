@@ -1,5 +1,7 @@
 upstream fastcgi_backend {
 	server unix:/var/run/onlyoffice/onlyoffice.socket;
+	server unix:/var/run/onlyoffice/onlyoffice2.socket;
+	server unix:/var/run/onlyoffice/onlyoffice3.socket;
 	keepalive 64;
 }
 
@@ -88,6 +90,7 @@ server {
 		gzip_types       text/html application/x-javascript text/xml text/css application/xml;
 
 		fastcgi_index   Default.aspx;
+		fastcgi_intercept_errors on;
 		fastcgi_param   HTTP_X_REWRITER_URL             $scheme://$http_host;
 		fastcgi_param   SERVER_NAME                     $host;
 		fastcgi_param   SCRIPT_FILENAME                 $document_root$fastcgi_script_name;
@@ -111,7 +114,8 @@ server {
 		fastcgi_read_timeout    600;
 		fastcgi_send_timeout    600;
 		
-   		location ~* (^\/(?:skins|products|addons).*\.(?:jpg|jpeg|gif|png|svg|ico)$)|(.*bundle/(?!clientscript).*) {
+		location ~* (^\/(?:skins|products|addons).*\.(?:jpg|jpeg|gif|png|svg|ico)$)|(.*bundle/(?!clientscript).*) {
+
                         fastcgi_pass fastcgi_backend;
 
                         fastcgi_temp_path        /var/cache/nginx/tmp 1 2;
@@ -119,6 +123,7 @@ server {
                         fastcgi_cache_key        "$scheme|$request_method|$host|$request_uri|$query_string";
                         fastcgi_cache_use_stale  updating error timeout invalid_header http_500;
                         fastcgi_cache_valid      1d;
+                        fastcgi_cache_valid 404 1s;
                         fastcgi_ignore_headers   Cache-Control Expires Set-Cookie;
 
                         add_header X-Fastcgi-Cache $upstream_cache_status;
@@ -128,7 +133,7 @@ server {
                 }
 	}
 
-	location ~ ^/(coauthoring|spellchecker|OfficeWeb|OnlineEditorsExample|CanvasService\.ashx|ConvertService\.ashx|fileDownloader\.ashx|FileUploader\.ashx|FontService\.ashx|ResourceService\.ashx|TrackingService\.ashx|UploadService\.ashx) {
+	location ~ ^/(downloadas|license|cache|upload|uploadold|doc|coauthoring|spellchecker|OfficeWeb|OnlineEditorsExample|CanvasService\.ashx|ConvertService\.ashx|fileDownloader\.ashx|FileUploader\.ashx|FontService\.ashx|ResourceService\.ashx|TrackingService\.ashx|UploadService\.ashx) {
 		proxy_pass {{DOCUMENT_SERVER_HOST_ADDR}};
 		proxy_redirect off;
 
@@ -144,5 +149,43 @@ server {
 		proxy_set_header X-Forwarded-Host $server_name;
 		proxy_set_header X-Forwarded-Proto $scheme;
 	}
+
+         location /healthcheck {
+                rewrite /healthckeck(.*) /$1  break;
+                proxy_pass http://localhost:9810;
+                proxy_redirect ~*/(.*) /healthcheck/$1;
+
+                client_max_body_size 100m;
+
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection "upgrade";
+
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Host $server_name;
+                proxy_set_header X-Forwarded-Proto $scheme;
+
+        }
+
+        location /controlpanel {
+                proxy_pass {{CONTROL_PANEL_HOST_ADDR}};
+         
+                client_max_body_size 100m;
+
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection "upgrade";
+
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Host $server_name;
+                proxy_set_header X-Forwarded-Proto $scheme;
+		proxy_set_header X-REWRITER-URL $scheme://$http_host;
+        }
+
+
 }
 

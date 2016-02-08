@@ -18,7 +18,7 @@ RUN echo "deb http://static.teamlab.com.s3.amazonaws.com/repo/debian/ squeeze ma
     apt-get -y update && \
     apt-get install --force-yes -yq mono-devel mono-complete ca-certificates-mono && \
     echo "#!/bin/sh\nexit 0" > /usr/sbin/policy-rc.d && \
-    apt-get install --force-yes -yq  mysql-server mysql-client sphinxsearch  onlyoffice-communityserver wget htop nano dnsutils monit && \
+    apt-get install --force-yes -yq  mysql-server mysql-client sphinxsearch  onlyoffice-communityserver wget htop nano dnsutils redis-server && \
     mkdir -p /app/onlyoffice/setup/data/mysql && mysqldump onlyoffice > /app/onlyoffice/setup/data/mysql/onlyoffice.sql && \
     rm -rf /var/lib/apt/lists/*
 
