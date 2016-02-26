@@ -83,9 +83,9 @@ All the data are stored in the specially-designated directories, **data volumes*
 To get access to your data from outside the container, you need to mount the volumes. It can be done by specifying the '-v' option in the docker run command.
 
     sudo docker run -i -t -d -p 80:80 \
-        -v /opt/onlyoffice/Logs:/var/log/onlyoffice  \
-        -v /opt/onlyoffice/Data:/var/www/onlyoffice/Data  \
-        -v /opt/onlyoffice/MySQL:/var/lib/mysql  onlyoffice/communityserver
+        -v /app/onlyoffice/CommunityServer/logs:/var/log/onlyoffice  \
+        -v /app/onlyoffice/CommunityServer/data:/var/www/onlyoffice/Data  \
+        -v /app/onlyoffice/CommunityServer/mysql:/var/lib/mysql  onlyoffice/communityserver
 
 Storing the data on the host machine allows you to easily update ONLYOFFICE once the new version is released without losing your data.
 
@@ -163,7 +163,7 @@ Additional ports to be exposed for the mail client correct work:
 ### Running ONLYOFFICE Community Server using HTTPS
 
         sudo docker run -i -t -d -p 80:80  -p 443:443 \
-        -v /opt/onlyoffice/Data:/var/www/onlyoffice/Data  onlyoffice/communityserver
+        -v /app/onlyoffice/CommunityServer/data:/var/www/onlyoffice/Data  onlyoffice/communityserver
 
 Access to the onlyoffice application can be secured using SSL so as to prevent unauthorized access. While a CA certified SSL certificate allows for verification of trust via the CA, a self signed certificates can also provide an equal level of trust verification as long as each client takes some additional steps to verify the identity of your website. Below the instructions on achieving this are provided.
 
@@ -174,8 +174,8 @@ To secure the application via SSL basically two things are needed:
 
 So you need to create and install the following files:
 
-        /opt/onlyoffice/Data/certs/onlyoffice.key
-        /opt/onlyoffice/Data/certs/onlyoffice.crt
+        /app/onlyoffice/CommunityServer/data/certs/onlyoffice.key
+        /app/onlyoffice/CommunityServer/data/certs/onlyoffice.crt
 
 When using CA certified certificates, these files are provided to you by the CA. When using self-signed certificates you need to generate these files yourself. Skip the following section if you are have CA certified SSL certificates.
 
@@ -221,11 +221,11 @@ The default path that the onlyoffice application is configured to look for the S
 The `/var/www/onlyoffice/Data/` path is the path of the data store, which means that you have to create a folder named certs inside `/opt/onlyoffice/Data/` and copy the files into it and as a measure of security you will update the permission on the `onlyoffice.key` file to only be readable by the owner.
 
 ```bash
-mkdir -p /opt/onlyoffice/Data/certs
-cp onlyoffice.key /opt/onlyoffice/Data/certs/
-cp onlyoffice.crt /opt/onlyoffice/Data/certs/
-cp dhparam.pem /opt/onlyoffice/Data/certs/
-chmod 400 /opt/onlyoffice/Data/certs/onlyoffice.key
+mkdir -p /app/onlyoffice/CommunityServer/data/certs
+cp onlyoffice.key /app/onlyoffice/CommunityServer/data/certs/
+cp onlyoffice.crt /app/onlyoffice/CommunityServer/data/certs/
+cp dhparam.pem /app/onlyoffice/CommunityServer/data/certs/
+chmod 400 /app/onlyoffice/CommunityServer/data/certs/onlyoffice.key
 ```
 
 You are now just one step away from having our application secured.
@@ -304,22 +304,9 @@ where
 **STEP 4** Run the new image with the same map paths
 
 	sudo docker run -i -t -d -p 80:80 \
-	-v /opt/onlyoffice/Logs:/var/log/onlyoffice  \
-	-v /opt/onlyoffice/Data:/var/www/onlyoffice/Data  \
-	-v /opt/onlyoffice/MySQL:/var/lib/mysql  onlyoffice/communityserver
-
-
-## Issues
-
-### Docker Issues
-
-As a relatively new project Docker is being worked on and actively developed by its community. So it's recommended to use the latest version of Docker, because the issues that you encounter might have already been fixed with a newer Docker release.
-
-The known Docker issue with ONLYOFFICE Community Server with rpm-based distributives is that sometimes the processes fail to start inside Docker container. Fedora and RHEL/CentOS users should try disabling selinux with setenforce 0. If it fixes the issue then you can either stick with SELinux disabled which is not recommended by RedHat, or switch to using Ubuntu.
-
-### Mono Issues
-
-ONLYOFFICE installation requires the presence of mono (tested for version 3.12.1 or [older](http://www.mono-project.com/docs/getting-started/install/linux/#accessing-older-releases "older")) that may cause problems for some Linux kernel versions. The full list of supported kernel versions is available [here](http://onlyo.co/1PABPEI "here").
+	-v /app/onlyoffice/CommunityServer/logs:/var/log/onlyoffice  \
+	-v /app/onlyoffice/CommunityServer/data:/var/www/onlyoffice/Data  \
+	-v /app/onlyoffice/CommunityServer/mysql:/var/lib/mysql  onlyoffice/communityserver
 
 
 ## Project Information
@@ -332,6 +319,7 @@ License: [GNU GPL v3.0](https://www.gnu.org/copyleft/gpl.html "GNU GPL v3.0")
 
 SaaS version: [http://www.onlyoffice.com](http://www.onlyoffice.com "http://www.onlyoffice.com")
 
+Issues: [http://helpcenter.onlyoffice.com](http://helpcenter.onlyoffice.com/server/docker/community/troubleshooting.aspx "http://helpcenter.onlyoffice.com")
 
 ## User Feedback and Support
 
