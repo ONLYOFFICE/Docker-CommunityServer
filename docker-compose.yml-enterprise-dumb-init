@@ -1,0 +1,110 @@
+version: '2'
+services:
+  onlyoffice-community:
+    container_name: onlyoffice-community
+    image: onlyoffice4enterprise/communityserver-ee:8.7.264
+    hostname: test.rural-market.ru
+    environment:
+      - DOCUMENT_SERVER_HOST=onlyoffice-document
+      - MAIL_SERVER_DB_HOST=onlyoffice-mail
+      - MAIL_SERVER_DB_PORT=3306
+      - MAIL_SERVER_DB_NAME=onlyoffice_mailserver
+      - MAIL_SERVER_DB_USER=mail_admin
+      - MAIL_SERVER_DB_PASS=Isadmin123
+#      - MYSQL_SERVER_HOST=onlyoffice-percona
+#      - MYSQL_SERVER_PORT=3306
+#      - MYSQL_SERVER_DB_NAME=onlyoffice
+#      - MYSQL_SERVER_USER=onlyoffice_user
+#      - MYSQL_SERVER_PASS=i
+#      - CONTROL_PANEL_HOST_ADDR=onlyoffice-controlpanel
+#      - CONTROL_PANEL_PORT_80_TCP=onlyoffice-controlpanel
+    command: [bash,-c,"wget -O /tmp/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.0.1/dumb-init_1.0.1_amd64; chmod +x /tmp/dumb-init; exec /tmp/dumb-init bash --rcfile /app/onlyoffice/run-community-server.sh -i"]
+    #command: [bash,--rcfile,/app/onlyoffice/run-community-server.sh,-i]
+    networks:
+      - onlyoffice
+    ports: ['80:80','443:443','5222:5222']
+    stdin_open: true
+    tty: true
+    volumes:
+      - community_data:/var/www/onlyoffice/Data
+      - community_log:/var/log/onlyoffice
+      - community_mysql_data:/var/lib/mysql
+  onlyoffice-document:
+    container_name: onlyoffice-document
+    image: onlyoffice4enterprise/documentserver-ee:3.6.0.121
+    hostname: test.rural-market.ru
+    command: [bash,-c,"curl https://github.com/Yelp/dumb-init/releases/download/v1.0.1/dumb-init_1.0.1_amd64 -o /tmp/dumb-init --silent -L; chmod +x /tmp/dumb-init; exec /tmp/dumb-init bash --rcfile /app/onlyoffice/run-document-server.sh -i"]
+#    command: [bash,--rcfile,/app/onlyoffice/run-document-server.sh,-i]
+    networks:
+      - onlyoffice
+    stdin_open: true
+    tty: true
+    volumes:
+      - document_data:/var/www/onlyoffice/Data
+      - document_log:/var/log/onlyoffice
+  onlyoffice-mail:
+    container_name: onlyoffice-mail
+    image: onlyoffice/mailserver:1.0.0
+    hostname: test.rural-market.ru
+    networks:
+      - onlyoffice
+    privileged: false
+    ports: ['25:25','143:143','587:587']
+    stdin_open: true
+    tty: true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - mail_data:/var/vmail
+      - mail_certs:/etc/pki/tls/mailserver
+      - mail_log:/var/log
+      - mail_mysql_data:/var/lib/mysql
+  onlyoffice-percona:
+    container_name: onlyoffice-percona
+    image: percona:5.5
+    environment:
+      - MYSQL_ROOT_PASSWORD=i
+      - MYSQL_DATABASE=onlyoffice
+      - MYSQL_USER=onlyoffice_user
+      - MYSQL_PASSWORD=i
+    networks:
+      - onlyoffice
+    expose: ['3306']
+    volumes:
+      - percona_data:/var/lib/mysql
+      - percona_log:/var/log/mysql
+  onlyoffice-controlpanel:
+    container_name: onlyoffice-controlpanel
+    image: onlyoffice4enterprise/controlpanel-ee:1.0.8
+    command: [bash,-c,"wget -O /tmp/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.0.1/dumb-init_1.0.1_amd64; chmod +x /tmp/dumb-init; exec /tmp/dumb-init bash --rcfile /app/onlyoffice-controlpanel/run-controlpanel-server.sh -i"]
+    #command: [bash,--rcfile,/app/onlyoffice-controlpanel/run-controlpanel-server.sh,-i]
+    hostname: test.rural-market.ru
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - community_data:/app/onlyoffice/CommunityServer/data
+      - document_data:/app/onlyoffice/DocumentServer/data
+      - mail_data:/app/onlyoffice/MailServer/data
+      - controlpanel_data:/var/www/onlyoffice-controlpanel/Data
+      - controlpanel_log:/var/log/onlyoffice-controlpanel
+      - controlpanel_mysql_data:/var/lib/mysql
+    networks:
+      - onlyoffice
+    stdin_open: true
+    tty: true
+networks:
+  onlyoffice:
+    driver: 'bridge'
+volumes:
+  percona_data:
+  percona_log:
+  mail_data:
+  mail_certs:
+  mail_log:
+  mail_mysql_data:
+  document_data:
+  document_log:
+  community_data:
+  community_log:
+  community_mysql_data:
+  controlpanel_data:
+  controlpanel_log:
+  controlpanel_mysql_data:
