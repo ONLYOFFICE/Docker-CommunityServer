@@ -6,8 +6,6 @@
     - [Automatic Restart](#auto-restart)
     - [Storing Data](#storing-data)
     - [Using MySQL](#using-mysql)
-        + [Using a Linked MySQL Container](#using-a-linked-mysql-container)
-        + [Connecting to an External MySQL Server](#connecting-to-an-external-mysql-server)
     - [Running ONLYOFFICE Community Server on Different Port](#running-onlyoffice-community-server-on-different-port)
     - [Exposing Additional Ports](#exposing-additional-ports)
     - [Running ONLYOFFICE Community Server using HTTPS](#running-onlyoffice-community-server-using-https)
@@ -17,9 +15,6 @@
         + [Available Configuration Parameters](#available-configuration-parameters)
 * [Installing ONLYOFFICE Community Server integrated with Document and Mail Servers](#installing-onlyoffice-community-server-integrated-with-document-and-mail-servers)
 * [Upgrading ONLYOFFICE Community Server](#upgrading-onlyoffice-community-server)
-* [Issues](#issues)
-    - [Docker Issues](#docker-issues)
-    - [Mono Issues](#mono-issues)
 * [Project Information](#project-information)
 * [User Feedback and Support](#user-feedback-and-support)
 
@@ -57,7 +52,7 @@ ONLYOFFICE Community Server is a free open source collaborative system developed
 * **Swap file**: at least 2 GB
 * **HDD**: at least 2 GB of free space
 * **Distributive**: 64-bit Red Hat, CentOS or other compatible distributive with kernel version 3.8 or later, 64-bit Debian, Ubuntu or other compatible distributive with kernel version 3.8 or later
-* **Docker**: version 1.4.1 or later
+* **Docker**: version 1.9.0 or later
 
 ## Running Docker Image
 
@@ -94,28 +89,6 @@ ONLYOFFICE uses **MySQL 5.5** to store its data.
 
 By default the MySQL server is started internally. But you can easily configure the image to use an external MySQL database. 
 
-####Using a Linked MySQL Container
-
-First of all you will need to run the MySQL image configuring the available environment variables. We use the image from the [official MySQL repository](https://registry.hub.docker.com/_/mysql/ "official MySQL repository").
-
-```bash
-	sudo docker run --name onlyoffice-mysql-server \
-	-e MYSQL_ROOT_PASSWORD=my-secret-pw \
-	-e MYSQL_DATABASE="onlyoffice" \
-	-e MYSQL_USER="usr_onlyoffice" \
-	-e MYSQL_PASSWORD="onlyoffice123" \
-	-d mysql:5.5
-```
-
-Then run the ONLYOFFICE Community Server image and link it with a MySQL container:
-
-```bash
-	sudo docker run -i -t -d -p 80:80 -p 5222:5222 -p 443:443 \
-	--link onlyoffice-mysql-server:mysql_server \
-	onlyoffice/communityserver
-```
-
-####Connecting to an External MySQL Server
 If you have an external MySQL server installed on your machine, execute the following command:
 
 ```bash
@@ -250,34 +223,69 @@ Below is the complete list of parameters that can be set using environment varia
 
 ## Installing ONLYOFFICE Community Server integrated with Document and Mail Servers
 
-ONLYOFFICE Community Server is a part of ONLYOFFICE Free Edition that comprises also Document Server and Mail Server. To install them, follow these easy steps:
+ONLYOFFICE Community Server is a part of ONLYOFFICE Community Edition that comprises also Document Server and Mail Server. To install them, follow these easy steps:
 
-**STEP 1**: Installing ONLYOFFICE Document Server.
+**STEP 1**: Create the 'onlyoffice' network.
 
 ```bash
-sudo docker run -i -t -d  --name onlyoffice-document-server onlyoffice/documentserver
+docker network create --driver bridge onlyoffice
+```
+Than launch containers on it using the 'docker run --net onlyoffice' option:
+
+**STEP 1**: Install ONLYOFFICE Document Server.
+
+```bash
+sudo docker run --net onlyoffice -i -t -d --restart=always --name onlyoffice-document-server \
+	-v /app/onlyoffice/DocumentServer/data:/var/www/onlyoffice/Data \
+	-v /app/onlyoffice/DocumentServer/logs:/var/log/onlyoffice \
+	onlyoffice/documentserver
 ```
 
-**STEP 2**: Installing ONLYOFFICE Mail Server. 
+**STEP 2**: Install ONLYOFFICE Mail Server. 
 
 For the mail server correct work you need to specify its hostname 'yourdomain.com'.
 To learn more, refer to the [ONLYOFFICE Mail Server documentation](https://github.com/ONLYOFFICE/MailServer "ONLYOFFICE Mail Server documentation").
 
 ```bash
-sudo docker run --privileged -i -t -d --name onlyoffice-mail-server -p 25:25 -p 143:143 -p 587:587 \
--h yourdomain.com onlyoffice/mailserver
+sudo docker run --net onlyoffice --privileged -i -t -d --restart=always --name onlyoffice-mail-server \
+	-p 25:25 -p 143:143 -p 587:587 \
+	-v /app/onlyoffice/MailServer/data:/var/vmail \
+	-v /app/onlyoffice/MailServer/data/certs:/etc/pki/tls/mailserver \
+	-v /app/onlyoffice/MailServer/logs:/var/log \
+	-v /app/onlyoffice/MailServer/mysql:/var/lib/mysql \
+	-h yourdomain.com \
+	onlyoffice/mailserver
 ```
 
-**STEP 3**: Installing ONLYOFFICE Community Server
+**STEP 3**: Install ONLYOFFICE Community Server
 
 ```bash
-sudo docker run -i -t -d -p 80:80 -p 5222:5222 -p 443:443 \
---link onlyoffice-mail-server:mail_server \
---link onlyoffice-document-server:document_server \
-onlyoffice/communityserver
+sudo docker run --net onlyoffice -i -t -d -p 80:80 --restart=always --name onlyoffice-community-server \
+	-p 80:80 -p 5222:5222 -p 443:443 \
+	-v /app/onlyoffice/CommunityServer/data:/var/www/onlyoffice/Data \
+	-v /app/onlyoffice/CommunityServer/mysql:/var/lib/mysql \
+	-v /app/onlyoffice/CommunityServer/logs:/var/log/onlyoffice \
+	-v /app/onlyoffice/DocumentServer/data:/var/www/onlyoffice/DocumentServerData \
+	-e DOCUMENT_SERVER_PORT_80_TCP_ADDR=onlyoffice-document-server \
+	-e MAIL_SERVER_DB_HOST=onlyoffice-mail-server \
+	onlyoffice/communityserver
 ```
 
-Alternatively, you can use [docker-compose](https://docs.docker.com/compose/install "docker-compose") to install the whole ONLYOFFICE Free Edition at once. For the mail server correct work you need to specify its hostname 'yourdomain.com'. Assuming you have docker-compose installed, execute the following command:
+Alternatively, you can use an automatic installation script to install the whole ONLYOFFICE Community Edition at once. For the mail server correct work you need to specify its hostname 'yourdomain.com'.
+
+**STEP 1**: Download the Community Edition Docker script file
+
+```bash
+wget http://download.onlyoffice.com/install/opensource-install.sh
+```
+
+**STEP 2**: Install ONLYOFFICE Community Edition executing the following command:
+
+```bash
+bash opensource-install.sh -md yourdomain.com
+```
+
+Or, use [docker-compose](https://docs.docker.com/compose/install "docker-compose"). For the mail server correct work you need to specify its hostname 'yourdomain.com'. Assuming you have docker-compose installed, execute the following command:
 
 ```bash
 wget https://raw.githubusercontent.com/ONLYOFFICE/Docker-CommunityServer/master/docker-compose.yml
@@ -326,4 +334,3 @@ Issues: [http://helpcenter.onlyoffice.com](http://helpcenter.onlyoffice.com/serv
 If you have any problems with or questions about this image, please contact us through a [dev.onlyoffice.org][1].
 
   [1]: http://dev.onlyoffice.org
-
