@@ -499,11 +499,12 @@ fi
 if [ "${CONTROL_PANEL_ENABLED}" == "true" ]; then
 	sed 's,{{CONTROL_PANEL_HOST_ADDR}},'"http:\/\/${CONTROL_PANEL_PORT_80_TCP_ADDR}"',' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
 
-	# change web.appsettings link to editor
-	sed '/web\.controlpanel\.url/s/\(value\s*=\s*\"\)[^\"]*\"/\1\/controlpanel\/\"/' -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
+	# change web.appsettings link to controlpanel
+	sed '/web\.controlpanel\.url/s/\(value\s*=\s*\"\)[^\"]*\"/\1\/controlpanel\/\"/' -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config;
+	sed '/web\.controlpanel\.url/s/\(value\s*=\s*\"\)[^\"]*\"/\1\/controlpanel\/\"/' -i ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config;
 
 else
-	# delete documentserver section
+	# delete controlpanel section from nginx template
 	sed '/controlpanel/,/}$/d' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
 fi
 
