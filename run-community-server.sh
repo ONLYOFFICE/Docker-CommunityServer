@@ -54,6 +54,10 @@ MYSQL_SERVER_USER=${MYSQL_SERVER_USER:-"root"}
 MYSQL_SERVER_PASS=${MYSQL_SERVER_PASS:-""}
 MYSQL_SERVER_EXTERNAL=false;
 
+PARTNER_DATA_FILE="${ONLYOFFICE_DATA_DIR}/json-data.txt";
+
+check_partnerdata
+
 re='^[0-9]+$'
 
 if ! [[ ${ONLYOFFICE_MONOSERVE_COUNT} =~ $re ]] ; then
@@ -226,6 +230,11 @@ change_connections(){
 	sed '/'${1}'/s/\(connectionString\s*=\s*\"\)[^\"]*\"/\1Server='${MYSQL_SERVER_HOST}';Port='${MYSQL_SERVER_PORT}';Database='${MYSQL_SERVER_DB_NAME}';User ID='${MYSQL_SERVER_USER}';Password='${MYSQL_SERVER_PASS}';Pooling=true;Character Set=utf8;AutoEnlist=false\"/' -i ${2}
 }
 
+check_partnerdata(){
+	if [ -f ${PARTNER_DATA_FILE} ]; then
+		cp ${PARTNER_DATA_FILE} ${ONLYOFFICE_ROOT_DIR}/App_Data/static/partnerdata
+	fi
+}
 
 if [ "${MYSQL_SERVER_EXTERNAL}" == "true" ]; then
 
