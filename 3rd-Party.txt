@@ -1,0 +1,6 @@
+Docker-CommunityServer uses code from the following 3rd party projects.
+
+1. wait-for-it (https://github.com/vishnubob/wait-for-it/)
+
+License:        MIT
+License File:   assets\tools\wait-for-it.license
