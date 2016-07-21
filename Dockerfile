@@ -31,7 +31,7 @@ RUN echo "${SOURCE_REPO_URL}" >> /etc/apt/sources.list && \
     apt-get -y update && \
     apt-get install --force-yes -yq mono-complete ca-certificates-mono && \
     echo "#!/bin/sh\nexit 0" > /usr/sbin/policy-rc.d && \
-    apt-get install --force-yes -yq dumb-init  mysql-server mysql-client sphinxsearch onlyoffice-communityserver htop nano dnsutils && \
+    apt-get install --force-yes -yq dumb-init  sphinxsearch onlyoffice-communityserver htop nano dnsutils && \
     rm -rf /var/lib/apt/lists/*
 
 
