@@ -309,7 +309,8 @@ if [ "${MYSQL_SERVER_EXTERNAL}" == "true" ]; then
 else
 	# create db if not exist
 	if [ ! -f /var/lib/mysql/ibdata1 ]; then
-		mysql_install_db
+		cp /etc/mysql/my.cnf /usr/share/mysql/my-default.cnf
+		mysql_install_db || true
 		service mysql start
 
 		echo "CREATE DATABASE onlyoffice CHARACTER SET utf8 COLLATE utf8_general_ci" | mysql;
