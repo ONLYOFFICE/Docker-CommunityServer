@@ -493,7 +493,7 @@ END
 
     MAIL_SERVER_API_HOST_ADDRESS=${MAIL_SERVER_API_HOST};
     if [[ $MAIL_SERVER_DB_HOST == "onlyoffice-mail-server" ]]; then
-    MAIL_SERVER_API_HOST_ADDDRESS=${MAIL_SERVER_DB_HOST};
+    MAIL_SERVER_API_HOST_ADDRESS=${MAIL_SERVER_DB_HOST};
     fi
 
     mysql_scalar_exec "DELETE FROM mail_server_server;"
