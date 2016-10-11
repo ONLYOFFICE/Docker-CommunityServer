@@ -1,5 +1,6 @@
 #!/bin/bash
 
+SERVER_HOST="";
 ONLYOFFICE_DIR="/var/www/onlyoffice"
 ONLYOFFICE_DATA_DIR="${ONLYOFFICE_DIR}/Data"
 ONLYOFFICE_SERVICES_DIR="${ONLYOFFICE_DIR}/Services"
@@ -13,6 +14,8 @@ ONLYOFFICE_MONOSERVE_COUNT=${ONLYOFFICE_MONOSERVE_COUNT:-2};
 ONLYOFFICE_MODE=${ONLYOFFICE_MODE:-"SERVER"};
 ONLYOFFICE_GOD_DIR="/etc/god/conf.d"
 ONLYOFFICE_CRON_PATH="/etc/cron.d/onlyoffice"
+DOCKER_ONLYOFFICE_SUBNET=${DOCKER_ONLYOFFICE_SUBNET:-""};
+
 NGINX_CONF_DIR="/etc/nginx/sites-enabled"
 NGINX_ROOT_DIR="/etc/nginx"
 
@@ -377,6 +380,13 @@ else
 	cp ${SYSCONF_TEMPLATES_DIR}/nginx/onlyoffice ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice;
 fi
 
+if [ ${DOCKER_ONLYOFFICE_SUBNET} ]; then
+	sed 's,{{DOCKER_ONLYOFFICE_SUBNET}},'"${DOCKER_ONLYOFFICE_SUBNET}"',' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
+else
+	sed '/{{DOCKER_ONLYOFFICE_SUBNET}}/d' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
+fi
+
+
 echo "Start=No" >> /etc/init.d/sphinxsearch 
 
 if ! grep -q "name=\"textindex\"" ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config; then
@@ -384,13 +394,19 @@ if ! grep -q "name=\"textindex\"" ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/TeamLabS
 fi
 
 if [ "${DOCUMENT_SERVER_ENABLED}" == "true" ]; then
-	sed 's,{{DOCUMENT_SERVER_HOST_ADDR}},'"${DOCUMENT_SERVER_PROTOCOL}:\/\/${DOCUMENT_SERVER_HOST}"',' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
+    sed 's,{{DOCUMENT_SERVER_HOST_ADDR}},'"${DOCUMENT_SERVER_PROTOCOL}:\/\/${DOCUMENT_SERVER_HOST}"',' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
 
-	# change web.appsettings link to editor
+    # change web.appsettings link to editor
     sed '/files\.docservice\.url\.converter/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_PROTOCOL}':\/\/'${DOCUMENT_SERVER_HOST}'\/ConvertService\.ashx\"!' -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
     sed '/files\.docservice\.url\.api/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_API_URL}'\"!' -i ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
     sed '/files\.docservice\.url\.storage/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_PROTOCOL}':\/\/'${DOCUMENT_SERVER_HOST}'\/FileUploader\.ashx\"!' -i ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
     sed '/files\.docservice\.url\.command/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_PROTOCOL}':\/\/'${DOCUMENT_SERVER_HOST}'\/coauthoring\/CommandService\.ashx\"!' -i ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
+
+    if [ -n "${DOCKER_ONLYOFFICE_SUBNET}" ] && [ -n "${SERVER_HOST}" ]; then
+	sed '/files\.docservice\.url\.portal/s!\(value\s*=\s*\"\)[^\"]*\"!\1http:\/\/'${SERVER_HOST}'\"!' -i ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
+	
+    fi
+
 
     if ! grep -q "files\.docservice\.url\.command" ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config; then
           sed '/files\.docservice\.url\.storage/a <add key=\"files\.docservice\.url\.command\" value=\"'${DOCUMENT_SERVER_PROTOCOL}':\/\/'${DOCUMENT_SERVER_HOST}'\/coauthoring\/CommandService\.ashx\" \/>/' -i ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
