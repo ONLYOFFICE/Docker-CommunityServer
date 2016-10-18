@@ -631,6 +631,7 @@ else
 
 	chown -R onlyoffice:onlyoffice /var/log/onlyoffice
 	chown -R onlyoffice:onlyoffice /var/www/onlyoffice/Data
+	chown -R onlyoffice:onlyoffice /var/www/onlyoffice/DocumentServerData
 
 	sleep 10s;
 
