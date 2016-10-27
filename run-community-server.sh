@@ -54,6 +54,8 @@ MYSQL_SERVER_USER=${MYSQL_SERVER_USER:-"root"}
 MYSQL_SERVER_PASS=${MYSQL_SERVER_PASS:-""}
 MYSQL_SERVER_EXTERNAL=false;
 
+mkdir -p "${SSL_CERTIFICATES_DIR}"
+
 re='^[0-9]+$'
 
 if ! [[ ${ONLYOFFICE_MONOSERVE_COUNT} =~ $re ]] ; then
@@ -611,6 +613,7 @@ else
 	chown -R onlyoffice:onlyoffice /var/log/onlyoffice
 	chown -R onlyoffice:onlyoffice /var/www/onlyoffice/Data
 	chown -R onlyoffice:onlyoffice /var/www/onlyoffice/DocumentServerData
+	chown -R onlyoffice:onlyoffice /var/www/onlyoffice/Data/certs
 
 	sleep 10s;
 
