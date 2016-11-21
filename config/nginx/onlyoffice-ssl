@@ -88,9 +88,15 @@ server {
 		gzip_proxied     expired no-cache no-store private auth;
 		gzip_types       text/html application/x-javascript text/css application/xml;
 
+		set $X_REWRITER_URL $scheme://$http_host;
+        
+        if ($http_x_rewriter_url != '') {
+            set $X_REWRITER_URL $http_x_rewriter_url ;
+		}    
+		
 		fastcgi_index   Default.aspx;
 		fastcgi_intercept_errors on;
-		fastcgi_param   HTTP_X_REWRITER_URL             $scheme://$http_host;
+		fastcgi_param   HTTP_X_REWRITER_URL             $X_REWRITER_URL;
 		fastcgi_param   SERVER_NAME                     $host;
 		fastcgi_param   SCRIPT_FILENAME                 $document_root$fastcgi_script_name;
 		fastcgi_param   PATH_INFO                       "";
