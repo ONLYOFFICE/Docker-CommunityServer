@@ -57,6 +57,7 @@ MYSQL_SERVER_USER=${MYSQL_SERVER_USER:-"root"}
 MYSQL_SERVER_PASS=${MYSQL_SERVER_PASS:-""}
 MYSQL_SERVER_EXTERNAL=false;
 
+mkdir -p "${SSL_CERTIFICATES_DIR}"
 PARTNER_DATA_FILE="${ONLYOFFICE_DATA_DIR}/json-data.txt";
 
 check_partnerdata
@@ -517,9 +518,14 @@ END
         echo "mysql mail server access token is ${MYSQL_MAIL_SERVER_ACCESS_TOKEN}";
     fi
 
+    MAIL_SERVER_API_HOST_ADDRESS=${MAIL_SERVER_API_HOST};
+    if [[ $MAIL_SERVER_DB_HOST == "onlyoffice-mail-server" ]]; then
+    MAIL_SERVER_API_HOST_ADDRESS=${MAIL_SERVER_DB_HOST};
+    fi
+
     mysql_scalar_exec "DELETE FROM mail_server_server;"
     mysql_scalar_exec "INSERT INTO mail_server_server (mx_record, connection_string, server_type, smtp_settings_id, imap_settings_id) \
-                       VALUES ('${MAIL_SERVER_HOSTNAME}', '{\"DbConnection\" : \"Server=${MAIL_SERVER_DB_HOST};Database=${MAIL_SERVER_DB_NAME};User ID=${MAIL_SERVER_DB_USER};Password=${MAIL_SERVER_DB_PASS};Pooling=True;Character Set=utf8;AutoEnlist=false\", \"Api\":{\"Protocol\":\"http\", \"Server\":\"${MAIL_SERVER_API_HOST}\", \"Port\":\"${MAIL_SERVER_API_PORT}\", \"Version\":\"v1\",\"Token\":\"${MYSQL_MAIL_SERVER_ACCESS_TOKEN}\"}}', 2, '${id2}', '${id1}');"
+                       VALUES ('${MAIL_SERVER_HOSTNAME}', '{\"DbConnection\" : \"Server=${MAIL_SERVER_DB_HOST};Database=${MAIL_SERVER_DB_NAME};User ID=${MAIL_SERVER_DB_USER};Password=${MAIL_SERVER_DB_PASS};Pooling=True;Character Set=utf8;AutoEnlist=false\", \"Api\":{\"Protocol\":\"http\", \"Server\":\"${MAIL_SERVER_API_HOST_ADDRESS}\", \"Port\":\"${MAIL_SERVER_API_PORT}\", \"Version\":\"v1\",\"Token\":\"${MYSQL_MAIL_SERVER_ACCESS_TOKEN}\"}}', 2, '${id2}', '${id1}');"
 fi
 
 if [ "${CONTROL_PANEL_ENABLED}" == "true" ]; then
@@ -632,6 +638,7 @@ else
 	chown -R onlyoffice:onlyoffice /var/log/onlyoffice
 	chown -R onlyoffice:onlyoffice /var/www/onlyoffice/Data
 	chown -R onlyoffice:onlyoffice /var/www/onlyoffice/DocumentServerData
+	chown -R onlyoffice:onlyoffice /var/www/onlyoffice/Data/certs
 
 	sleep 10s;
 
