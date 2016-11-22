@@ -672,6 +672,7 @@ else
 	service onlyofficeMailWatchdog start
 	service onlyofficeNotify start
 	service onlyofficeBackup start
+	service onlyofficeHealthCheck start
 fi
 
 service god start
