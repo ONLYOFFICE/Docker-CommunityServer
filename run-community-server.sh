@@ -58,7 +58,6 @@ MYSQL_SERVER_PASS=${MYSQL_SERVER_PASS:-""}
 MYSQL_SERVER_EXTERNAL=false;
 
 mkdir -p "${SSL_CERTIFICATES_DIR}"
-PARTNER_DATA_FILE="${ONLYOFFICE_DATA_DIR}/json-data.txt";
 
 check_partnerdata
 
@@ -235,8 +234,19 @@ change_connections(){
 }
 
 check_partnerdata(){
+	PARTNER_DATA_FILE="${ONLYOFFICE_DATA_DIR}/json-data.txt";
+
 	if [ -f ${PARTNER_DATA_FILE} ]; then
-		cp ${PARTNER_DATA_FILE} ${ONLYOFFICE_ROOT_DIR}/App_Data/static/partnerdata
+		for serverID in $(seq 1 ${ONLYOFFICE_MONOSERVE_COUNT});
+		do
+			index=$serverID;
+
+			if [ $index == 1 ]; then
+				index="";
+			fi
+
+			cp ${PARTNER_DATA_FILE} ${ONLYOFFICE_ROOT_DIR}${index}/App_Data/static/partnerdata/
+		done
 	fi
 }
 
