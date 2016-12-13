@@ -563,7 +563,12 @@ do
 		continue;
 	fi
 
-	rm -Rf ${ONLYOFFICE_ROOT_DIR}$serverID;
+	rm -rfd ${ONLYOFFICE_ROOT_DIR}$serverID;
+
+    if [ -d "${ONLYOFFICE_ROOT_DIR}$serverID" ]; then
+        rm -rfd ${ONLYOFFICE_ROOT_DIR}$serverID;
+    fi
+
 	cp -R ${ONLYOFFICE_ROOT_DIR} ${ONLYOFFICE_ROOT_DIR}$serverID;
 	chown -R onlyoffice:onlyoffice ${ONLYOFFICE_ROOT_DIR}$serverID;
 
