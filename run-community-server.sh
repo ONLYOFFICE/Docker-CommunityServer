@@ -59,6 +59,23 @@ MYSQL_SERVER_EXTERNAL=false;
 
 mkdir -p "${SSL_CERTIFICATES_DIR}"
 
+check_partnerdata(){
+	PARTNER_DATA_FILE="${ONLYOFFICE_DATA_DIR}/json-data.txt";
+
+	if [ -f ${PARTNER_DATA_FILE} ]; then
+		for serverID in $(seq 1 ${ONLYOFFICE_MONOSERVE_COUNT});
+		do
+			index=$serverID;
+
+			if [ $index == 1 ]; then
+				index="";
+			fi
+
+			cp ${PARTNER_DATA_FILE} ${ONLYOFFICE_ROOT_DIR}${index}/App_Data/static/partnerdata/
+		done
+	fi
+}
+
 check_partnerdata
 
 re='^[0-9]+$'
@@ -231,23 +248,6 @@ change_connections(){
 	fi
 
 	sed '/'${1}'/s/\(connectionString\s*=\s*\"\)[^\"]*\"/\1Server='${MYSQL_SERVER_HOST}';Port='${MYSQL_SERVER_PORT}';Database='${MYSQL_SERVER_DB_NAME}';User ID='${MYSQL_SERVER_USER}';Password='${MYSQL_SERVER_PASS}';Pooling=true;Character Set=utf8;AutoEnlist=false\"/' -i ${2}
-}
-
-check_partnerdata(){
-	PARTNER_DATA_FILE="${ONLYOFFICE_DATA_DIR}/json-data.txt";
-
-	if [ -f ${PARTNER_DATA_FILE} ]; then
-		for serverID in $(seq 1 ${ONLYOFFICE_MONOSERVE_COUNT});
-		do
-			index=$serverID;
-
-			if [ $index == 1 ]; then
-				index="";
-			fi
-
-			cp ${PARTNER_DATA_FILE} ${ONLYOFFICE_ROOT_DIR}${index}/App_Data/static/partnerdata/
-		done
-	fi
 }
 
 if [ "${MYSQL_SERVER_EXTERNAL}" == "true" ]; then
@@ -563,7 +563,12 @@ do
 		continue;
 	fi
 
-	rm -Rf ${ONLYOFFICE_ROOT_DIR}$serverID;
+	rm -rfd ${ONLYOFFICE_ROOT_DIR}$serverID;
+
+    if [ -d "${ONLYOFFICE_ROOT_DIR}$serverID" ]; then
+        rm -rfd ${ONLYOFFICE_ROOT_DIR}$serverID;
+    fi
+
 	cp -R ${ONLYOFFICE_ROOT_DIR} ${ONLYOFFICE_ROOT_DIR}$serverID;
 	chown -R onlyoffice:onlyoffice ${ONLYOFFICE_ROOT_DIR}$serverID;
 
