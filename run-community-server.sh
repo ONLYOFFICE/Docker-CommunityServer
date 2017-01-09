@@ -99,7 +99,7 @@ cp ${SYSCONF_TEMPLATES_DIR}/nginx/onlyoffice-init ${NGINX_CONF_DIR}/onlyoffice
 rm -f /etc/nginx/conf.d/*.conf
 
 rsyslogd 
-service nginx start
+service nginx restart
 
 if [ ${ONLYOFFICE_SERVICES_INTERNAL_HOST} ]; then
 	ONLYOFFICE_SERVICES_EXTERNAL=true;
@@ -650,10 +650,14 @@ else
 		echo "fix docker bug volume mapping for onlyoffice";
 	fi
 
-	chown -R onlyoffice:onlyoffice /var/log/onlyoffice
-	chown -R onlyoffice:onlyoffice /var/www/onlyoffice/Data
+	chown -R onlyoffice:onlyoffice /var/log/onlyoffice	
 	chown -R onlyoffice:onlyoffice /var/www/onlyoffice/DocumentServerData
 	chown -R onlyoffice:onlyoffice /var/www/onlyoffice/Data/certs
+	
+        if [ "$(ls -alhd /var/www/onlyoffice/Data | awk '{ print $3 }')" != "onlyoffice" ]; then
+              chown -R onlyoffice:onlyoffice /var/www/onlyoffice/Data
+        fi
+
 
 	sleep 10s;
 
