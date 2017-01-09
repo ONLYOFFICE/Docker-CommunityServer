@@ -658,9 +658,6 @@ else
               chown -R onlyoffice:onlyoffice /var/www/onlyoffice/Data
         fi
 
-
-	sleep 10s;
-
 	for serverID in $(seq 1 ${ONLYOFFICE_MONOSERVE_COUNT});
 	do
 		index=$serverID;
@@ -674,6 +671,8 @@ else
 		service monoserve$index stop
 		service monoserve$index start
 	done
+
+	sleep 10s;
 
 	service monoserveApiSystem start
 	service monoserveApiSystem stop
@@ -703,10 +702,10 @@ if [ "${ONLYOFFICE_MODE}" == "SERVER" ]; then
 
 		if [ $index == 1 ]; then
 			index="";
-			wget -qO- --no-check-certificate --timeout=1 -t 1 "http://localhost/warmup/Startup.aspx?restart=true" &> /dev/null;
+			wget -qO- --no-check-certificate --timeout=1 -t 1 "http://localhost/warmup/Default.aspx" &> /dev/null;
 		fi
 
-		wget -qO- --no-check-certificate --timeout=1 -t 1 "http://localhost/warmup'${index}'/Startup.aspx?restart=true" &> /dev/null;
+		wget -qO- --no-check-certificate --timeout=1 -t 1 "http://localhost/warmup'${index}'/Default.aspx" &> /dev/null;
 	done
 
 	for serverID in  $(seq 1 ${ONLYOFFICE_MONOSERVE_COUNT});
@@ -715,14 +714,14 @@ if [ "${ONLYOFFICE_MODE}" == "SERVER" ]; then
 
 		if [ $index == 1 ]; then
 			index="";
-			wget_retry "http://localhost/warmup/Startup.aspx?restart=true";
+			wget_retry "http://localhost/warmup/Default.aspx";
 		fi
 
 		if [ ${LOG_DEBUG} ]; then
 			echo "run monoserve warmup$index";
 		fi
 
-		wget_retry "http://localhost/warmup$index/Startup.aspx?restart=true";
+		wget_retry "http://localhost/warmup$index/Default.aspx";
 
 	done
 
