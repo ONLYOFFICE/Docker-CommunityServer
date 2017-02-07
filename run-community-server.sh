@@ -278,8 +278,9 @@ if [ "${MYSQL_SERVER_EXTERNAL}" == "true" ]; then
 
 	if [ -z ${DB_IS_EXIST} ]; then
 		mysql_scalar_exec "CREATE DATABASE ${MYSQL_SERVER_DB_NAME} CHARACTER SET utf8 COLLATE utf8_general_ci" "opt_ignore_db_name";
-		DB_CHARACTER_SET_NAME="utf8";	
+		DB_CHARACTER_SET_NAME="utf8";
 		DB_COLLATION_NAME="utf8_general_ci";
+		DB_TABLES_COUNT=0;
 
 		if [ ${LOG_DEBUG} ]; then
 			echo "create db ${MYSQL_SERVER_DB_NAME}";
@@ -395,6 +396,12 @@ if [ ${DOCKER_ONLYOFFICE_SUBNET} ]; then
 	sed 's,{{DOCKER_ONLYOFFICE_SUBNET}},'"${DOCKER_ONLYOFFICE_SUBNET}"',' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
 else
 	sed '/{{DOCKER_ONLYOFFICE_SUBNET}}/d' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
+fi
+
+if [ ${ONLYOFFICE_SERVICES_INTERNAL_HOST} ]; then
+	sed 's,{{ONLYOFFICE_SERVICES_HOST}},'"${ONLYOFFICE_SERVICES_INTERNAL_HOST}"',' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
+else
+	sed 's,{{ONLYOFFICE_SERVICES_HOST}},'"localhost"',' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
 fi
 
 
@@ -737,3 +744,5 @@ if [ "${ONLYOFFICE_MODE}" == "SERVER" ]; then
 		echo "FINISH";
 	fi
 fi
+
+exec tail -f /dev/null

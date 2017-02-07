@@ -46,5 +46,6 @@ VOLUME ["/var/lib/mysql"]
 
 EXPOSE 80 443 5222 3306 9865 9888 9866 9871 9882 5280
 
+ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 
-CMD exec dumb-init bash --rcfile /app/onlyoffice/run-community-server.sh -i;
+CMD ["/app/onlyoffice/run-community-server.sh"];
