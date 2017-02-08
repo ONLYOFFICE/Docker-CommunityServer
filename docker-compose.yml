@@ -1,23 +1,87 @@
-communityserver:
-  image: onlyoffice/communityserver
-  links:
-   - documentserver:document_server
-   - mailserver:mail_server
-  ports:
-   - "80:80"
-  stdin_open: true
-  tty: true
-documentserver:
-  image: onlyoffice/documentserver
-  stdin_open: true
-  tty: true
-mailserver:
-  image: onlyoffice/mailserver
-  hostname: yourdomain.com
-  privileged: true
-  ports:
-   - "25:25"
-   - "143:143"
-   - "587:587"
-  stdin_open: true
-  tty: true
+version: '2'
+services:
+  onlyoffice-community:
+    container_name: onlyoffice-community
+    image: onlyoffice/communityserver
+    environment:
+     - DOCUMENT_SERVER_HOST=onlyoffice-document
+     - MAIL_SERVER_DB_HOST=onlyoffice-mail
+     - MAIL_SERVER_DB_PORT=3306
+     - MAIL_SERVER_DB_NAME=onlyoffice_mailserver
+     - MAIL_SERVER_DB_USER=mail_admin
+     - MAIL_SERVER_DB_PASS=Isadmin123
+     - MYSQL_SERVER_HOST=onlyoffice-percona
+     - MYSQL_SERVER_PORT=3306
+     - MYSQL_SERVER_DB_NAME=onlyoffice
+     - MYSQL_SERVER_USER=onlyoffice_user
+     - MYSQL_SERVER_PASS=i
+    networks:
+     - onlyoffice
+    ports:
+     - '80:80'
+     - '443:443'
+     - '5222:5222'
+    stdin_open: true
+    tty: true
+    volumes:
+     - onlyoffice_community_data:/var/www/onlyoffice/Data
+     - onlyoffice_community_log:/var/log/onlyoffice
+     - onlyoffice_community_mysql_data:/var/lib/mysql
+  onlyoffice-document:
+    container_name: onlyoffice-document
+    image: onlyoffice/documentserver
+    networks:
+     - onlyoffice
+    stdin_open: true
+    tty: true
+    volumes:
+     - onlyoffice_document_data:/var/www/onlyoffice/Data
+     - onlyoffice_document_log:/var/log/onlyoffice
+  onlyoffice-mail:
+    container_name: onlyoffice-mail
+    hostname: test.rural-market.ru
+    image: onlyoffice/mailserver
+    networks:
+     - onlyoffice
+    hostname: oo.rural-market.ru
+    privileged: false
+    ports:
+     - '25:25'
+     - '143:143'
+     - '587:587'
+    stdin_open: true
+    tty: true
+    volumes:
+     - onlyoffice_mail_data:/var/vmail
+     - onlyoffice_mail_certs:/etc/pki/tls/mailserver
+     - onlyoffice_mail_log:/var/log
+     - onlyoffice_mail_mysql_data:/var/lib/mysql
+  onlyoffice-percona:
+    container_name: onlyoffice-percona
+    image: percona:5.5
+    environment:
+      - MYSQL_ROOT_PASSWORD=i
+      - MYSQL_DATABASE=onlyoffice
+      - MYSQL_USER=onlyoffice_user
+      - MYSQL_PASSWORD=i
+    networks:
+      - onlyoffice
+    expose: 
+      - '3306'
+    volumes:
+      - onlyoffice_percona_data:/var/lib/mysql
+#    volume_driver: onlyoffice
+networks:
+  onlyoffice:
+    driver: 'bridge'
+volumes:
+  onlyoffice_percona_data:
+  onlyoffice_mail_data:
+  onlyoffice_mail_certs:
+  onlyoffice_mail_log:
+  onlyoffice_mail_mysql_data:
+  onlyoffice_document_data:
+  onlyoffice_document_log:
+  onlyoffice_community_data:
+  onlyoffice_community_log:
+  onlyoffice_community_mysql_data:
