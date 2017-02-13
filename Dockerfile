@@ -35,8 +35,8 @@ RUN echo "${SOURCE_REPO_URL}" >> /etc/apt/sources.list && \
     rm -rf /var/lib/apt/lists/*
 
 
-ADD config /app/onlyoffice/setup/config/
-ADD assets /app/onlyoffice/setup/assets/
+ADD config /app/onlyoffice/config/
+ADD assets /app/onlyoffice/assets/
 ADD run-community-server.sh /app/onlyoffice/run-community-server.sh
 RUN chmod -R 755 /app/onlyoffice/*.sh
 
