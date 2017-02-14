@@ -15,6 +15,8 @@ ONLYOFFICE_MODE=${ONLYOFFICE_MODE:-"SERVER"};
 ONLYOFFICE_GOD_DIR="/etc/god/conf.d"
 ONLYOFFICE_CRON_PATH="/etc/cron.d/onlyoffice"
 DOCKER_ONLYOFFICE_SUBNET=${DOCKER_ONLYOFFICE_SUBNET:-""};
+DOCKER_ENABLED=${DOCKER_ENABLED:-true};
+
 
 NGINX_CONF_DIR="/etc/nginx/sites-enabled"
 NGINX_ROOT_DIR="/etc/nginx"
@@ -55,7 +57,7 @@ MYSQL_SERVER_PORT=${MYSQL_SERVER_PORT:-"3306"}
 MYSQL_SERVER_DB_NAME=${MYSQL_SERVER_DB_NAME:-"onlyoffice"}
 MYSQL_SERVER_USER=${MYSQL_SERVER_USER:-"root"}
 MYSQL_SERVER_PASS=${MYSQL_SERVER_PASS:-""}
-MYSQL_SERVER_EXTERNAL=false;
+MYSQL_SERVER_EXTERNAL=${MYSQL_SERVER_EXTERNAL:-false};
 
 mkdir -p "${SSL_CERTIFICATES_DIR}"
 
@@ -745,4 +747,6 @@ if [ "${ONLYOFFICE_MODE}" == "SERVER" ]; then
 	fi
 fi
 
-exec tail -f /dev/null
+if [ "${DOCKER_ENABLED}" == "true" ]; then
+   exec tail -f /dev/null
+fi
