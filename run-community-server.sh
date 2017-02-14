@@ -95,10 +95,12 @@ fi
 #	fi	
 # fi
 
-
+if [ "${DOCKER_ENABLED}" == "true" ]; then
 cp ${SYSCONF_TEMPLATES_DIR}/nginx/nginx.conf ${NGINX_ROOT_DIR}/nginx.conf
+fi
+
 cp ${SYSCONF_TEMPLATES_DIR}/nginx/onlyoffice-init ${NGINX_CONF_DIR}/onlyoffice
-rm -f /etc/nginx/conf.d/*.conf
+rm -f ${NGINX_ROOT_DIR}/conf.d/*.conf
 
 rsyslogd 
 service nginx restart
