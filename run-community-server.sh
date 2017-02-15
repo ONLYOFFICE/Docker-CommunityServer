@@ -122,9 +122,11 @@ if [ ${ONLYOFFICE_SERVICES_INTERNAL_HOST} ]; then
 		echo "change connections for ${1} then ${2}";
 	fi
 
-	while ! bash ${SYSCONF_TOOLS_DIR}/wait-for-it.sh ${ONLYOFFICE_SERVICES_INTERNAL_HOST}:9871 --quiet -s -- echo "ONLYOFFICE SERVICES is up"; do
-    		sleep 1
-	done
+	if [ "${DOCKER_ENABLED}" == "true" ]; then
+		while ! bash ${SYSCONF_TOOLS_DIR}/wait-for-it.sh ${ONLYOFFICE_SERVICES_INTERNAL_HOST}:9871 --quiet -s -- echo "ONLYOFFICE SERVICES is up"; do
+    			sleep 1
+		done
+	fi
 
 fi
 
