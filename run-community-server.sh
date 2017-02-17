@@ -647,6 +647,8 @@ wget_retry() {
 
 if [ "${REDIS_SERVER_EXTERNAL}" == "true" ]; then
 	rm -f "${ONLYOFFICE_GOD_DIR}"/redis.god;
+	sed '/redis-cli/d' -i ${ONLYOFFICE_CRON_PATH}
+
 	service redis-server stop
 else
 	service redis-server start
@@ -729,6 +731,8 @@ if [ "${ONLYOFFICE_SERVICES_EXTERNAL}" == "true" ]; then
 	service onlyofficeMailWatchdog stop
 	service onlyofficeNotify stop
 	service onlyofficeBackup stop
+	service onlyofficeSignalR stop
+	service onlyofficeAutoreply stop
 
 	rm -f /etc/init.d/onlyofficeFeed
 	rm -f /etc/init.d/onlyofficeIndex
@@ -737,11 +741,24 @@ if [ "${ONLYOFFICE_SERVICES_EXTERNAL}" == "true" ]; then
 	rm -f /etc/init.d/onlyofficeMailWatchdog
 	rm -f /etc/init.d/onlyofficeNotify
 	rm -f /etc/init.d/onlyofficeBackup
-
+	rm -f /etc/init.d/onlyofficeSignalR
+	rm -f /etc/init.d/onlyofficeAutoreply
 
 	sed '/onlyoffice/d' -i ${ONLYOFFICE_CRON_PATH}
 
 else
+
+	service onlyofficeFeed stop
+	service onlyofficeIndex stop
+	service onlyofficeJabber stop
+	service onlyofficeMailAggregator stop
+	service onlyofficeMailWatchdog stop
+	service onlyofficeNotify stop
+	service onlyofficeBackup stop
+	service onlyofficeSignalR stop
+ 	service onlyofficeAutoreply stop
+	service onlyofficeHealthCheck stop
+
 	service onlyofficeFeed start
 	service onlyofficeIndex start
 	service onlyofficeJabber start
@@ -749,7 +766,7 @@ else
 	service onlyofficeMailWatchdog start
 	service onlyofficeNotify start
 	service onlyofficeBackup start
-	#service onlyofficeHealthCheck start
+
 fi
 
 service god restart
@@ -797,8 +814,11 @@ if [ "${ONLYOFFICE_MODE}" == "SERVER" ]; then
 	fi
 fi
 
-/etc/init.d/cron stop
-/etc/init.d/cron start
+PID=$(ps auxf | grep cron | grep -v grep | awk '{print $2}')
+
+kill $PID
+
+cron
 
 if [ "${DOCKER_ENABLED}" == "true" ]; then
    exec tail -f /dev/null
