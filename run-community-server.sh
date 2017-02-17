@@ -327,6 +327,7 @@ if [ "${MYSQL_SERVER_EXTERNAL}" == "true" ]; then
 	sed 's!\(sql_db\s*=\s*\)\S*!\1'${MYSQL_SERVER_DB_NAME}'!' -i ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/sphinx-min.conf.in;
 	sed 's!\(sql_port\s*=\s*\)\S*!\1'${MYSQL_SERVER_PORT}'!' -i ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/sphinx-min.conf.in;
 
+	service mysql stop
 else
 	# create db if not exist
 	if [ ! -f /var/lib/mysql/ibdata1 ]; then
@@ -646,6 +647,7 @@ wget_retry() {
 
 if [ "${REDIS_SERVER_EXTERNAL}" == "true" ]; then
 	rm -f "${ONLYOFFICE_GOD_DIR}"/redis.god;
+	service redis-server stop
 else
 	service redis-server start
 fi
@@ -656,17 +658,42 @@ fi
 
 if [ "${ONLYOFFICE_MODE}" == "SERVICES" ]; then
 	service nginx stop
-	rm -f "${ONLYOFFICE_GOD_DIR}"/monoserve.god;
+
 	rm -f "${ONLYOFFICE_GOD_DIR}"/nginx.god;
+	rm -f "${ONLYOFFICE_GOD_DIR}"/monoserveApiSystem.god;
+
+	service monoserveApiSystem stop
+
+	rm -f /etc/init.d/monoserveApiSystem
+
+	for serverID in $(seq 1 ${ONLYOFFICE_MONOSERVE_COUNT});
+	do
+		index=$serverID;
+
+		if [ $index == 1 ]; then
+			index="";
+		fi
+
+	rm -f "${ONLYOFFICE_GOD_DIR}"/monoserve$index.god;
+
+        service monoserve$index stop
+
+	rm -f /etc/init.d/monoserve$index
+
+	done
+
+	sed '/monoserve/d' -i ${ONLYOFFICE_CRON_PATH}
+	sed '/warmup/d' -i ${ONLYOFFICE_CRON_PATH}
+
 else
 	if [ ${LOG_DEBUG} ]; then
 		echo "fix docker bug volume mapping for onlyoffice";
 	fi
 
-	chown -R onlyoffice:onlyoffice /var/log/onlyoffice	
+	chown -R onlyoffice:onlyoffice /var/log/onlyoffice
 	chown -R onlyoffice:onlyoffice /var/www/onlyoffice/DocumentServerData
 	chown -R onlyoffice:onlyoffice /var/www/onlyoffice/Data/certs
-	
+
         if [ "$(ls -alhd /var/www/onlyoffice/Data | awk '{ print $3 }')" != "onlyoffice" ]; then
               chown -R onlyoffice:onlyoffice /var/www/onlyoffice/Data
         fi
@@ -678,8 +705,7 @@ else
 		if [ $index == 1 ]; then
 			index="";
 		fi
-		
-		
+
 		service monoserve$index start
 		service monoserve$index stop
 		service monoserve$index start
@@ -690,11 +716,31 @@ else
 	service monoserveApiSystem start
 	service monoserveApiSystem stop
 	service monoserveApiSystem start
-	cron
 fi
 
 if [ "${ONLYOFFICE_SERVICES_EXTERNAL}" == "true" ]; then
 	rm -f "${ONLYOFFICE_GOD_DIR}"/onlyoffice.god;
+	rm -f "${ONLYOFFICE_GOD_DIR}"/mail.god;
+
+	service onlyofficeFeed stop
+	service onlyofficeIndex stop
+	service onlyofficeJabber stop
+	service onlyofficeMailAggregator stop
+	service onlyofficeMailWatchdog stop
+	service onlyofficeNotify stop
+	service onlyofficeBackup stop
+
+	rm -f /etc/init.d/onlyofficeFeed
+	rm -f /etc/init.d/onlyofficeIndex
+	rm -f /etc/init.d/onlyofficeJabber
+	rm -f /etc/init.d/onlyofficeMailAggregator
+	rm -f /etc/init.d/onlyofficeMailWatchdog
+	rm -f /etc/init.d/onlyofficeNotify
+	rm -f /etc/init.d/onlyofficeBackup
+
+
+	sed '/onlyoffice/d' -i ${ONLYOFFICE_CRON_PATH}
+
 else
 	service onlyofficeFeed start
 	service onlyofficeIndex start
@@ -706,7 +752,7 @@ else
 	#service onlyofficeHealthCheck start
 fi
 
-service god start
+service god restart
 
 if [ "${ONLYOFFICE_MODE}" == "SERVER" ]; then
 	for serverID in $(seq 1 ${ONLYOFFICE_MONOSERVE_COUNT});
@@ -750,6 +796,9 @@ if [ "${ONLYOFFICE_MODE}" == "SERVER" ]; then
 		echo "FINISH";
 	fi
 fi
+
+/etc/init.d/cron stop
+/etc/init.d/cron start
 
 if [ "${DOCKER_ENABLED}" == "true" ]; then
    exec tail -f /dev/null
