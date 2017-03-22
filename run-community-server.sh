@@ -631,18 +631,27 @@ sed 's/{{ONLYOFFICE_NIGNX_KEEPLIVE}}/'$((32*${ONLYOFFICE_MONOSERVE_COUNT}))'/g' 
 
 bash -c 'echo "onlyoffice ALL=(ALL) NOPASSWD: /usr/sbin/service" | (EDITOR="tee -a" visudo)'
 
-wget_retry() {
-    timeout=120;
-    interval=10;
 
-    while [ "$interval" -lt "$timeout" ] ; do
-        interval=$((${interval} + 10));
-        wget -qO- --retry-connrefused --no-check-certificate --waitretry=1 --read-timeout=20 --timeout=15 $1 &> /dev/null;
-        if [[ "$?" -eq "0" ]]; then
+ping_onlyoffice() {
+    timeout=6;
+    interval=1;
+
+    while [ "$interval" -le "$timeout" ] ; do
+        interval=$((${interval} + 1));
+        status_code=$(curl -LI $1 -o /dev/null -w '%{http_code}\n' -s);
+
+        if [ "$status_code" == "200" ]; then
+            wget -qO- --retry-connrefused --no-check-certificate --wait=30 $1 &> /dev/null;
+
             break;
         fi
+
+        echo "status_code: $status_code";
+
         sleep 10;
+
     done
+
 }
 
 if [ "${REDIS_SERVER_EXTERNAL}" == "true" ]; then
@@ -713,8 +722,6 @@ else
 		service monoserve$index start
 	done
 
-	sleep 10s;
-
 	service monoserveApiSystem start
 	service monoserveApiSystem stop
 	service monoserveApiSystem start
@@ -772,47 +779,29 @@ fi
 service god restart
 
 if [ "${ONLYOFFICE_MODE}" == "SERVER" ]; then
-	for serverID in $(seq 1 ${ONLYOFFICE_MONOSERVE_COUNT});
-	do
-		index=$serverID;
+        for serverID in $(seq 1 ${ONLYOFFICE_MONOSERVE_COUNT});
+        do
+                index=$serverID;
 
-		if [ $index == 1 ]; then
-			index="";
-			wget -qO- --no-check-certificate --timeout=1 -t 1 "http://localhost/warmup/Default.aspx" &> /dev/null;
-		fi
+                if [ $index == 1 ]; then
+                        index="";
+                fi
 
-		wget -qO- --no-check-certificate --timeout=1 -t 1 "http://localhost/warmup'${index}'/Default.aspx" &> /dev/null;
-	done
+                (ping_onlyoffice "http://localhost/warmup${index}/auth.aspx") &
+        done
 
-	for serverID in  $(seq 1 ${ONLYOFFICE_MONOSERVE_COUNT});
-	do
-		index=$serverID;
+        wait
 
-		if [ $index == 1 ]; then
-			index="";
-			wget_retry "http://localhost/warmup/Default.aspx";
-		fi
+        mv ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice ${NGINX_CONF_DIR}/onlyoffice
 
-		if [ ${LOG_DEBUG} ]; then
-			echo "run monoserve warmup$index";
-		fi
+        service nginx reload
 
-		wget_retry "http://localhost/warmup$index/Default.aspx";
+        echo "reload nginx config";
+        echo "FINISH";
 
-	done
-
-	mv ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice ${NGINX_CONF_DIR}/onlyoffice
-
-	service nginx reload
-
-	if [ ${LOG_DEBUG} ]; then
-		echo "reload nginx config";
-	fi
-
-	if [ ${LOG_DEBUG} ]; then
-		echo "FINISH";
-	fi
 fi
+
+
 
 PID=$(ps auxf | grep cron | grep -v grep | awk '{print $2}')
 
