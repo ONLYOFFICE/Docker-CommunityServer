@@ -20,7 +20,7 @@ DOCKER_ENABLED=${DOCKER_ENABLED:-true};
 
 NGINX_CONF_DIR="/etc/nginx/sites-enabled"
 
-if [ ! -d "$NGINX_CONF_DIR" ];
+if [ ! -d "$NGINX_CONF_DIR" ]; then
    mkdir -p $NGINX_CONF_DIR;
 fi
 
@@ -66,6 +66,7 @@ MYSQL_SERVER_EXTERNAL=${MYSQL_SERVER_EXTERNAL:-false};
 
 mkdir -p "${SSL_CERTIFICATES_DIR}"
 
+
 check_partnerdata(){
 	PARTNER_DATA_FILE="${ONLYOFFICE_DATA_DIR}/json-data.txt";
 
@@ -82,6 +83,13 @@ check_partnerdata(){
 		done
 	fi
 }
+
+
+log_debug () {
+  echo "onlyoffice: [Debug] $1"
+}
+
+
 
 check_partnerdata
 
@@ -122,7 +130,7 @@ if [ ${ONLYOFFICE_SERVICES_INTERNAL_HOST} ]; then
 	sed '/<endpoint/s!\"netTcpBinding\"!\"basicHttpBinding\"!' -i ${ONLYOFFICE_ROOT_DIR}/Web.config;
 
 	if [ ${LOG_DEBUG} ]; then
-		echo "change connections for ${1} then ${2}";
+		log_debug "Change connections for ${1} then ${2}";
 	fi
 
 	if [ "${DOCKER_ENABLED}" == "true" ]; then
@@ -154,11 +162,11 @@ if [ ${MYSQL_SERVER_PORT_3306_TCP} ]; then
 	MYSQL_SERVER_PASS=${MYSQL_SERVER_ENV_MYSQL_PASSWORD:-${MYSQL_SERVER_ENV_MYSQL_ROOT_PASSWORD:-${MYSQL_SERVER_PASS}}};
 
 	if [ ${LOG_DEBUG} ]; then
-		echo "MYSQL_SERVER_HOST: ${MYSQL_SERVER_HOST}";
-		echo "MYSQL_SERVER_PORT: ${MYSQL_SERVER_PORT}";
-		echo "MYSQL_SERVER_DB_NAME: ${MYSQL_SERVER_DB_NAME}";
-		echo "MYSQL_SERVER_USER: ${MYSQL_SERVER_USER}";
-		echo "MYSQL_SERVER_PASS: ${MYSQL_SERVER_PASS}";
+		log_debug "MYSQL_SERVER_HOST: ${MYSQL_SERVER_HOST}";
+		log_debug "MYSQL_SERVER_PORT: ${MYSQL_SERVER_PORT}";
+		log_debug "MYSQL_SERVER_DB_NAME: ${MYSQL_SERVER_DB_NAME}";
+		log_debug "MYSQL_SERVER_USER: ${MYSQL_SERVER_USER}";
+		log_debug "MYSQL_SERVER_PASS: ${MYSQL_SERVER_PASS}";
 	fi
 fi
 
@@ -242,7 +250,7 @@ mysql_batch_exec(){
 mysql_check_connection() {
 
 	if [ ${LOG_DEBUG} ]; then
-		echo "mysq check connection for ${MYSQL_SERVER_HOST}";
+		log_debug "Mysql check connection for ${MYSQL_SERVER_HOST}";
 	fi
 	
 
@@ -253,7 +261,7 @@ mysql_check_connection() {
 
 change_connections(){
 	if [ ${LOG_DEBUG} ]; then
-		echo "change connections for ${1} then ${2}";
+		log_debug "Change connections for ${1} then ${2}";
 	fi
 
 	sed '/'${1}'/s/\(connectionString\s*=\s*\"\)[^\"]*\"/\1Server='${MYSQL_SERVER_HOST}';Port='${MYSQL_SERVER_PORT}';Database='${MYSQL_SERVER_DB_NAME}';User ID='${MYSQL_SERVER_USER}';Password='${MYSQL_SERVER_PASS}';Pooling=true;Character Set=utf8;AutoEnlist=false\"/' -i ${2}
@@ -279,10 +287,10 @@ if [ "${MYSQL_SERVER_EXTERNAL}" == "true" ]; then
 	DB_TABLES_COUNT=$(mysql_scalar_exec "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='${MYSQL_SERVER_DB_NAME}'");
 
 	if [ ${LOG_DEBUG} ]; then
-		echo "DB_IS_EXIST: ${DB_IS_EXIST}";
-		echo "DB_CHARACTER_SET_NAME: ${DB_CHARACTER_SET_NAME}";
-		echo "DB_COLLATION_NAME: ${DB_COLLATION_NAME}";
-		echo "DB_TABLES_COUNT: ${DB_TABLES_COUNT}";
+		log_debug "DB_IS_EXIST: ${DB_IS_EXIST}";
+		log_debug "DB_CHARACTER_SET_NAME: ${DB_CHARACTER_SET_NAME}";
+		log_debug "DB_COLLATION_NAME: ${DB_COLLATION_NAME}";
+		log_debug "DB_TABLES_COUNT: ${DB_TABLES_COUNT}";
 	fi
 
 	if [ -z ${DB_IS_EXIST} ]; then
@@ -292,7 +300,7 @@ if [ "${MYSQL_SERVER_EXTERNAL}" == "true" ]; then
 		DB_TABLES_COUNT=0;
 
 		if [ ${LOG_DEBUG} ]; then
-			echo "create db ${MYSQL_SERVER_DB_NAME}";
+			log_debug "Create db ${MYSQL_SERVER_DB_NAME}";
 		fi
 	fi
 
@@ -300,7 +308,7 @@ if [ "${MYSQL_SERVER_EXTERNAL}" == "true" ]; then
 		mysql_scalar_exec "ALTER DATABASE ${MYSQL_SERVER_DB_NAME} CHARACTER SET utf8 COLLATE utf8_general_ci";
 
 		if [ ${LOG_DEBUG} ]; then
-			echo "change characted set name ${MYSQL_SERVER_DB_NAME}";
+			log_debug "Change characted set name ${MYSQL_SERVER_DB_NAME}";
 		fi
 
 	fi
@@ -308,7 +316,7 @@ if [ "${MYSQL_SERVER_EXTERNAL}" == "true" ]; then
 	if [ "${DB_TABLES_COUNT}" -eq "0" ]; then
 
 		if [ ${LOG_DEBUG} ]; then
-			echo "run filling tables...";
+			log_debug "Run filling tables...";
 		fi
 
       		mysql_batch_exec ${ONLYOFFICE_SQL_DIR}/onlyoffice.sql
@@ -347,7 +355,7 @@ else
 		chown -R mysql:mysql /var/lib/mysql/
 
 		if [ ${LOG_DEBUG} ]; then
-			echo "fix docker bug volume mapping for mysql";
+			log_debug "Fix docker bug volume mapping for mysql";
 		fi
 
 		myisamchk -q -r /var/lib/mysql/mysql/proc || true
@@ -466,7 +474,7 @@ if [ "${MAIL_SERVER_ENABLED}" == "true" ]; then
 	sleep 10;
 
 	if [ ${LOG_DEBUG} ]; then
-		echo "waiting MAIL SERVER DB...";
+		log_debug "Waiting MAIL SERVER DB...";
 	fi
 
     done
@@ -481,9 +489,9 @@ if [ "${MAIL_SERVER_ENABLED}" == "true" ]; then
         
         VALID_IP_ADDRESS_REGEX="^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$";
         if [[ $EXTERNAL_IP =~ $VALID_IP_ADDRESS_REGEX ]]; then
-            echo "External ip $EXTERNAL_IP is valid";
+            log_debug "External ip $EXTERNAL_IP is valid";
         else
-            echo "External ip $EXTERNAL_IP is not valid";
+            log_debug "External ip $EXTERNAL_IP is not valid";
             exit 502;
         fi
 
@@ -500,13 +508,13 @@ END
 
         id1=$(mysql_scalar_exec "INSERT INTO mail_mailbox_server (id_provider, type, hostname, port, socket_type, username, authentication, is_user_data) VALUES (-1, 'imap', '${MAIL_SERVER_HOSTNAME}', 143, 'STARTTLS', '%EMAILADDRESS%', '', 0);SELECT LAST_INSERT_ID();");
         if [ ${LOG_DEBUG} ]; then
-            echo "id1 is '${id1}'";
+            log_debug "id1 is '${id1}'";
         fi
 
         id2=$(mysql_scalar_exec "INSERT INTO mail_mailbox_server (id_provider, type, hostname, port, socket_type, username, authentication, is_user_data) VALUES (-1, 'smtp', '${MAIL_SERVER_HOSTNAME}', 587, 'STARTTLS', '%EMAILADDRESS%', '', 0);SELECT LAST_INSERT_ID();");
 
         if [ ${LOG_DEBUG} ]; then
-            echo "id2 is '${id2}'";
+            log_debug "id2 is '${id2}'";
         fi
         
         sed '/mail\.certificate-permit/s/\(value *= *\"\).*\"/\1true\"/' -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
@@ -514,12 +522,12 @@ END
     else
         id1=$(mysql_scalar_exec "select imap_settings_id from mail_server_server where mx_record='${MAIL_SERVER_HOSTNAME}' limit 1");
         if [ ${LOG_DEBUG} ]; then
-            echo "id1 is '${id1}'";
+            log_debug "id1 is '${id1}'";
         fi
 
         id2=$(mysql_scalar_exec "select smtp_settings_id from mail_server_server where mx_record='${MAIL_SERVER_HOSTNAME}' limit 1");
         if [ ${LOG_DEBUG} ]; then
-            echo "id2 is '${id2}'";
+            log_debug "id2 is '${id2}'";
         fi
 
         mysql_scalar_exec <<END
@@ -788,14 +796,17 @@ if [ "${ONLYOFFICE_MODE}" == "SERVER" ]; then
 
         service nginx reload
 
-        echo "reload nginx config";
-        echo "FINISH";
+        log_debug "reload nginx config";
+        log_debug "FINISH";
 
 fi
 
 PID=$(ps auxf | grep cron | grep -v grep | awk '{print $2}')
 
-kill $PID
+
+if [ -z "$PID" ]; then
+ kill $PID
+fi
 
 cron
 
