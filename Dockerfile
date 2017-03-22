@@ -21,7 +21,7 @@ RUN echo "${SOURCE_REPO_URL}" >> /etc/apt/sources.list && \
     DEBIAN_FRONTEND=noninteractive  && \
     locale-gen en_US.UTF-8 && \
     apt-get -y update && \
-    apt-get install --force-yes -yq software-properties-common wget cron rsyslog && \
+    apt-get install --force-yes -yq software-properties-common wget curl cron rsyslog && \
     wget http://nginx.org/keys/nginx_signing.key && \
     apt-key add nginx_signing.key && \
     echo "deb http://nginx.org/packages/mainline/ubuntu/ trusty nginx" >> /etc/apt/sources.list.d/nginx.list && \
