@@ -19,6 +19,11 @@ DOCKER_ENABLED=${DOCKER_ENABLED:-true};
 
 
 NGINX_CONF_DIR="/etc/nginx/sites-enabled"
+
+if [ ! -d "$NGINX_CONF_DIR" ];
+   mkdir -p $NGINX_CONF_DIR;
+fi
+
 NGINX_ROOT_DIR="/etc/nginx"
 
 VALID_IP_ADDRESS_REGEX="^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$";
@@ -95,14 +100,12 @@ fi
 #	fi	
 # fi
 
-if [ "${DOCKER_ENABLED}" == "true" ]; then
 cp ${SYSCONF_TEMPLATES_DIR}/nginx/nginx.conf ${NGINX_ROOT_DIR}/nginx.conf
-fi
 
 cp ${SYSCONF_TEMPLATES_DIR}/nginx/onlyoffice-init ${NGINX_CONF_DIR}/onlyoffice
 rm -f ${NGINX_ROOT_DIR}/conf.d/*.conf
 
-rsyslogd 
+rsyslogd
 service nginx restart
 
 if [ ${ONLYOFFICE_SERVICES_INTERNAL_HOST} ]; then
@@ -702,11 +705,11 @@ else
 	fi
 
 	chown -R onlyoffice:onlyoffice /var/log/onlyoffice
-	chown -R onlyoffice:onlyoffice /var/www/onlyoffice/DocumentServerData
-	chown -R onlyoffice:onlyoffice /var/www/onlyoffice/Data/certs
+	chown -R onlyoffice:onlyoffice ${ONLYOFFICE_DIR}/DocumentServerData
+	chown -R onlyoffice:onlyoffice ${ONLYOFFICE_DIR}/certs
 
-        if [ "$(ls -alhd /var/www/onlyoffice/Data | awk '{ print $3 }')" != "onlyoffice" ]; then
-              chown -R onlyoffice:onlyoffice /var/www/onlyoffice/Data
+        if [ "$(ls -alhd ${ONLYOFFICE_DATA_DIR} | awk '{ print $3 }')" != "onlyoffice" ]; then
+              chown -R onlyoffice:onlyoffice ${ONLYOFFICE_DATA_DIR}
         fi
 
 	for serverID in $(seq 1 ${ONLYOFFICE_MONOSERVE_COUNT});
@@ -800,8 +803,6 @@ if [ "${ONLYOFFICE_MODE}" == "SERVER" ]; then
         echo "FINISH";
 
 fi
-
-
 
 PID=$(ps auxf | grep cron | grep -v grep | awk '{print $2}')
 
