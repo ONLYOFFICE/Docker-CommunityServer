@@ -721,13 +721,11 @@ else
 		fi
 
 		service monoserve$index start
-		service monoserve$index stop
-		service monoserve$index start
+		service monoserve$index restart
 	done
 
 	service monoserveApiSystem start
-	service monoserveApiSystem stop
-	service monoserveApiSystem start
+	service monoserveApiSystem restart
 fi
 
 if [ "${ONLYOFFICE_SERVICES_EXTERNAL}" == "true" ]; then
@@ -758,25 +756,16 @@ if [ "${ONLYOFFICE_SERVICES_EXTERNAL}" == "true" ]; then
 
 else
 
-	service onlyofficeFeed stop
-	service onlyofficeIndex stop
-	service onlyofficeJabber stop
-	service onlyofficeMailAggregator stop
-	service onlyofficeMailWatchdog stop
-	service onlyofficeNotify stop
-	service onlyofficeBackup stop
+	service onlyofficeFeed restart
+	service onlyofficeIndex restart
+	service onlyofficeJabber restart
+	service onlyofficeMailAggregator restart
+	service onlyofficeMailWatchdog restart
+	service onlyofficeNotify restart
+	service onlyofficeBackup restart
 	service onlyofficeSignalR stop
  	service onlyofficeAutoreply stop
 	service onlyofficeHealthCheck stop
-
-	service onlyofficeFeed start
-	service onlyofficeIndex start
-	service onlyofficeJabber start
-	service onlyofficeMailAggregator start
-	service onlyofficeMailWatchdog start
-	service onlyofficeNotify start
-	service onlyofficeBackup start
-
 fi
 
 service god restart
