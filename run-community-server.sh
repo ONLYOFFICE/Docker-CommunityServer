@@ -603,7 +603,7 @@ do
 	sed '/web.warmup.count/s/value=\"\S*\"/value=\"'${ONLYOFFICE_MONOSERVE_COUNT}'\"/g' -i  ${ONLYOFFICE_ROOT_DIR}$serverID/web.appsettings.config
 	sed '/web.warmup.domain/s/value=\"\S*\"/value=\"localhost\/warmup'${serverID}'\"/g' -i  ${ONLYOFFICE_ROOT_DIR}$serverID/web.appsettings.config
 
-        sed '/conversionPattern\s*value=\"%folder{LogDirectory}/s!web!'${serverID}'!g' -i ${ONLYOFFICE_ROOT_DIR}$serverID/web.log4net.config;
+        sed '/conversionPattern\s*value=\"%folder{LogDirectory}/s!web!web'${serverID}'!g' -i ${ONLYOFFICE_ROOT_DIR}$serverID/web.log4net.config;
 
 
 	cp ${ONLYOFFICE_MONOSERVER_PATH} ${ONLYOFFICE_MONOSERVER_PATH}$serverID;
