@@ -17,11 +17,14 @@ ONLYOFFICE_CRON_PATH="/etc/cron.d/onlyoffice"
 DOCKER_ONLYOFFICE_SUBNET=${DOCKER_ONLYOFFICE_SUBNET:-""};
 DOCKER_ENABLED=${DOCKER_ENABLED:-true};
 
-
 NGINX_CONF_DIR="/etc/nginx/sites-enabled"
 
 if [ ! -d "$NGINX_CONF_DIR" ]; then
    mkdir -p $NGINX_CONF_DIR;
+fi
+
+if [ ! -d "${ONLYOFFICE_DIR}/DocumentServerData" ]; then
+   mkdir -p ${ONLYOFFICE_DIR}/DocumentServerData;
 fi
 
 NGINX_ROOT_DIR="/etc/nginx"
@@ -599,6 +602,9 @@ do
 
 	sed '/web.warmup.count/s/value=\"\S*\"/value=\"'${ONLYOFFICE_MONOSERVE_COUNT}'\"/g' -i  ${ONLYOFFICE_ROOT_DIR}$serverID/web.appsettings.config
 	sed '/web.warmup.domain/s/value=\"\S*\"/value=\"localhost\/warmup'${serverID}'\"/g' -i  ${ONLYOFFICE_ROOT_DIR}$serverID/web.appsettings.config
+
+        sed '/conversionPattern\s*value=\"%folder{LogDirectory}/s!web!'${serverID}'!g' -i ${ONLYOFFICE_ROOT_DIR}$serverID/web.log4net.config;
+
 
 	cp ${ONLYOFFICE_MONOSERVER_PATH} ${ONLYOFFICE_MONOSERVER_PATH}$serverID;
 
