@@ -413,6 +413,9 @@ else
 	cp ${SYSCONF_TEMPLATES_DIR}/nginx/onlyoffice ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice;
 fi
 
+sed -i '1d' /etc/logrotate.d/nginx
+sed '1 i\/var/log/nginx/*.log /var/log/onlyoffice/nginx.*.log {' -i /etc/logrotate.d/nginx
+
 if [ ${DOCKER_ONLYOFFICE_SUBNET} ]; then
 	sed 's,{{DOCKER_ONLYOFFICE_SUBNET}},'"${DOCKER_ONLYOFFICE_SUBNET}"',' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
 else
