@@ -464,6 +464,12 @@ fi
 
 if [ "${MAIL_SERVER_ENABLED}" == "true" ]; then
 
+    if [ "${DOCKER_ENABLED}" == "true" ]; then
+	while ! bash ${SYSCONF_TOOLS_DIR}/wait-for-it.sh  ${MAIL_SERVER_DB_HOST}:25 --quiet -s -- log_debug "MailServer is up"; do
+		sleep 1
+	done
+    fi
+
     timeout=120;
     interval=10;
 
