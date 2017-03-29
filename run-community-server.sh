@@ -16,7 +16,7 @@ ONLYOFFICE_GOD_DIR="/etc/god/conf.d"
 ONLYOFFICE_CRON_PATH="/etc/cron.d/onlyoffice"
 DOCKER_ONLYOFFICE_SUBNET=${DOCKER_ONLYOFFICE_SUBNET:-""};
 DOCKER_ENABLED=${DOCKER_ENABLED:-true};
-
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 NGINX_CONF_DIR="/etc/nginx/sites-enabled"
 
 if [ ! -d "$NGINX_CONF_DIR" ]; then
@@ -45,8 +45,9 @@ SSL_DHPARAM_PATH=${SSL_DHPARAM_PATH:-${SSL_CERTIFICATES_DIR}/dhparam.pem}
 SSL_VERIFY_CLIENT=${SSL_VERIFY_CLIENT:-off}
 ONLYOFFICE_HTTPS_HSTS_ENABLED=${ONLYOFFICE_HTTPS_HSTS_ENABLED:-true}
 ONLYOFFICE_HTTPS_HSTS_MAXAGE=${ONLYOFFICE_HTTPS_HSTS_MAXAG:-31536000}
-SYSCONF_TEMPLATES_DIR="${PWD}/config"
-SYSCONF_TOOLS_DIR="${PWD}/assets/tools"
+
+SYSCONF_TEMPLATES_DIR="${DIR}/config"
+SYSCONF_TOOLS_DIR="${DIR}/assets/tools"
 
 ONLYOFFICE_SERVICES_INTERNAL_HOST=${ONLYOFFICE_SERVICES_PORT_9865_TCP_ADDR:-${ONLYOFFICE_SERVICES_INTERNAL_HOST}}
 ONLYOFFICE_SERVICES_EXTERNAL=false
@@ -729,7 +730,6 @@ else
 
 	chown -R onlyoffice:onlyoffice /var/log/onlyoffice
 	chown -R onlyoffice:onlyoffice ${ONLYOFFICE_DIR}/DocumentServerData
-	chown -R onlyoffice:onlyoffice ${ONLYOFFICE_DIR}/certs
 
         if [ "$(ls -alhd ${ONLYOFFICE_DATA_DIR} | awk '{ print $3 }')" != "onlyoffice" ]; then
               chown -R onlyoffice:onlyoffice ${ONLYOFFICE_DATA_DIR}
