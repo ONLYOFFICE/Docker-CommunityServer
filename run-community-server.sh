@@ -466,7 +466,7 @@ fi
 if [ "${MAIL_SERVER_ENABLED}" == "true" ]; then
 
     if [ "${DOCKER_ENABLED}" == "true" ]; then
-	while ! bash ${SYSCONF_TOOLS_DIR}/wait-for-it.sh  ${MAIL_SERVER_DB_HOST}:25 --quiet -s -- log_debug "MailServer is up"; do
+	while ! bash ${SYSCONF_TOOLS_DIR}/wait-for-it.sh  ${MAIL_SERVER_DB_HOST}:25 --quiet -s -- echo "MailServer is up"; do
 		sleep 1
 	done
     fi
@@ -667,16 +667,14 @@ ping_onlyoffice() {
         interval=$((${interval} + 1));
         status_code=$(curl -LI $1 -o /dev/null -w '%{http_code}\n' -s);
 
-        if [ "$status_code" == "200" ]; then
-            wget -qO- --retry-connrefused --no-check-certificate --wait=30 $1 &> /dev/null;
+        echo "ping monoserve get status_code: $status_code";
 
+        if [ "$status_code" == "200" ]; then
+            wget -qO- --retry-connrefused --no-check-certificate --waitretry=15 -t 0 --continue $1 &> /dev/null;
             break;
         fi
 
-        echo "status_code: $status_code";
-
-        sleep 10;
-
+        sleep 5s;
     done
 
 }
@@ -743,11 +741,11 @@ else
 			index="";
 		fi
 
-		service monoserve$index start
 		service monoserve$index restart
+
+                (ping_onlyoffice "http://localhost/warmup${index}/auth.aspx") &
 	done
 
-	service monoserveApiSystem start
 	service monoserveApiSystem restart
 fi
 
@@ -794,16 +792,6 @@ fi
 service god restart
 
 if [ "${ONLYOFFICE_MODE}" == "SERVER" ]; then
-        for serverID in $(seq 1 ${ONLYOFFICE_MONOSERVE_COUNT});
-        do
-                index=$serverID;
-
-                if [ $index == 1 ]; then
-                        index="";
-                fi
-
-                (ping_onlyoffice "http://localhost/warmup${index}/auth.aspx") &
-        done
 
         wait
 
@@ -819,8 +807,8 @@ fi
 PID=$(ps auxf | grep cron | grep -v grep | awk '{print $2}')
 
 
-if [ -z "$PID" ]; then
- kill $PID
+if [ -n "$PID" ]; then
+  kill -9 $PID
 fi
 
 cron
