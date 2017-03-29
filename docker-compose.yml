@@ -1,23 +1,71 @@
-communityserver:
-  image: onlyoffice/communityserver
-  links:
-   - documentserver:document_server
-   - mailserver:mail_server
-  ports:
-   - "80:80"
-  stdin_open: true
-  tty: true
-documentserver:
-  image: onlyoffice/documentserver
-  stdin_open: true
-  tty: true
-mailserver:
-  image: onlyoffice/mailserver
-  hostname: yourdomain.com
-  privileged: true
-  ports:
-   - "25:25"
-   - "143:143"
-   - "587:587"
-  stdin_open: true
-  tty: true
+version: '3'
+services:
+  onlyoffice-community-server:
+    container_name: onlyoffice-community-server
+    image: onlyoffice/communityserver:latest
+    depends_on:
+     - onlyoffice-document-server
+     - onlyoffice-mail-server
+    environment:
+     - MAIL_SERVER_DB_HOST=onlyoffice-mail-server
+     - DOCUMENT_SERVER_PORT_80_TCP_ADDR=onlyoffice-document-server
+    networks:
+     - onlyoffice
+    ports:
+     - '80:80'
+     - '443:443'
+     - '5222:5222'
+    stdin_open: true
+    tty: true
+    restart: always
+    volumes:
+     - community_mysql:/var/lib/mysql
+     - community_data:/var/www/onlyoffice/Data
+     - community_log:/var/log/onlyoffice
+     - document_data:/var/www/onlyoffice/DocumentServerData
+  onlyoffice-document-server:
+    container_name: onlyoffice-document-server
+    image: onlyoffice/documentserver:latest
+    stdin_open: true
+    tty: true
+    restart: always
+    networks:
+      - onlyoffice
+    expose:
+      - '80'
+      - '443'
+    volumes:
+       - document_data:/var/www/onlyoffice/Data
+       - document_log:/var/log/onlyoffice
+  onlyoffice-mail-server:
+    container_name: onlyoffice-mail-server
+    image: onlyoffice/mailserver:latest
+    hostname: ${MAIL_SERVER_HOSTNAME}
+    networks:
+      - onlyoffice
+    restart: always
+    privileged: true
+    ports: ['25:25','143:143','587:587']
+    stdin_open: true
+    tty: true
+    expose:
+      - '8081'
+      - '3306'
+    volumes:
+      - mail_data:/var/vmail
+      - mail_certs:/etc/pki/tls/mailserver
+      - mail_log:/var/log
+      - mail_mysql:/var/lib/mysql
+networks:
+  onlyoffice:
+    driver: 'bridge'
+volumes:
+  mail_data:
+  mail_certs:
+  mail_log:
+  mail_mysql:
+  document_data:
+  document_log:
+  community_mysql:
+  community_data:
+  community_log:
