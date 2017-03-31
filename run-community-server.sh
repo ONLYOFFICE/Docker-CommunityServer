@@ -414,6 +414,9 @@ else
 	cp ${SYSCONF_TEMPLATES_DIR}/nginx/onlyoffice ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice;
 fi
 
+ONLYOFFICE_SKELETON='$(cat ${SYSCONF_TEMPLATES_DIR}/nginx/onlyoffice-skeleton)';
+sed 's,{{ONLYOFFICE_SKELETON}},'"${ONLYOFFICE_SKELETON}"',' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice;
+
 sed -i '1d' /etc/logrotate.d/nginx
 sed '1 i\/var/log/nginx/*.log /var/log/onlyoffice/nginx.*.log {' -i /etc/logrotate.d/nginx
 
@@ -437,7 +440,10 @@ if ! grep -q "name=\"textindex\"" ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/TeamLabS
 fi
 
 if [ "${DOCUMENT_SERVER_ENABLED}" == "true" ]; then
-    sed 's,{{DOCUMENT_SERVER_HOST_ADDR}},'"${DOCUMENT_SERVER_PROTOCOL}:\/\/${DOCUMENT_SERVER_HOST}"',' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
+
+    cp ${SYSCONF_TEMPLATES_DIR}/nginx/onlyoffice-proxy-to-document-server ${NGINX_CONF_DIR}/onlyoffice-proxy-to-document-server;
+
+    sed 's,{{DOCUMENT_SERVER_HOST_ADDR}},'"${DOCUMENT_SERVER_PROTOCOL}:\/\/${DOCUMENT_SERVER_HOST}"',' -i ${NGINX_CONF_DIR}/onlyoffice-proxy-to-document-server;
 
     # change web.appsettings link to editor
     sed '/files\.docservice\.url\.converter/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_PROTOCOL}':\/\/'${DOCUMENT_SERVER_HOST}'\/ConvertService\.ashx\"!' -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
@@ -450,17 +456,13 @@ if [ "${DOCUMENT_SERVER_ENABLED}" == "true" ]; then
 	
     fi
 
-
     if ! grep -q "files\.docservice\.url\.command" ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config; then
           sed '/files\.docservice\.url\.storage/a <add key=\"files\.docservice\.url\.command\" value=\"'${DOCUMENT_SERVER_PROTOCOL}':\/\/'${DOCUMENT_SERVER_HOST}'\/coauthoring\/CommandService\.ashx\" \/>/' -i ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
     else
           sed '/files\.docservice\.url\.command/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_PROTOCOL}':\/\/'${DOCUMENT_SERVER_HOST}'\/coauthoring\/CommandService\.ashx\"!' -i ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
     fi
 	
-	mysql_scalar_exec "REPLACE INTO webstudio_settings (TenantID, ID, UserID, Data) VALUES (-1, 'a3acbfc4-155b-4ea8-8367-bbc586319553', '00000000-0000-0000-0000-000000000000', '{\"NewScheme\":true,\"RequestedScheme\":true}');";
-else
-	# delete documentserver section
-	sed '/coauthoring/,/}$/d' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
+    mysql_scalar_exec "REPLACE INTO webstudio_settings (TenantID, ID, UserID, Data) VALUES (-1, 'a3acbfc4-155b-4ea8-8367-bbc586319553', '00000000-0000-0000-0000-000000000000', '{\"NewScheme\":true,\"RequestedScheme\":true}');";
 fi
 
 if [ "${MAIL_SERVER_ENABLED}" == "true" ]; then
@@ -577,15 +579,14 @@ END
 fi
 
 if [ "${CONTROL_PANEL_ENABLED}" == "true" ]; then
-	sed 's,{{CONTROL_PANEL_HOST_ADDR}},'"http:\/\/${CONTROL_PANEL_PORT_80_TCP_ADDR}"',' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
+        cp ${SYSCONF_TEMPLATES_DIR}/nginx/onlyoffice-proxy-to-control-panel ${NGINX_CONF_DIR}/onlyoffice-proxy-to-control-panel;
+
+	sed 's,{{CONTROL_PANEL_HOST_ADDR}},'"http:\/\/${CONTROL_PANEL_PORT_80_TCP_ADDR}"',' -i ${NGINX_CONF_DIR}/onlyoffice-proxy-to-control-panel;
 
 	# change web.appsettings link to controlpanel
 	sed '/web\.controlpanel\.url/s/\(value\s*=\s*\"\)[^\"]*\"/\1\/controlpanel\/\"/' -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config;
 	sed '/web\.controlpanel\.url/s/\(value\s*=\s*\"\)[^\"]*\"/\1\/controlpanel\/\"/' -i ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config;
 
-else
-	# delete controlpanel section from nginx template
-	sed '/controlpanel/,/}$/d' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
 fi
 
 if [ "${ONLYOFFICE_MODE}" == "SERVER" ]; then
