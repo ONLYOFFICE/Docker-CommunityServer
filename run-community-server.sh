@@ -414,8 +414,6 @@ else
 	cp ${SYSCONF_TEMPLATES_DIR}/nginx/onlyoffice ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice;
 fi
 
-ONLYOFFICE_SKELETON='$(cat ${SYSCONF_TEMPLATES_DIR}/nginx/onlyoffice-skeleton)';
-sed 's,{{ONLYOFFICE_SKELETON}},'"${ONLYOFFICE_SKELETON}"',' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice;
 
 sed -i '1d' /etc/logrotate.d/nginx
 sed '1 i\/var/log/nginx/*.log /var/log/onlyoffice/nginx.*.log {' -i /etc/logrotate.d/nginx
