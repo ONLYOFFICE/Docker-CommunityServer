@@ -13,6 +13,5 @@ fastcgi_cache_path /var/cache/nginx/onlyoffice
 server {
 	listen 80;
 
-	{{ONLYOFFICE_SKELETON}}
-	
+        include /etc/nginx/includes/onlyoffice-communityserver-*.conf;
 }

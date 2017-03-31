@@ -427,13 +427,11 @@ else
 fi
 
 if [ ${ONLYOFFICE_SERVICES_INTERNAL_HOST} ]; then
-	sed 's,{{ONLYOFFICE_SERVICES_HOST}},'"${ONLYOFFICE_SERVICES_INTERNAL_HOST}"',' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
-else
-	sed 's,{{ONLYOFFICE_SERVICES_HOST}},'"localhost"',' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
+	sed "s/localhost/${ONLYOFFICE_SERVICES_INTERNAL_HOST}/" -i ${NGINX_CONF_DIR}/includes/onlyoffice-communityserver-services.conf
 fi
 
 
-echo "Start=No" >> /etc/init.d/sphinxsearch 
+echo "Start=No" >> /etc/init.d/sphinxsearch
 
 if ! grep -q "name=\"textindex\"" ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config; then
 	sed -i 's/.*<add\s*name="default"\s*connectionString=.*/&\n<add name="textindex" connectionString="Server=localhost;Port=9306;Pooling=True;Character Set=utf8;AutoEnlist=false" providerName="MySql.Data.MySqlClient"\/>/' ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config; 
@@ -441,9 +439,9 @@ fi
 
 if [ "${DOCUMENT_SERVER_ENABLED}" == "true" ]; then
 
-    cp ${SYSCONF_TEMPLATES_DIR}/nginx/onlyoffice-proxy-to-document-server ${NGINX_CONF_DIR}/onlyoffice-proxy-to-document-server;
+    cp ${SYSCONF_TEMPLATES_DIR}/nginx/onlyoffice-communityserver-proxy-to-documentserver.conf ${NGINX_CONF_DIR}/includes/onlyoffice-communityserver-proxy-to-documentserver.conf;
 
-    sed 's,{{DOCUMENT_SERVER_HOST_ADDR}},'"${DOCUMENT_SERVER_PROTOCOL}:\/\/${DOCUMENT_SERVER_HOST}"',' -i ${NGINX_CONF_DIR}/onlyoffice-proxy-to-document-server;
+    sed 's,{{DOCUMENT_SERVER_HOST_ADDR}},'"${DOCUMENT_SERVER_PROTOCOL}:\/\/${DOCUMENT_SERVER_HOST}"',' -i ${NGINX_CONF_DIR}/includes/onlyoffice-communityserver-proxy-to-documentserver.conf;
 
     # change web.appsettings link to editor
     sed '/files\.docservice\.url\.converter/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_PROTOCOL}':\/\/'${DOCUMENT_SERVER_HOST}'\/ConvertService\.ashx\"!' -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
@@ -579,9 +577,8 @@ END
 fi
 
 if [ "${CONTROL_PANEL_ENABLED}" == "true" ]; then
-        cp ${SYSCONF_TEMPLATES_DIR}/nginx/onlyoffice-proxy-to-control-panel ${NGINX_CONF_DIR}/onlyoffice-proxy-to-control-panel;
-
-	sed 's,{{CONTROL_PANEL_HOST_ADDR}},'"http:\/\/${CONTROL_PANEL_PORT_80_TCP_ADDR}"',' -i ${NGINX_CONF_DIR}/onlyoffice-proxy-to-control-panel;
+        cp ${SYSCONF_TEMPLATES_DIR}/nginx/onlyoffice-communityserver-proxy-to-controlpanel.conf ${NGINX_CONF_DIR}/includes/onlyoffice-communityserver-proxy-to-controlpanel.conf;
+	sed 's,{{CONTROL_PANEL_HOST_ADDR}},'"http:\/\/${CONTROL_PANEL_PORT_80_TCP_ADDR}"',' -i ${NGINX_CONF_DIR}/includes/onlyoffice-communityserver-proxy-to-controlpanel.conf;
 
 	# change web.appsettings link to controlpanel
 	sed '/web\.controlpanel\.url/s/\(value\s*=\s*\"\)[^\"]*\"/\1\/controlpanel\/\"/' -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config;

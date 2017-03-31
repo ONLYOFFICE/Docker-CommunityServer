@@ -94,8 +94,7 @@ server {
 	##
 	ssl_dhparam {{SSL_DHPARAM_PATH}};
 
-	{{ONLYOFFICE_SKELETON}}
-
+        include /etc/nginx/includes/onlyoffice-communityserver-*.conf;
 }
 
 
