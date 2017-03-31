@@ -437,9 +437,9 @@ fi
 
 if [ "${DOCUMENT_SERVER_ENABLED}" == "true" ]; then
 
-    cp ${SYSCONF_TEMPLATES_DIR}/nginx/onlyoffice-communityserver-proxy-to-documentserver.conf ${NGINX_CONF_DIR}/includes/onlyoffice-communityserver-proxy-to-documentserver.conf;
+    cp ${SYSCONF_TEMPLATES_DIR}/nginx/onlyoffice-communityserver-proxy-to-documentserver.conf ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-proxy-to-documentserver.conf;
 
-    sed 's,{{DOCUMENT_SERVER_HOST_ADDR}},'"${DOCUMENT_SERVER_PROTOCOL}:\/\/${DOCUMENT_SERVER_HOST}"',' -i ${NGINX_CONF_DIR}/includes/onlyoffice-communityserver-proxy-to-documentserver.conf;
+    sed 's,{{DOCUMENT_SERVER_HOST_ADDR}},'"${DOCUMENT_SERVER_PROTOCOL}:\/\/${DOCUMENT_SERVER_HOST}"',' -i ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-proxy-to-documentserver.conf;
 
     # change web.appsettings link to editor
     sed '/files\.docservice\.url\.converter/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_PROTOCOL}':\/\/'${DOCUMENT_SERVER_HOST}'\/ConvertService\.ashx\"!' -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
@@ -575,8 +575,8 @@ END
 fi
 
 if [ "${CONTROL_PANEL_ENABLED}" == "true" ]; then
-        cp ${SYSCONF_TEMPLATES_DIR}/nginx/onlyoffice-communityserver-proxy-to-controlpanel.conf ${NGINX_CONF_DIR}/includes/onlyoffice-communityserver-proxy-to-controlpanel.conf;
-	sed 's,{{CONTROL_PANEL_HOST_ADDR}},'"http:\/\/${CONTROL_PANEL_PORT_80_TCP_ADDR}"',' -i ${NGINX_CONF_DIR}/includes/onlyoffice-communityserver-proxy-to-controlpanel.conf;
+        cp ${SYSCONF_TEMPLATES_DIR}/nginx/onlyoffice-communityserver-proxy-to-controlpanel.conf ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-proxy-to-controlpanel.conf;
+	sed 's,{{CONTROL_PANEL_HOST_ADDR}},'"http:\/\/${CONTROL_PANEL_PORT_80_TCP_ADDR}"',' -i ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-proxy-to-controlpanel.conf;
 
 	# change web.appsettings link to controlpanel
 	sed '/web\.controlpanel\.url/s/\(value\s*=\s*\"\)[^\"]*\"/\1\/controlpanel\/\"/' -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config;
