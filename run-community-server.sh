@@ -807,7 +807,7 @@ if [ -n "$PID" ]; then
   kill -9 $PID
 fi
 
-cron
+#cron
 
 if [ "${DOCKER_ENABLED}" == "true" ]; then
    exec tail -f /dev/null
