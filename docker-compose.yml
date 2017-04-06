@@ -23,6 +23,7 @@ services:
      - community_data:/var/www/onlyoffice/Data
      - community_log:/var/log/onlyoffice
      - document_data:/var/www/onlyoffice/DocumentServerData
+     - ./certs:/var/www/onlyoffice/Data/certs
   onlyoffice-document-server:
     container_name: onlyoffice-document-server
     image: onlyoffice/documentserver:latest
@@ -36,6 +37,7 @@ services:
       - '443'
     volumes:
        - document_data:/var/www/onlyoffice/Data
+       - ./document_fonts:/usr/share/fonts/truetype/custom
        - document_log:/var/log/onlyoffice
   onlyoffice-mail-server:
     container_name: onlyoffice-mail-server
@@ -66,6 +68,6 @@ volumes:
   mail_mysql:
   document_data:
   document_log:
-  community_mysql:
   community_data:
   community_log:
+  community_mysql:
