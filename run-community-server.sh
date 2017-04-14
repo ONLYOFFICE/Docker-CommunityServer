@@ -69,8 +69,8 @@ MYSQL_SERVER_USER=${MYSQL_SERVER_USER:-"root"}
 MYSQL_SERVER_PASS=${MYSQL_SERVER_PASS:-""}
 MYSQL_SERVER_EXTERNAL=${MYSQL_SERVER_EXTERNAL:-false};
 
-mkdir -p "${SSL_CERTIFICATES_DIR}"
-
+mkdir -p "${SSL_CERTIFICATES_DIR}/.well-known/acme-challenge"
+cp ${SYSCONF_TEMPLATES_DIR}/nginx/onlyoffice-communityserver-letsencrypt.conf ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-letsencrypt.conf;
 
 check_partnerdata(){
 	PARTNER_DATA_FILE="${ONLYOFFICE_DATA_DIR}/json-data.txt";
