@@ -576,8 +576,8 @@ fi
 
 if [ "${CONTROL_PANEL_ENABLED}" == "true" ]; then
         cp ${SYSCONF_TEMPLATES_DIR}/nginx/onlyoffice-communityserver-proxy-to-controlpanel.conf ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-proxy-to-controlpanel.conf;
-	sed 's,{{CONTROL_PANEL_HOST_ADDR}},'"http:\/\/${CONTROL_PANEL_PORT_80_TCP_ADDR}"',' -i ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-proxy-to-controlpanel.conf;
-	sed 's,{{SERVICE_SSO_AUTH_HOST_ADDR}},'"https:\/\/${CONTROL_PANEL_PORT_80_TCP_ADDR}:9833"',' -i ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-proxy-to-controlpanel.conf;
+	sed 's,{{CONTROL_PANEL_HOST_ADDR}},'"${CONTROL_PANEL_PORT_80_TCP_ADDR}"',' -i ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-proxy-to-controlpanel.conf;
+	sed 's,{{SERVICE_SSO_AUTH_HOST_ADDR}},'"${CONTROL_PANEL_PORT_80_TCP_ADDR}"',' -i ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-proxy-to-controlpanel.conf;
 
 	# change web.appsettings link to controlpanel
 	sed '/web\.controlpanel\.url/s/\(value\s*=\s*\"\)[^\"]*\"/\1\/controlpanel\/\"/' -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config;
