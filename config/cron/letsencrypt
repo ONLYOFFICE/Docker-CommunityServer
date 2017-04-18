@@ -1,0 +1,2 @@
+@weekly	certbot renew >> /var/log/le-renew.log
+@weekly	nginx reload

@@ -13,6 +13,7 @@ ONLYOFFICE_HYPERFASTCGI_PATH="/etc/hyperfastcgi/onlyoffice";
 ONLYOFFICE_MONOSERVE_COUNT=${ONLYOFFICE_MONOSERVE_COUNT:-2};
 ONLYOFFICE_MODE=${ONLYOFFICE_MODE:-"SERVER"};
 ONLYOFFICE_GOD_DIR="/etc/god/conf.d"
+ONLYOFFICE_CRON_DIR="/etc/cron.d"
 ONLYOFFICE_CRON_PATH="/etc/cron.d/onlyoffice"
 DOCKER_ONLYOFFICE_SUBNET=${DOCKER_ONLYOFFICE_SUBNET:-""};
 DOCKER_ENABLED=${DOCKER_ENABLED:-true};
@@ -809,7 +810,11 @@ if [ -n "$PID" ]; then
   kill -9 $PID
 fi
 
-#cron
+if [ ! -f ${ONLYOFFICE_CRON_DIR}/letsencrypt ]; then
+  cp ${SYSCONF_TEMPLATES_DIR}/cron/letsencrypt  ${ONLYOFFICE_CRON_DIR}/letsencrypt;
+fi
+
+cron
 
 if [ "${DOCKER_ENABLED}" == "true" ]; then
    exec tail -f /dev/null
