@@ -1,0 +1,97 @@
+version: '3'
+services:
+  onlyoffice-community-server:
+    container_name: onlyoffice-community-server
+    image: onlyoffice4enterprise/communityserver-ee:8.9.2.27
+    depends_on:
+     - onlyoffice-document-server
+     - onlyoffice-mail-server
+    environment:
+     - MAIL_SERVER_DB_HOST=onlyoffice-mail-server
+     - DOCUMENT_SERVER_PORT_80_TCP_ADDR=onlyoffice-document-server
+     - CONTROL_PANEL_PORT_80_TCP=80
+     - CONTROL_PANEL_PORT_80_TCP_ADDR=onlyoffice-control-panel
+    networks:
+     - onlyoffice
+    ports:
+     - '80:80'
+     - '443:443'
+     - '5222:5222'
+    stdin_open: true
+    tty: true
+    restart: always
+    volumes:
+     - community_mysql:/var/lib/mysql
+     - community_data:/var/www/onlyoffice/Data
+     - community_log:/var/log/onlyoffice
+     - document_data:/var/www/onlyoffice/DocumentServerData
+     - ./certs:/var/www/onlyoffice/Data/certs
+  onlyoffice-document-server:
+    container_name: onlyoffice-document-server
+    image: onlyoffice4enterprise/documentserver-ee:4.3.2.3
+    stdin_open: true
+    tty: true
+    restart: always
+    networks:
+      - onlyoffice
+    expose:
+      - '80'
+      - '443'
+    volumes:
+       - document_data:/var/www/onlyoffice/Data
+       - document_log:/var/log/onlyoffice
+       - ./document_fonts:/usr/share/fonts/truetype/custom
+  onlyoffice-mail-server:
+    container_name: onlyoffice-mail-server
+    image: onlyoffice/mailserver:1.6.21
+    hostname: ${MAIL_SERVER_HOSTNAME}
+    networks:
+      - onlyoffice
+    restart: always
+    privileged: true
+    ports: ['25:25','143:143','587:587']
+    stdin_open: true
+    tty: true
+    expose:
+      - '8081'
+      - '3306'
+    volumes:
+      - mail_data:/var/vmail
+      - mail_certs:/etc/pki/tls/mailserver
+      - mail_log:/var/log
+      - mail_mysql:/var/lib/mysql
+  onlyoffice-control-panel:
+    container_name: onlyoffice-control-panel
+    depends_on:
+     - onlyoffice-document-server
+     - onlyoffice-mail-server
+     - onlyoffice-community-server
+    image: onlyoffice4enterprise/controlpanel-ee:1.6.1.106
+    expose:
+      - '80'
+      - '443'
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - community_data:/app/onlyoffice/CommunityServer/data
+      - controlpanel_data:/var/www/onlyoffice-controlpanel/Data
+      - controlpanel_log:/var/log/onlyoffice-controlpanel
+    networks:
+      - onlyoffice
+    stdin_open: true
+    tty: true
+networks:
+  onlyoffice:
+    driver: 'bridge'
+volumes:
+  mail_data:
+  mail_certs:
+  mail_log:
+  mail_mysql:
+  document_data:
+  document_log:
+  community_mysql:
+  community_data:
+  community_log:
+  controlpanel_data:
+  controlpanel_log:
