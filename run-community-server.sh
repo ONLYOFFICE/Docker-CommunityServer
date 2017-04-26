@@ -13,6 +13,7 @@ ONLYOFFICE_HYPERFASTCGI_PATH="/etc/hyperfastcgi/onlyoffice";
 ONLYOFFICE_MONOSERVE_COUNT=${ONLYOFFICE_MONOSERVE_COUNT:-2};
 ONLYOFFICE_MODE=${ONLYOFFICE_MODE:-"SERVER"};
 ONLYOFFICE_GOD_DIR="/etc/god/conf.d"
+ONLYOFFICE_CRON_DIR="/etc/cron.d"
 ONLYOFFICE_CRON_PATH="/etc/cron.d/onlyoffice"
 DOCKER_ONLYOFFICE_SUBNET=$(ip -o -f inet addr show | awk '/scope global/ {print $4}');
 DOCKER_ENABLED=${DOCKER_ENABLED:-true};
@@ -46,6 +47,7 @@ SSL_CERTIFICATE_PATH=${SSL_CERTIFICATE_PATH:-${SSL_CERTIFICATES_DIR}/onlyoffice.
 SSL_KEY_PATH=${SSL_KEY_PATH:-${SSL_CERTIFICATES_DIR}/onlyoffice.key}
 SSL_DHPARAM_PATH=${SSL_DHPARAM_PATH:-${SSL_CERTIFICATES_DIR}/dhparam.pem}
 SSL_VERIFY_CLIENT=${SSL_VERIFY_CLIENT:-off}
+CA_CERTIFICATES_PATH=${CA_CERTIFICATES_PATH:-${SSL_CERTIFICATES_DIR}/ca.crt}
 ONLYOFFICE_HTTPS_HSTS_ENABLED=${ONLYOFFICE_HTTPS_HSTS_ENABLED:-true}
 ONLYOFFICE_HTTPS_HSTS_MAXAGE=${ONLYOFFICE_HTTPS_HSTS_MAXAG:-31536000}
 
@@ -71,8 +73,8 @@ MYSQL_SERVER_USER=${MYSQL_SERVER_USER:-"root"}
 MYSQL_SERVER_PASS=${MYSQL_SERVER_PASS:-""}
 MYSQL_SERVER_EXTERNAL=${MYSQL_SERVER_EXTERNAL:-false};
 
-mkdir -p "${SSL_CERTIFICATES_DIR}"
-
+mkdir -p "${SSL_CERTIFICATES_DIR}/.well-known/acme-challenge"
+cp ${SYSCONF_TEMPLATES_DIR}/nginx/onlyoffice-communityserver-letsencrypt.conf ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-letsencrypt.conf;
 
 check_partnerdata(){
 	PARTNER_DATA_FILE="${ONLYOFFICE_DATA_DIR}/json-data.txt";
@@ -403,7 +405,7 @@ if [ -f "${SSL_CERTIFICATE_PATH}" -a -f "${SSL_KEY_PATH}" ]; then
 
 	sed 's,{{SSL_VERIFY_CLIENT}},'"${SSL_VERIFY_CLIENT}"',' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
 
-	if [ -f /usr/local/share/ca-certificates/ca.crt ]; then
+	if [ -f "${CA_CERTIFICATES_PATH}" ]; then
 		sed 's,{{CA_CERTIFICATES_PATH}},'"${CA_CERTIFICATES_PATH}"',' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
 	else
 		sed '/{{CA_CERTIFICATES_PATH}}/d' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
@@ -815,7 +817,11 @@ if [ -n "$PID" ]; then
   kill -9 $PID
 fi
 
-#cron
+if [ ! -f ${ONLYOFFICE_CRON_DIR}/letsencrypt ]; then
+  cp ${SYSCONF_TEMPLATES_DIR}/cron/letsencrypt  ${ONLYOFFICE_CRON_DIR}/letsencrypt;
+fi
+
+cron
 
 if [ "${DOCKER_ENABLED}" == "true" ]; then
    exec tail -f /dev/null
