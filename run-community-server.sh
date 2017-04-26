@@ -18,6 +18,9 @@ DOCKER_ONLYOFFICE_SUBNET=${DOCKER_ONLYOFFICE_SUBNET:-""};
 DOCKER_ENABLED=${DOCKER_ENABLED:-true};
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 NGINX_CONF_DIR="/etc/nginx/sites-enabled"
+NGINX_WORKER_PROCESSES=${NGINX_WORKER_PROCESSES:-$(grep processor /proc/cpuinfo | wc -l)};
+NGINX_WORKER_CONNECTIONS=${NGINX_WORKER_CONNECTIONS:-$(ulimit -n)};
+
 
 if [ ! -d "$NGINX_CONF_DIR" ]; then
    mkdir -p $NGINX_CONF_DIR;
@@ -113,6 +116,10 @@ fi
 # fi
 
 cp ${SYSCONF_TEMPLATES_DIR}/nginx/nginx.conf ${NGINX_ROOT_DIR}/nginx.conf
+
+sed 's/^worker_processes.*/'"worker_processes ${NGINX_WORKER_PROCESSES};"'/' -i ${NGINX_ROOT_DIR}/nginx.conf
+sed 's/worker_connections.*/'"worker_connections ${NGINX_WORKER_CONNECTIONS};"'/' -i ${NGINX_ROOT_DIR}/nginx.conf
+
 
 cp ${SYSCONF_TEMPLATES_DIR}/nginx/onlyoffice-init ${NGINX_CONF_DIR}/onlyoffice
 rm -f ${NGINX_ROOT_DIR}/conf.d/*.conf
