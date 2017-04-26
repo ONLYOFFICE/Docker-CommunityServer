@@ -1,6 +1,9 @@
 #!/bin/bash
 
+DOCKER_ONLYOFFICE_SUBNET=$(ip -o -f inet addr show | awk '/scope global/ {print $4}');
+
 cp /app/onlyoffice/config/nginx/onlyoffice-ssl default-onlyoffice-ssl.conf;
+
 sed 's,{{SSL_CERTIFICATE_PATH}},/var/www/onlyoffice/Data/certs/onlyoffice.crt,' -i default-onlyoffice-ssl.conf;
 sed 's,{{SSL_KEY_PATH}},/var/www/onlyoffice/Data/certs/onlyoffice.key,' -i default-onlyoffice-ssl.conf;
 sed 's,{{SSL_DHPARAM_PATH}},/var/www/onlyoffice/Data/certs/dhparam.pem,' -i default-onlyoffice-ssl.conf;
