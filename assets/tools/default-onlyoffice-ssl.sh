@@ -1,5 +1,11 @@
 #!/bin/bash
 
+if [ ! -f /var/www/onlyoffice/Data/certs/dhparam.pem ]; then
+        sudo openssl dhparam -out dhparam.pem 2048
+
+        mv dhparam.pem /var/www/onlyoffice/Data/certs/dhparam.pem;
+fi
+
 DOCKER_ONLYOFFICE_SUBNET=$(ip -o -f inet addr show | awk '/scope global/ {print $4}');
 
 cp /app/onlyoffice/config/nginx/onlyoffice-ssl default-onlyoffice-ssl.conf;
