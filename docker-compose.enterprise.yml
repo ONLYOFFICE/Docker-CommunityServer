@@ -73,7 +73,6 @@ services:
     restart: always
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - community_data:/app/onlyoffice/CommunityServer/data
       - controlpanel_data:/var/www/onlyoffice-controlpanel/Data
       - controlpanel_log:/var/log/onlyoffice-controlpanel
     networks:
