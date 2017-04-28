@@ -10,5 +10,6 @@ certbot certonly --webroot -w /var/www/onlyoffice/Data/certs --noninteractive --
 
 ln -sf /etc/letsencrypt/live/$1/fullchain.pem /var/www/onlyoffice/Data/certs/onlyoffice.crt
 ln -sf /etc/letsencrypt/live/$1/privkey.pem /var/www/onlyoffice/Data/certs/onlyoffice.key
+ln -sf /etc/letsencrypt/live/$1/chain.pem /var/www/onlyoffice/Data/certs/stapling.trusted.crt
 
 source default-onlyoffice-ssl.sh

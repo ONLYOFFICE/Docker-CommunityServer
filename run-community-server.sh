@@ -47,9 +47,10 @@ SSL_CERTIFICATE_PATH=${SSL_CERTIFICATE_PATH:-${SSL_CERTIFICATES_DIR}/onlyoffice.
 SSL_KEY_PATH=${SSL_KEY_PATH:-${SSL_CERTIFICATES_DIR}/onlyoffice.key}
 SSL_DHPARAM_PATH=${SSL_DHPARAM_PATH:-${SSL_CERTIFICATES_DIR}/dhparam.pem}
 SSL_VERIFY_CLIENT=${SSL_VERIFY_CLIENT:-off}
+SSL_OCSP_CERTIFICATE_PATH=${SSL_OCSP_CERTIFICATE_PATH:-${SSL_CERTIFICATES_DIR}/stapling.trusted.crt}
 CA_CERTIFICATES_PATH=${CA_CERTIFICATES_PATH:-${SSL_CERTIFICATES_DIR}/ca.crt}
 ONLYOFFICE_HTTPS_HSTS_ENABLED=${ONLYOFFICE_HTTPS_HSTS_ENABLED:-true}
-ONLYOFFICE_HTTPS_HSTS_MAXAGE=${ONLYOFFICE_HTTPS_HSTS_MAXAG:-31536000}
+ONLYOFFICE_HTTPS_HSTS_MAXAGE=${ONLYOFFICE_HTTPS_HSTS_MAXAG:-63072000}
 
 SYSCONF_TEMPLATES_DIR="${DIR}/config"
 SYSCONF_TOOLS_DIR="${DIR}/assets/tools"
@@ -402,6 +403,19 @@ if [ -f "${SSL_CERTIFICATE_PATH}" -a -f "${SSL_KEY_PATH}" ]; then
 	else
 		sed '/ssl_dhparam {{SSL_DHPARAM_PATH}};/d' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
 	fi
+
+
+	# if dhparam path is valid, add to the config, otherwise remove the option
+	if [ -r "${SSL_OCSP_CERTIFICATE_PATH}" ]; then
+		sed 's,{{SSL_OCSP_CERTIFICATE_PATH}},'"${SSL_OCSP_CERTIFICATE_PATH}"',' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
+	else
+		sed '/ssl_stapling/d' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
+		sed '/ssl_stapling_verify/d' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
+		sed '/ssl_trusted_certificate/d' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
+		sed '/resolver/d' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
+		sed '/resolver_timeout/d' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
+	fi
+
 
 	sed 's,{{SSL_VERIFY_CLIENT}},'"${SSL_VERIFY_CLIENT}"',' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
 

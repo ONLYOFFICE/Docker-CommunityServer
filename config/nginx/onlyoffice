@@ -13,5 +13,7 @@ fastcgi_cache_path /var/cache/nginx/onlyoffice
 server {
 	listen 80;
 
+	add_header Access-Control-Allow-Origin *;
+
         include /etc/nginx/includes/onlyoffice-communityserver-*.conf;
 }
