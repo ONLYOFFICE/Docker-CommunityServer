@@ -64,8 +64,8 @@ server {
 
 ## HTTPS host
 server {
-	listen 0.0.0.0:443 ssl;
-	listen [::]:443 ssl default_server;
+	listen 0.0.0.0:443 ssl http2;
+	listen [::]:443 ssl http2 default_server;
 	server_tokens off;
 	root /usr/share/nginx/html;
 
@@ -73,34 +73,35 @@ server {
 	client_max_body_size 100m;
 
 	## Strong SSL Security
-	## https://raymii.org/s/tutorials/Strong_SSL_Security_On_nginx.html
+	## https://cipherli.st/
 	ssl on;
 	ssl_certificate {{SSL_CERTIFICATE_PATH}};
 	ssl_certificate_key {{SSL_KEY_PATH}};
 	ssl_verify_client {{SSL_VERIFY_CLIENT}};
 	ssl_client_certificate {{CA_CERTIFICATES_PATH}};
 
-	ssl_ciphers "ECDHE-RSA-AES128-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA128:DHE-RSA-AES128-GCM-SHA384:DHE-RSA-AES128-GCM-SHA128:ECDHE-RSA-AES128-SHA384:ECDHE-RSA-AES128-SHA128:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES128-SHA:DHE-RSA-AES128-SHA128:DHE-RSA-AES128-SHA128:DHE-RSA-AES128-SHA:DHE-RSA-AES128-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES128-GCM-SHA384:AES128-GCM-SHA128:AES128-SHA128:AES128-SHA128:AES128-SHA:AES128-SHA:DES-CBC3-SHA:HIGH:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4";
+	ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+	ssl_prefer_server_ciphers on;
+	ssl_ciphers "EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH";
+	ssl_ecdh_curve secp384r1; # Requires nginx >= 1.1.0
+	ssl_session_cache shared:SSL:10m;
+	ssl_session_tickets off; # Requires nginx >= 1.5.9
 
-	ssl_protocols  TLSv1 TLSv1.1 TLSv1.2;
-	ssl_session_cache  builtin:1000  shared:SSL:10m;
-
-	ssl_prefer_server_ciphers   on;
-
-	add_header Strict-Transport-Security max-age={{ONLYOFFICE_HTTPS_HSTS_MAXAGE}};
-	# add_header X-Frame-Options SAMEORIGIN;
+	add_header Strict-Transport-Security "max-age={{ONLYOFFICE_HTTPS_HSTS_MAXAGE}}; includeSubDomains; preload" always;
+#	add_header X-Frame-Options DENY;
 	add_header X-Content-Type-Options nosniff;
+	add_header Access-Control-Allow-Origin *;	
 
 	## [Optional] If your certficate has OCSP, enable OCSP stapling to reduce the overhead and latency of running SSL.
 	## Replace with your ssl_trusted_certificate. For more info see:
 	## - https://medium.com/devops-programming/4445f4862461
 	## - https://www.ruby-forum.com/topic/4419319
 	## - https://www.digitalocean.com/community/tutorials/how-to-configure-ocsp-stapling-on-apache-and-nginx
-	# ssl_stapling on;
-	# ssl_stapling_verify on;
-	# ssl_trusted_certificate /etc/nginx/ssl/stapling.trusted.crt;
-	# resolver 208.67.222.222 208.67.222.220 valid=300s; # Can change to your DNS resolver if desired
-	# resolver_timeout 10s;
+	ssl_stapling on;
+	ssl_stapling_verify on;
+	ssl_trusted_certificate {{SSL_OCSP_CERTIFICATE_PATH}};
+	resolver 8.8.8.8 8.8.4.4 127.0.0.11 valid=300s; # Can change to your DNS resolver if desired
+	resolver_timeout 10s;
 
 	## [Optional] Generate a stronger DHE parameter:
 	## cd /etc/ssl/certs

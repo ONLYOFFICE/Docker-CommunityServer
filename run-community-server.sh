@@ -13,11 +13,15 @@ ONLYOFFICE_HYPERFASTCGI_PATH="/etc/hyperfastcgi/onlyoffice";
 ONLYOFFICE_MONOSERVE_COUNT=${ONLYOFFICE_MONOSERVE_COUNT:-2};
 ONLYOFFICE_MODE=${ONLYOFFICE_MODE:-"SERVER"};
 ONLYOFFICE_GOD_DIR="/etc/god/conf.d"
+ONLYOFFICE_CRON_DIR="/etc/cron.d"
 ONLYOFFICE_CRON_PATH="/etc/cron.d/onlyoffice"
-DOCKER_ONLYOFFICE_SUBNET=${DOCKER_ONLYOFFICE_SUBNET:-""};
+DOCKER_ONLYOFFICE_SUBNET=$(ip -o -f inet addr show | awk '/scope global/ {print $4}');
 DOCKER_ENABLED=${DOCKER_ENABLED:-true};
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 NGINX_CONF_DIR="/etc/nginx/sites-enabled"
+NGINX_WORKER_PROCESSES=${NGINX_WORKER_PROCESSES:-$(grep processor /proc/cpuinfo | wc -l)};
+NGINX_WORKER_CONNECTIONS=${NGINX_WORKER_CONNECTIONS:-$(ulimit -n)};
+
 
 if [ ! -d "$NGINX_CONF_DIR" ]; then
    mkdir -p $NGINX_CONF_DIR;
@@ -43,8 +47,10 @@ SSL_CERTIFICATE_PATH=${SSL_CERTIFICATE_PATH:-${SSL_CERTIFICATES_DIR}/onlyoffice.
 SSL_KEY_PATH=${SSL_KEY_PATH:-${SSL_CERTIFICATES_DIR}/onlyoffice.key}
 SSL_DHPARAM_PATH=${SSL_DHPARAM_PATH:-${SSL_CERTIFICATES_DIR}/dhparam.pem}
 SSL_VERIFY_CLIENT=${SSL_VERIFY_CLIENT:-off}
+SSL_OCSP_CERTIFICATE_PATH=${SSL_OCSP_CERTIFICATE_PATH:-${SSL_CERTIFICATES_DIR}/stapling.trusted.crt}
+CA_CERTIFICATES_PATH=${CA_CERTIFICATES_PATH:-${SSL_CERTIFICATES_DIR}/ca.crt}
 ONLYOFFICE_HTTPS_HSTS_ENABLED=${ONLYOFFICE_HTTPS_HSTS_ENABLED:-true}
-ONLYOFFICE_HTTPS_HSTS_MAXAGE=${ONLYOFFICE_HTTPS_HSTS_MAXAG:-31536000}
+ONLYOFFICE_HTTPS_HSTS_MAXAGE=${ONLYOFFICE_HTTPS_HSTS_MAXAG:-63072000}
 
 SYSCONF_TEMPLATES_DIR="${DIR}/config"
 SYSCONF_TOOLS_DIR="${DIR}/assets/tools"
@@ -55,7 +61,7 @@ DOCUMENT_SERVER_ENABLED=false
 
 DOCUMENT_SERVER_HOST=${DOCUMENT_SERVER_HOST:-""};
 DOCUMENT_SERVER_PROTOCOL=${DOCUMENT_SERVER_PROTOCOL:-"http"};
-DOCUMENT_SERVER_API_URL="\/OfficeWeb\/apps\/api\/documents\/api\.js";
+DOCUMENT_SERVER_API_URL="\/web-apps\/apps\/api\/documents\/api\.js";
 
 CONTROL_PANEL_ENABLED=false
 MAIL_SERVER_ENABLED=false
@@ -68,8 +74,8 @@ MYSQL_SERVER_USER=${MYSQL_SERVER_USER:-"root"}
 MYSQL_SERVER_PASS=${MYSQL_SERVER_PASS:-""}
 MYSQL_SERVER_EXTERNAL=${MYSQL_SERVER_EXTERNAL:-false};
 
-mkdir -p "${SSL_CERTIFICATES_DIR}"
-
+mkdir -p "${SSL_CERTIFICATES_DIR}/.well-known/acme-challenge"
+cp ${SYSCONF_TEMPLATES_DIR}/nginx/onlyoffice-communityserver-letsencrypt.conf ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-letsencrypt.conf;
 
 check_partnerdata(){
 	PARTNER_DATA_FILE="${ONLYOFFICE_DATA_DIR}/json-data.txt";
@@ -113,6 +119,10 @@ fi
 # fi
 
 cp ${SYSCONF_TEMPLATES_DIR}/nginx/nginx.conf ${NGINX_ROOT_DIR}/nginx.conf
+
+sed 's/^worker_processes.*/'"worker_processes ${NGINX_WORKER_PROCESSES};"'/' -i ${NGINX_ROOT_DIR}/nginx.conf
+sed 's/worker_connections.*/'"worker_connections ${NGINX_WORKER_CONNECTIONS};"'/' -i ${NGINX_ROOT_DIR}/nginx.conf
+
 
 cp ${SYSCONF_TEMPLATES_DIR}/nginx/onlyoffice-init ${NGINX_CONF_DIR}/onlyoffice
 rm -f ${NGINX_ROOT_DIR}/conf.d/*.conf
@@ -394,9 +404,22 @@ if [ -f "${SSL_CERTIFICATE_PATH}" -a -f "${SSL_KEY_PATH}" ]; then
 		sed '/ssl_dhparam {{SSL_DHPARAM_PATH}};/d' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
 	fi
 
+
+	# if dhparam path is valid, add to the config, otherwise remove the option
+	if [ -r "${SSL_OCSP_CERTIFICATE_PATH}" ]; then
+		sed 's,{{SSL_OCSP_CERTIFICATE_PATH}},'"${SSL_OCSP_CERTIFICATE_PATH}"',' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
+	else
+		sed '/ssl_stapling/d' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
+		sed '/ssl_stapling_verify/d' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
+		sed '/ssl_trusted_certificate/d' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
+		sed '/resolver/d' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
+		sed '/resolver_timeout/d' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
+	fi
+
+
 	sed 's,{{SSL_VERIFY_CLIENT}},'"${SSL_VERIFY_CLIENT}"',' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
 
-	if [ -f /usr/local/share/ca-certificates/ca.crt ]; then
+	if [ -f "${CA_CERTIFICATES_PATH}" ]; then
 		sed 's,{{CA_CERTIFICATES_PATH}},'"${CA_CERTIFICATES_PATH}"',' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
 	else
 		sed '/{{CA_CERTIFICATES_PATH}}/d' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
@@ -458,7 +481,6 @@ if [ "${DOCUMENT_SERVER_ENABLED}" == "true" ]; then
           sed '/files\.docservice\.url\.command/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_PROTOCOL}':\/\/'${DOCUMENT_SERVER_HOST}'\/coauthoring\/CommandService\.ashx\"!' -i ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
     fi
 	
-    mysql_scalar_exec "REPLACE INTO webstudio_settings (TenantID, ID, UserID, Data) VALUES (-1, 'a3acbfc4-155b-4ea8-8367-bbc586319553', '00000000-0000-0000-0000-000000000000', '{\"NewScheme\":true,\"RequestedScheme\":true}');";
 fi
 
 if [ "${MAIL_SERVER_ENABLED}" == "true" ]; then
@@ -576,8 +598,8 @@ fi
 
 if [ "${CONTROL_PANEL_ENABLED}" == "true" ]; then
         cp ${SYSCONF_TEMPLATES_DIR}/nginx/onlyoffice-communityserver-proxy-to-controlpanel.conf ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-proxy-to-controlpanel.conf;
-	sed 's,{{CONTROL_PANEL_HOST_ADDR}},'"http:\/\/${CONTROL_PANEL_PORT_80_TCP_ADDR}"',' -i ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-proxy-to-controlpanel.conf;
-	sed 's,{{SERVICE_SSO_AUTH_HOST_ADDR}},'"https:\/\/${CONTROL_PANEL_PORT_80_TCP_ADDR}:9833"',' -i ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-proxy-to-controlpanel.conf;
+	sed 's,{{CONTROL_PANEL_HOST_ADDR}},'"${CONTROL_PANEL_PORT_80_TCP_ADDR}"',' -i ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-proxy-to-controlpanel.conf;
+	sed 's,{{SERVICE_SSO_AUTH_HOST_ADDR}},'"${CONTROL_PANEL_PORT_80_TCP_ADDR}"',' -i ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-proxy-to-controlpanel.conf;
 
 	# change web.appsettings link to controlpanel
 	sed '/web\.controlpanel\.url/s/\(value\s*=\s*\"\)[^\"]*\"/\1\/controlpanel\/\"/' -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config;
@@ -808,7 +830,11 @@ if [ -n "$PID" ]; then
   kill -9 $PID
 fi
 
-#cron
+if [ ! -f ${ONLYOFFICE_CRON_DIR}/letsencrypt ]; then
+  cp ${SYSCONF_TEMPLATES_DIR}/cron/letsencrypt  ${ONLYOFFICE_CRON_DIR}/letsencrypt;
+fi
+
+cron
 
 if [ "${DOCKER_ENABLED}" == "true" ]; then
    exec tail -f /dev/null
