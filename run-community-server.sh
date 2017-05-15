@@ -22,6 +22,7 @@ NGINX_CONF_DIR="/etc/nginx/sites-enabled"
 NGINX_WORKER_PROCESSES=${NGINX_WORKER_PROCESSES:-$(grep processor /proc/cpuinfo | wc -l)};
 NGINX_WORKER_CONNECTIONS=${NGINX_WORKER_CONNECTIONS:-$(ulimit -n)};
 
+SERVICE_SSO_AUTH_HOST_ADDR=${SERVICE_SSO_AUTH_HOST_ADDR:-${CONTROL_PANEL_PORT_80_TCP_ADDR}};
 
 if [ ! -d "$NGINX_CONF_DIR" ]; then
    mkdir -p $NGINX_CONF_DIR;
@@ -75,7 +76,6 @@ MYSQL_SERVER_PASS=${MYSQL_SERVER_PASS:-""}
 MYSQL_SERVER_EXTERNAL=${MYSQL_SERVER_EXTERNAL:-false};
 
 mkdir -p "${SSL_CERTIFICATES_DIR}/.well-known/acme-challenge"
-cp ${SYSCONF_TEMPLATES_DIR}/nginx/onlyoffice-communityserver-letsencrypt.conf ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-letsencrypt.conf;
 
 check_partnerdata(){
 	PARTNER_DATA_FILE="${ONLYOFFICE_DATA_DIR}/json-data.txt";
@@ -460,7 +460,7 @@ fi
 
 if [ "${DOCUMENT_SERVER_ENABLED}" == "true" ]; then
 
-    cp ${SYSCONF_TEMPLATES_DIR}/nginx/onlyoffice-communityserver-proxy-to-documentserver.conf ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-proxy-to-documentserver.conf;
+    cp ${NGINX_ROOT_DIR}/nginx/onlyoffice-communityserver-proxy-to-documentserver.conf.template ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-proxy-to-documentserver.conf;
 
     sed 's,{{DOCUMENT_SERVER_HOST_ADDR}},'"${DOCUMENT_SERVER_PROTOCOL}:\/\/${DOCUMENT_SERVER_HOST}"',' -i ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-proxy-to-documentserver.conf;
 
@@ -597,9 +597,9 @@ END
 fi
 
 if [ "${CONTROL_PANEL_ENABLED}" == "true" ]; then
-        cp ${SYSCONF_TEMPLATES_DIR}/nginx/onlyoffice-communityserver-proxy-to-controlpanel.conf ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-proxy-to-controlpanel.conf;
+        cp ${NGINX_ROOT_DIR}/nginx/onlyoffice-communityserver-proxy-to-controlpanel.conf.template ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-proxy-to-controlpanel.conf;
 	sed 's,{{CONTROL_PANEL_HOST_ADDR}},'"${CONTROL_PANEL_PORT_80_TCP_ADDR}"',' -i ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-proxy-to-controlpanel.conf;
-	sed 's,{{SERVICE_SSO_AUTH_HOST_ADDR}},'"${CONTROL_PANEL_PORT_80_TCP_ADDR}"',' -i ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-proxy-to-controlpanel.conf;
+	sed 's,{{SERVICE_SSO_AUTH_HOST_ADDR}},'"${SERVICE_SSO_AUTH_HOST_ADDR}"',' -i ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-proxy-to-controlpanel.conf;
 
 	# change web.appsettings link to controlpanel
 	sed '/web\.controlpanel\.url/s/\(value\s*=\s*\"\)[^\"]*\"/\1\/controlpanel\/\"/' -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config;
