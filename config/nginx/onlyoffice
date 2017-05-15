@@ -15,6 +15,21 @@ fastcgi_cache_path /var/cache/nginx/onlyoffice
 	max_size=256m
 	inactive=1d;
 
+map $http_host $this_host {
+  "" $host;
+  default $http_host;
+}
+
+map $http_x_forwarded_proto $the_scheme {
+  default $http_x_forwarded_proto;
+  "" $scheme;
+}
+
+map $http_x_forwarded_host $the_host {
+  default $http_x_forwarded_host;
+  "" $this_host;
+}
+
 server {
 	listen 80;
 
