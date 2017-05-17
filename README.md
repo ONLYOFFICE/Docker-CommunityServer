@@ -62,7 +62,7 @@ This command will install ONLYOFFICE Community Server and all the dependencies i
 
 ## Configuring Docker Image
 
-###Auto-restart
+### Auto-restart
 
 To make Docker auto-restart containers on reboot, please use the --restart=always in the docker run command:
 
