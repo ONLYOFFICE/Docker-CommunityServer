@@ -460,7 +460,7 @@ fi
 
 if [ "${DOCUMENT_SERVER_ENABLED}" == "true" ]; then
 
-    cp ${NGINX_ROOT_DIR}/nginx/onlyoffice-communityserver-proxy-to-documentserver.conf.template ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-proxy-to-documentserver.conf;
+    cp ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-proxy-to-documentserver.conf.template ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-proxy-to-documentserver.conf;
 
     sed 's,{{DOCUMENT_SERVER_HOST_ADDR}},'"${DOCUMENT_SERVER_PROTOCOL}:\/\/${DOCUMENT_SERVER_HOST}"',' -i ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-proxy-to-documentserver.conf;
 
@@ -597,7 +597,7 @@ END
 fi
 
 if [ "${CONTROL_PANEL_ENABLED}" == "true" ]; then
-        cp ${NGINX_ROOT_DIR}/nginx/onlyoffice-communityserver-proxy-to-controlpanel.conf.template ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-proxy-to-controlpanel.conf;
+        cp ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-proxy-to-controlpanel.conf.template ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-proxy-to-controlpanel.conf;
 	sed 's,{{CONTROL_PANEL_HOST_ADDR}},'"${CONTROL_PANEL_PORT_80_TCP_ADDR}"',' -i ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-proxy-to-controlpanel.conf;
 	sed 's,{{SERVICE_SSO_AUTH_HOST_ADDR}},'"${SERVICE_SSO_AUTH_HOST_ADDR}"',' -i ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-proxy-to-controlpanel.conf;
 
