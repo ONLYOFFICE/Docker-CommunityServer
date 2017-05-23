@@ -32,7 +32,7 @@ map $http_x_forwarded_host $the_host {
 
 server {
 	listen 80;
-
+	
 	add_header Access-Control-Allow-Origin *;
 
         include /etc/nginx/includes/onlyoffice-communityserver-*.conf;
