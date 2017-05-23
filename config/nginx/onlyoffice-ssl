@@ -1,3 +1,8 @@
+upstream fastcgi_backend_apisystem {
+        server unix:/var/run/onlyoffice/onlyofficeApiSystem.socket;
+        keepalive 32;
+}
+
 upstream fastcgi_backend {
 	server unix:/var/run/onlyoffice/onlyoffice.socket;
 	server unix:/var/run/onlyoffice/onlyoffice2.socket;
