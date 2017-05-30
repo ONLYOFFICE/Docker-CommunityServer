@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -x
+
 SERVER_HOST=${SERVER_HOST:-""};
 ONLYOFFICE_DIR="/var/www/onlyoffice"
 ONLYOFFICE_DATA_DIR="${ONLYOFFICE_DIR}/Data"
@@ -9,7 +11,7 @@ ONLYOFFICE_ROOT_DIR="${ONLYOFFICE_DIR}/WebStudio"
 ONLYOFFICE_APISYSTEM_DIR="/var/www/onlyoffice/ApiSystem"
 ONLYOFFICE_MONOSERVER_PATH="/etc/init.d/monoserve";
 ONLYOFFICE_HYPERFASTCGI_PATH="/etc/hyperfastcgi/onlyoffice";
-ONLYOFFICE_MONOSERVE_COUNT=${ONLYOFFICE_MONOSERVE_COUNT:-1};
+ONLYOFFICE_MONOSERVE_COUNT=1;
 ONLYOFFICE_MODE=${ONLYOFFICE_MODE:-"SERVER"};
 ONLYOFFICE_GOD_DIR="/etc/god/conf.d"
 ONLYOFFICE_CRON_DIR="/etc/cron.d"
@@ -369,7 +371,7 @@ else
 		chmod -R 755 /var/lib/mysql/
 
 		# cp /etc/mysql/my.cnf /usr/share/mysql/my-default.cnf
-		mysqld --initialize-insecure || true
+		mysqld --initialize-insecure --user=mysql || true
 		service mysql start
 
 		mysql -D "mysql" -e "update user set plugin='mysql_native_password' where user='root';"
