@@ -6,11 +6,10 @@ ONLYOFFICE_DATA_DIR="${ONLYOFFICE_DIR}/Data"
 ONLYOFFICE_SERVICES_DIR="${ONLYOFFICE_DIR}/Services"
 ONLYOFFICE_SQL_DIR="${ONLYOFFICE_DIR}/Sql"
 ONLYOFFICE_ROOT_DIR="${ONLYOFFICE_DIR}/WebStudio"
-ONLYOFFICE_ROOT_DIR2="${ONLYOFFICE_DIR}/WebStudio2"
 ONLYOFFICE_APISYSTEM_DIR="/var/www/onlyoffice/ApiSystem"
 ONLYOFFICE_MONOSERVER_PATH="/etc/init.d/monoserve";
 ONLYOFFICE_HYPERFASTCGI_PATH="/etc/hyperfastcgi/onlyoffice";
-ONLYOFFICE_MONOSERVE_COUNT=${ONLYOFFICE_MONOSERVE_COUNT:-2};
+ONLYOFFICE_MONOSERVE_COUNT=${ONLYOFFICE_MONOSERVE_COUNT:-1};
 ONLYOFFICE_MODE=${ONLYOFFICE_MODE:-"SERVER"};
 ONLYOFFICE_GOD_DIR="/etc/god/conf.d"
 ONLYOFFICE_CRON_DIR="/etc/cron.d"
@@ -384,6 +383,10 @@ else
 
 		myisamchk -q -r /var/lib/mysql/mysql/proc || true
 		service mysql start
+
+		if ! mysql_upgrade | grep -q "already upgraded"; then
+			service mysql restart;
+		fi
 
 		DEBIAN_SYS_MAINT_PASS=$(grep "password" /etc/mysql/debian.cnf | head -1 | sed 's/password\s*=\s*//' | tr -d '[[:space:]]');
 		mysql_scalar_exec "GRANT ALL PRIVILEGES ON *.* TO 'debian-sys-maint'@'localhost' IDENTIFIED BY '${DEBIAN_SYS_MAINT_PASS}'"

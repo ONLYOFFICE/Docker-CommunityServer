@@ -1,6 +1,5 @@
 upstream fastcgi_backend {
         server unix:/var/run/onlyoffice/onlyoffice.socket;
-        server unix:/var/run/onlyoffice/onlyoffice2.socket;
         keepalive 32;
 }
 
