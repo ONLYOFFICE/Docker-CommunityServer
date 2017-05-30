@@ -365,17 +365,26 @@ if [ "${MYSQL_SERVER_EXTERNAL}" == "true" ]; then
 else
 	# create db if not exist
 	if [ ! -f /var/lib/mysql/ibdata1 ]; then
-		cp /etc/mysql/my.cnf /usr/share/mysql/my-default.cnf
-		mysql_install_db || true
+		chown -R mysql:mysql /var/lib/mysql/
+		chmod -R 755 /var/lib/mysql/
+
+		# cp /etc/mysql/my.cnf /usr/share/mysql/my-default.cnf
+		mysqld --initialize-insecure || true
 		service mysql start
+
+		mysql -D "mysql" -e "update user set plugin='mysql_native_password' where user='root';"
 
 		echo "CREATE DATABASE onlyoffice CHARACTER SET utf8 COLLATE utf8_general_ci" | mysql;
 
 		mysql -D "onlyoffice" < ${ONLYOFFICE_SQL_DIR}/onlyoffice.sql
 		mysql -D "onlyoffice" < ${ONLYOFFICE_SQL_DIR}/onlyoffice.data.sql
 		mysql -D "onlyoffice" < ${ONLYOFFICE_SQL_DIR}/onlyoffice.resources.sql
+
+		service mysql restart
+
 	else
 		chown -R mysql:mysql /var/lib/mysql/
+		chmod -R 755 /var/lib/mysql/
 
 		if [ ${LOG_DEBUG} ]; then
 			log_debug "Fix docker bug volume mapping for mysql";
@@ -388,8 +397,10 @@ else
 			service mysql restart;
 		fi
 
-		DEBIAN_SYS_MAINT_PASS=$(grep "password" /etc/mysql/debian.cnf | head -1 | sed 's/password\s*=\s*//' | tr -d '[[:space:]]');
-		mysql_scalar_exec "GRANT ALL PRIVILEGES ON *.* TO 'debian-sys-maint'@'localhost' IDENTIFIED BY '${DEBIAN_SYS_MAINT_PASS}'"
+		#DEBIAN_SYS_MAINT_PASS=$(grep "password" /etc/mysql/debian.cnf | head -1 | sed 's/password\s*=\s*//' | tr -d '[[:space:]]');
+		#mysql_scalar_exec "GRANT ALL PRIVILEGES ON *.* TO 'debian-sys-maint'@'localhost' IDENTIFIED BY '${DEBIAN_SYS_MAINT_PASS}'"
+
+		mysql_scalar_exec "GRANT ALL PRIVILEGES ON *.* TO 'debian-sys-maint'@'localhost'"
 
 	fi
 fi
