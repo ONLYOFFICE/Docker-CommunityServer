@@ -308,7 +308,7 @@ if [ "${MYSQL_SERVER_EXTERNAL}" == "false" ]; then
 
 	service mysql start
 
-	if [ -n "$MYSQL_SERVER_PASS" ] && mysqladmin --silent ping -u root | grep -q "mysqld is alive" ; then
+	if [ -n "$MYSQL_SERVER_ROOT_PASSWORD" ] && mysqladmin --silent ping -u root | grep -q "mysqld is alive" ; then
 mysql <<EOF
 SET Password=PASSWORD("$MYSQL_SERVER_ROOT_PASSWORD");
 DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
