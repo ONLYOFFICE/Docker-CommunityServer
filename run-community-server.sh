@@ -69,11 +69,12 @@ CONTROL_PANEL_ENABLED=false
 MAIL_SERVER_ENABLED=false
 EXTERNAL_IP=${EXTERNAL_IP:-$(dig +short myip.opendns.com @resolver1.opendns.com)};
 
+MYSQL_SERVER_ROOT_PASSWORD=${MYSQL_SERVER_ROOT_PASSWORD:-""}
 MYSQL_SERVER_HOST=${MYSQL_SERVER_HOST:-"localhost"}
 MYSQL_SERVER_PORT=${MYSQL_SERVER_PORT:-"3306"}
 MYSQL_SERVER_DB_NAME=${MYSQL_SERVER_DB_NAME:-"onlyoffice"}
 MYSQL_SERVER_USER=${MYSQL_SERVER_USER:-"root"}
-MYSQL_SERVER_PASS=${MYSQL_SERVER_PASS:-""}
+MYSQL_SERVER_PASS=${MYSQL_SERVER_PASS:-${MYSQL_SERVER_ROOT_PASSWORD}}
 MYSQL_SERVER_EXTERNAL=${MYSQL_SERVER_EXTERNAL:-false};
 
 mkdir -p "${SSL_CERTIFICATES_DIR}/.well-known/acme-challenge"
@@ -284,128 +285,97 @@ mysql_check_connection() {
 	done
 }
 
-change_connections(){
-	if [ ${LOG_DEBUG} ]; then
-		log_debug "Change connections for ${1} then ${2}";
-	fi
 
+change_connections(){
 	sed '/'${1}'/s/\(connectionString\s*=\s*\"\)[^\"]*\"/\1Server='${MYSQL_SERVER_HOST}';Port='${MYSQL_SERVER_PORT}';Database='${MYSQL_SERVER_DB_NAME}';User ID='${MYSQL_SERVER_USER}';Password='${MYSQL_SERVER_PASS}';Pooling=true;Character Set=utf8;AutoEnlist=false\"/' -i ${2}
 }
 
-if [ "${MYSQL_SERVER_EXTERNAL}" == "true" ]; then
+if [ "${MYSQL_SERVER_EXTERNAL}" == "false" ]; then
+	chown -R mysql:mysql /var/lib/mysql/
+	chmod -R 755 /var/lib/mysql/
 
-	mysql_check_connection;
-
-	# create db if not exist
-	# DB_INFO=$(mysql_list_exec "SELECT SCHEMA_NAME, DEFAULT_CHARACTER_SET_NAME, DEFAULT_COLLATION_NAME FROM information_schema.SCHEMATA WHERE SCHEMA_NAME='${MYSQL_SERVER_DB_NAME}'" "opt_ignore_db_name");
-	# echo ${DB_INFO};
-	DB_IS_EXIST=$(mysql_scalar_exec "SELECT SCHEMA_NAME FROM information_schema.SCHEMATA WHERE SCHEMA_NAME='${MYSQL_SERVER_DB_NAME}'" "opt_ignore_db_name");
-	DB_CHARACTER_SET_NAME=$(mysql_list_exec "SELECT DEFAULT_CHARACTER_SET_NAME FROM information_schema.SCHEMATA WHERE SCHEMA_NAME='${MYSQL_SERVER_DB_NAME}'" "opt_ignore_db_name");
-	DB_COLLATION_NAME=$(mysql_list_exec "SELECT DEFAULT_COLLATION_NAME FROM information_schema.SCHEMATA WHERE SCHEMA_NAME='${MYSQL_SERVER_DB_NAME}'" "opt_ignore_db_name");
-
-	#	if [ ${DB_INFO[@]} -nq 0 ]; then
-	#		DB_IS_EXIST="1";
-	#		DB_CHARACTER_SET_NAME=${#DB_INFO[1]};
-	#		DB_COLLATION_NAME=${#DB_INFO[2]};
-	#	fi
-
-	DB_TABLES_COUNT=$(mysql_scalar_exec "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='${MYSQL_SERVER_DB_NAME}'");
-
-	if [ ${LOG_DEBUG} ]; then
-		log_debug "DB_IS_EXIST: ${DB_IS_EXIST}";
-		log_debug "DB_CHARACTER_SET_NAME: ${DB_CHARACTER_SET_NAME}";
-		log_debug "DB_COLLATION_NAME: ${DB_COLLATION_NAME}";
-		log_debug "DB_TABLES_COUNT: ${DB_TABLES_COUNT}";
-	fi
-
-	if [ -z ${DB_IS_EXIST} ]; then
-		mysql_scalar_exec "CREATE DATABASE ${MYSQL_SERVER_DB_NAME} CHARACTER SET utf8 COLLATE utf8_general_ci" "opt_ignore_db_name";
-		DB_CHARACTER_SET_NAME="utf8";
-		DB_COLLATION_NAME="utf8_general_ci";
-		DB_TABLES_COUNT=0;
-
-		if [ ${LOG_DEBUG} ]; then
-			log_debug "Create db ${MYSQL_SERVER_DB_NAME}";
-		fi
-	fi
-
-	if [ ${DB_CHARACTER_SET_NAME} != "utf8" ]; then
-		mysql_scalar_exec "ALTER DATABASE ${MYSQL_SERVER_DB_NAME} CHARACTER SET utf8 COLLATE utf8_general_ci";
-
-		if [ ${LOG_DEBUG} ]; then
-			log_debug "Change characted set name ${MYSQL_SERVER_DB_NAME}";
-		fi
-
-	fi
-
-	if [ "${DB_TABLES_COUNT}" -eq "0" ]; then
-
-		if [ ${LOG_DEBUG} ]; then
-			log_debug "Run filling tables...";
-		fi
-
-      		mysql_batch_exec ${ONLYOFFICE_SQL_DIR}/onlyoffice.sql
-       		mysql_batch_exec ${ONLYOFFICE_SQL_DIR}/onlyoffice.data.sql
-       		mysql_batch_exec ${ONLYOFFICE_SQL_DIR}/onlyoffice.resources.sql
-	fi
-
-	# change mysql config files
-	change_connections "default" "${ONLYOFFICE_ROOT_DIR}/web.connections.config";
-	change_connections "teamlabsite" "${ONLYOFFICE_ROOT_DIR}/web.connections.config";
-	change_connections "default" "${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config";
-	change_connections "default" "${ONLYOFFICE_SERVICES_DIR}/MailAggregator/ASC.Mail.Aggregator.CollectionService.exe.config";
-	change_connections "default" "${ONLYOFFICE_SERVICES_DIR}/MailAggregator/ASC.Mail.EmlDownloader.exe.config";
-	change_connections "default" "${ONLYOFFICE_SERVICES_DIR}/MailWatchdog/ASC.Mail.Watchdog.Service.exe.config";
-	change_connections "core" "${ONLYOFFICE_APISYSTEM_DIR}/Web.config";
-	sed 's!\(sql_host\s*=\s*\)\S*!\1'${MYSQL_SERVER_HOST}'!' -i ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/sphinx-min.conf.in;
-	sed 's!\(sql_pass\s*=\s*\)\S*!\1'${MYSQL_SERVER_PASS}'!' -i ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/sphinx-min.conf.in;
-	sed 's!\(sql_user\s*=\s*\)\S*!\1'${MYSQL_SERVER_USER}'!' -i ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/sphinx-min.conf.in;
-	sed 's!\(sql_db\s*=\s*\)\S*!\1'${MYSQL_SERVER_DB_NAME}'!' -i ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/sphinx-min.conf.in;
-	sed 's!\(sql_port\s*=\s*\)\S*!\1'${MYSQL_SERVER_PORT}'!' -i ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/sphinx-min.conf.in;
-
-	service mysql stop
-else
-	# create db if not exist
 	if [ ! -f /var/lib/mysql/ibdata1 ]; then
-		chown -R mysql:mysql /var/lib/mysql/
-		chmod -R 755 /var/lib/mysql/
-
 		# cp /etc/mysql/my.cnf /usr/share/mysql/my-default.cnf
 		mysqld --initialize-insecure --user=mysql || true
-		service mysql start
-
-		mysql -D "mysql" -e "update user set plugin='mysql_native_password' where user='root';"
-
-		echo "CREATE DATABASE onlyoffice CHARACTER SET utf8 COLLATE utf8_general_ci" | mysql;
-
-		mysql -D "onlyoffice" < ${ONLYOFFICE_SQL_DIR}/onlyoffice.sql
-		mysql -D "onlyoffice" < ${ONLYOFFICE_SQL_DIR}/onlyoffice.data.sql
-		mysql -D "onlyoffice" < ${ONLYOFFICE_SQL_DIR}/onlyoffice.resources.sql
-
-		service mysql restart
-
-	else
-		chown -R mysql:mysql /var/lib/mysql/
-		chmod -R 755 /var/lib/mysql/
-
-		if [ ${LOG_DEBUG} ]; then
-			log_debug "Fix docker bug volume mapping for mysql";
-		fi
-
-		myisamchk -q -r /var/lib/mysql/mysql/proc || true
-		service mysql start
-
-		if ! mysql_upgrade | grep -q "already upgraded"; then
-			service mysql restart;
-		fi
-
-		#DEBIAN_SYS_MAINT_PASS=$(grep "password" /etc/mysql/debian.cnf | head -1 | sed 's/password\s*=\s*//' | tr -d '[[:space:]]');
-		#mysql_scalar_exec "GRANT ALL PRIVILEGES ON *.* TO 'debian-sys-maint'@'localhost' IDENTIFIED BY '${DEBIAN_SYS_MAINT_PASS}'"
-
-		mysql_scalar_exec "GRANT ALL PRIVILEGES ON *.* TO 'debian-sys-maint'@'localhost'"
 
 	fi
+
+	if [ ${LOG_DEBUG} ]; then
+		log_debug "Fix docker bug volume mapping for mysql";
+	fi
+
+	myisamchk -q -r /var/lib/mysql/mysql/proc || true
+
+	service mysql start
+
+	if [ -n "$MYSQL_SERVER_PASS" ] && mysqladmin --silent ping -u root | grep -q "mysqld is alive" ; then
+mysql <<EOF
+SET Password=PASSWORD("$MYSQL_SERVER_ROOT_PASSWORD");
+DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
+DELETE FROM mysql.user WHERE User='';
+DELETE FROM mysql.db WHERE Db='test' OR Db='test_%';
+FLUSH PRIVILEGES;
+EOF
+
+		if [ "$MYSQL_SERVER_USER" != "root" ]; then
+mysql "-p${MYSQL_SERVER_ROOT_PASSWORD}" <<EOF
+CREATE USER IF NOT EXISTS "$MYSQL_SERVER_USER"@"localhost" IDENTIFIED WITH mysql_native_password BY "$MYSQL_SERVER_PASS";
+GRANT ALL PRIVILEGES ON *.* TO "$MYSQL_SERVER_USER"@'localhost';
+FLUSH PRIVILEGES;
+EOF
+
+		fi
+	fi
+
+	mysql_scalar_exec "GRANT ALL PRIVILEGES ON *.* TO 'debian-sys-maint'@'localhost'" "opt_ignore_db_name";
+
+	if ! mysql_upgrade -h ${MYSQL_SERVER_HOST} -P ${MYSQL_SERVER_PORT} -u ${MYSQL_SERVER_USER} --password=${MYSQL_SERVER_PASS} | grep -q "already upgraded"; then
+		service mysql restart;
+	fi
+
+else
+	service mysql stop
 fi
+
+mysql_check_connection;
+
+DB_IS_EXIST=$(mysql_scalar_exec "SELECT SCHEMA_NAME FROM information_schema.SCHEMATA WHERE SCHEMA_NAME='${MYSQL_SERVER_DB_NAME}'" "opt_ignore_db_name");
+DB_CHARACTER_SET_NAME=$(mysql_list_exec "SELECT DEFAULT_CHARACTER_SET_NAME FROM information_schema.SCHEMATA WHERE SCHEMA_NAME='${MYSQL_SERVER_DB_NAME}'" "opt_ignore_db_name");
+DB_COLLATION_NAME=$(mysql_list_exec "SELECT DEFAULT_COLLATION_NAME FROM information_schema.SCHEMATA WHERE SCHEMA_NAME='${MYSQL_SERVER_DB_NAME}'" "opt_ignore_db_name");
+DB_TABLES_COUNT=$(mysql_scalar_exec "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='${MYSQL_SERVER_DB_NAME}'");
+
+if [ -z ${DB_IS_EXIST} ]; then
+	mysql_scalar_exec "CREATE DATABASE ${MYSQL_SERVER_DB_NAME} CHARACTER SET utf8 COLLATE utf8_general_ci" "opt_ignore_db_name";
+	DB_CHARACTER_SET_NAME="utf8";
+	DB_COLLATION_NAME="utf8_general_ci";
+	DB_TABLES_COUNT=0;
+
+fi
+
+if [ ${DB_CHARACTER_SET_NAME} != "utf8" ]; then
+	mysql_scalar_exec "ALTER DATABASE ${MYSQL_SERVER_DB_NAME} CHARACTER SET utf8 COLLATE utf8_general_ci";
+fi
+
+if [ "${DB_TABLES_COUNT}" -eq "0" ]; then
+      	mysql_batch_exec ${ONLYOFFICE_SQL_DIR}/onlyoffice.sql
+       	mysql_batch_exec ${ONLYOFFICE_SQL_DIR}/onlyoffice.data.sql
+       	mysql_batch_exec ${ONLYOFFICE_SQL_DIR}/onlyoffice.resources.sql
+fi
+
+# change mysql config files
+change_connections "default" "${ONLYOFFICE_ROOT_DIR}/web.connections.config";
+change_connections "teamlabsite" "${ONLYOFFICE_ROOT_DIR}/web.connections.config";
+change_connections "default" "${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config";
+change_connections "default" "${ONLYOFFICE_SERVICES_DIR}/MailAggregator/ASC.Mail.Aggregator.CollectionService.exe.config";
+change_connections "default" "${ONLYOFFICE_SERVICES_DIR}/MailAggregator/ASC.Mail.EmlDownloader.exe.config";
+change_connections "default" "${ONLYOFFICE_SERVICES_DIR}/MailWatchdog/ASC.Mail.Watchdog.Service.exe.config";
+change_connections "core" "${ONLYOFFICE_APISYSTEM_DIR}/Web.config";
+sed 's!\(sql_host\s*=\s*\)\S*!\1'${MYSQL_SERVER_HOST}'!' -i ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/sphinx-min.conf.in;
+sed 's!\(sql_pass\s*=\s*\)\S*!\1'${MYSQL_SERVER_PASS}'!' -i ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/sphinx-min.conf.in;
+sed 's!\(sql_user\s*=\s*\)\S*!\1'${MYSQL_SERVER_USER}'!' -i ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/sphinx-min.conf.in;
+sed 's!\(sql_db\s*=\s*\)\S*!\1'${MYSQL_SERVER_DB_NAME}'!' -i ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/sphinx-min.conf.in;
+sed 's!\(sql_port\s*=\s*\)\S*!\1'${MYSQL_SERVER_PORT}'!' -i ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/sphinx-min.conf.in;
+
 
 # update mysql db
 for i in $(ls ${ONLYOFFICE_SQL_DIR}/onlyoffice.upgrade*); do
