@@ -10,8 +10,11 @@ DOCKER_ONLYOFFICE_SUBNET=$(ip -o -f inet addr show | awk '/scope global/ {print 
 
 cp /app/onlyoffice/config/nginx/onlyoffice-ssl default-onlyoffice-ssl.conf;
 
-sed 's,{{SSL_CERTIFICATE_PATH}},/var/www/onlyoffice/Data/certs/onlyoffice.crt,' -i default-onlyoffice-ssl.conf;
-sed 's,{{SSL_KEY_PATH}},/var/www/onlyoffice/Data/certs/onlyoffice.key,' -i default-onlyoffice-ssl.conf;
+SSL_CERTIFICATE_PATH="/var/www/onlyoffice/Data/certs/onlyoffice.crt"
+SSL_KEY_PATH="/var/www/onlyoffice/Data/certs/onlyoffice.key"
+
+sed 's,{{SSL_CERTIFICATE_PATH}},"${SSL_CERTIFICATE_PATH}",' -i default-onlyoffice-ssl.conf;
+sed 's,{{SSL_KEY_PATH}},"${SSL_KEY_PATH}",' -i default-onlyoffice-ssl.conf;
 sed 's,{{SSL_DHPARAM_PATH}},/var/www/onlyoffice/Data/certs/dhparam.pem,' -i default-onlyoffice-ssl.conf;
 sed 's,{{SSL_VERIFY_CLIENT}},off,' -i default-onlyoffice-ssl.conf;
 sed '/{{CA_CERTIFICATES_PATH}}/d' -i default-onlyoffice-ssl.conf;
@@ -32,9 +35,13 @@ else
         sed '/resolver_timeout/d' -i default-onlyoffice-ssl.conf;
 fi
 
+#sed '/certificate\.key/s/\(value\s*=\s*\"\).*\"/\1${SSL_CERTIFICATE_PATH}"\"/' -i ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config
+#sed '/certificate\.crt/s/\(value\s*=\s*\"\).*\"/\1${SSL_KEY_PATH}"\"/' -i ${ONLYOFFICE_SERVICES_DIR}//TeamLabSvc/TeamLabSvc.exe.Config;
+
 sed '/mail\.default-api-scheme/s/\(value\s*=\s*\"\).*\"/\1https\"/' -i /var/www/onlyoffice/Services/MailAggregator/ASC.Mail.Aggregator.CollectionService.exe.config;
 
 mv default-onlyoffice-ssl.conf /etc/nginx/sites-enabled/onlyoffice
 
 service onlyofficeMailAggregator restart
+service onlyofficeJabber restart
 service nginx reload
