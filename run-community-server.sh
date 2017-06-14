@@ -308,6 +308,17 @@ if [ "${MYSQL_SERVER_EXTERNAL}" == "false" ]; then
 
 	service mysql start
 
+	if [ ! -f /var/lib/mysql/mysql_upgrade_info ]; then
+		if mysqladmin --silent ping -u root | grep -q "mysqld is alive" ; then
+			mysql_upgrade
+		else
+			mysql_upgrade --password=${MYSQL_SERVER_ROOT_PASSWORD};
+		fi
+	
+		service mysql restart;
+	fi
+
+
 	if [ -n "$MYSQL_SERVER_ROOT_PASSWORD" ] && mysqladmin --silent ping -u root | grep -q "mysqld is alive" ; then
 mysql <<EOF
 SET Password=PASSWORD("$MYSQL_SERVER_ROOT_PASSWORD");
@@ -328,10 +339,6 @@ EOF
 	fi
 
 	mysql_scalar_exec "GRANT ALL PRIVILEGES ON *.* TO 'debian-sys-maint'@'localhost'" "opt_ignore_db_name";
-
-	if ! mysql_upgrade -h ${MYSQL_SERVER_HOST} -P ${MYSQL_SERVER_PORT} -u ${MYSQL_SERVER_USER} --password=${MYSQL_SERVER_PASS} | grep -q "already upgraded"; then
-		service mysql restart;
-	fi
 
 else
 	service mysql stop
