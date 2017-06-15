@@ -21,7 +21,15 @@ RUN echo "${SOURCE_REPO_URL}" >> /etc/apt/sources.list && \
     apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF && \
     locale-gen en_US.UTF-8 && \
     apt-get -y update && \
-    apt-get install --force-yes -yq software-properties-common wget curl cron rsyslog && \
+    apt-get install --force-yes -yq software-properties-common wget curl cron rsyslog gcc make && \
+    wget https://www.openssl.org/source/openssl-1.1.0f.tar.gz && \
+    tar xzvf openssl-1.1.0f.tar.gz && \
+    cd openssl-1.1.0f && \
+    ./config -Wl,--enable-new-dtags,-rpath,'$(LIBRPATH)' && \
+    make && \
+    sudo make install && \
+    cd .. && \
+    rm -f openssl-1.1.0f.tar.gz && \
     wget http://nginx.org/keys/nginx_signing.key && \
     apt-key add nginx_signing.key && \
     echo "deb http://nginx.org/packages/mainline/ubuntu/ trusty nginx" >> /etc/apt/sources.list.d/nginx.list && \
