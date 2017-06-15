@@ -13,8 +13,8 @@ cp /app/onlyoffice/config/nginx/onlyoffice-ssl default-onlyoffice-ssl.conf;
 SSL_CERTIFICATE_PATH="/var/www/onlyoffice/Data/certs/onlyoffice.crt"
 SSL_KEY_PATH="/var/www/onlyoffice/Data/certs/onlyoffice.key"
 
-sed 's,{{SSL_CERTIFICATE_PATH}},"${SSL_CERTIFICATE_PATH}",' -i default-onlyoffice-ssl.conf;
-sed 's,{{SSL_KEY_PATH}},"${SSL_KEY_PATH}",' -i default-onlyoffice-ssl.conf;
+sed "s,{{SSL_CERTIFICATE_PATH}},${SSL_CERTIFICATE_PATH}," -i default-onlyoffice-ssl.conf;
+sed "s,{{SSL_KEY_PATH}},${SSL_KEY_PATH}," -i default-onlyoffice-ssl.conf;
 sed 's,{{SSL_DHPARAM_PATH}},/var/www/onlyoffice/Data/certs/dhparam.pem,' -i default-onlyoffice-ssl.conf;
 sed 's,{{SSL_VERIFY_CLIENT}},off,' -i default-onlyoffice-ssl.conf;
 sed '/{{CA_CERTIFICATES_PATH}}/d' -i default-onlyoffice-ssl.conf;
