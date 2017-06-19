@@ -296,8 +296,8 @@ if [ "${MYSQL_SERVER_EXTERNAL}" == "false" ]; then
 
 	if [ ! -f /var/lib/mysql/ibdata1 ]; then
 		# cp /etc/mysql/my.cnf /usr/share/mysql/my-default.cnf
-		mysqld --initialize-insecure --user=mysql || true
-
+		mysql_install_db || true
+		# mysqld --initialize-insecure --user=mysql || true
 	fi
 
 	if [ ${LOG_DEBUG} ]; then
@@ -338,7 +338,11 @@ EOF
 		fi
 	fi
 
-	mysql_scalar_exec "GRANT ALL PRIVILEGES ON *.* TO 'debian-sys-maint'@'localhost'" "opt_ignore_db_name";
+	DEBIAN_SYS_MAINT_PASS=$(grep "password" /etc/mysql/debian.cnf | head -1 | sed 's/password\s*=\s*//' | tr -d '[[:space:]]');
+	mysql_scalar_exec "GRANT ALL PRIVILEGES ON *.* TO 'debian-sys-maint'@'localhost' IDENTIFIED BY '${DEBIAN_SYS_MAINT_PASS}'"
+
+
+	#mysql_scalar_exec "GRANT ALL PRIVILEGES ON *.* TO 'debian-sys-maint'@'localhost'" "opt_ignore_db_name";
 
 else
 	service mysql stop

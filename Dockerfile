@@ -25,7 +25,7 @@ RUN echo "${SOURCE_REPO_URL}" >> /etc/apt/sources.list && \
     wget https://www.openssl.org/source/openssl-1.1.0f.tar.gz && \
     tar xzvf openssl-1.1.0f.tar.gz && \
     cd openssl-1.1.0f && \
-    ./config -Wl,--enable-new-dtags,-rpath,'$(LIBRPATH)' && \
+    ./config && \
     make && \
     sudo make install && \
     cd .. && \
@@ -37,9 +37,6 @@ RUN echo "${SOURCE_REPO_URL}" >> /etc/apt/sources.list && \
     add-apt-repository -y ppa:builds/sphinxsearch-rel22 && \
     add-apt-repository -y ppa:certbot/certbot && \
     echo "Start=No" >> /etc/init.d/sphinxsearch && \
-    wget http://dev.mysql.com/get/mysql-apt-config_0.8.6-1_all.deb && \
-    echo "mysql-apt-config mysql-apt-config/select-server  select  mysql-5.7" | sudo debconf-set-selections && \  
-    dpkg -i mysql-apt-config_0.8.6-1_all.deb && \
     apt-get -y update && \
     apt-get install --force-yes -yq mysql-server mono-complete ca-certificates-mono && \
     echo "#!/bin/sh\nexit 0" > /usr/sbin/policy-rc.d && \
@@ -57,7 +54,5 @@ VOLUME ["/var/www/onlyoffice/Data"]
 VOLUME ["/var/lib/mysql"]
 
 EXPOSE 80 443 5222 3306 9865 9888 9866 9871 9882 5280
-
-ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 
 CMD ["/app/onlyoffice/run-community-server.sh"];
