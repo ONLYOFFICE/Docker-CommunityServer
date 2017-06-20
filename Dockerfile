@@ -38,7 +38,7 @@ RUN echo "${SOURCE_REPO_URL}" >> /etc/apt/sources.list && \
     add-apt-repository -y ppa:certbot/certbot && \
     echo "Start=No" >> /etc/init.d/sphinxsearch && \
     apt-get -y update && \
-    apt-get install --force-yes -yq mysql-server mono-complete ca-certificates-mono && \
+    apt-get install --force-yes -yq mono-complete ca-certificates-mono && \
     echo "#!/bin/sh\nexit 0" > /usr/sbin/policy-rc.d && \
     apt-get install --force-yes -yq dumb-init certbot sphinxsearch onlyoffice-communityserver htop nano dnsutils && \
     rm -rf /var/lib/apt/lists/*
