@@ -16,13 +16,13 @@ ONLYOFFICE_MODE=${ONLYOFFICE_MODE:-"SERVER"};
 ONLYOFFICE_GOD_DIR="/etc/god/conf.d"
 ONLYOFFICE_CRON_DIR="/etc/cron.d"
 ONLYOFFICE_CRON_PATH="/etc/cron.d/onlyoffice"
-DOCKER_ONLYOFFICE_SUBNET=$(ip -o -f inet addr show | awk '/scope global/ {print $4}');
+DOCKER_ONLYOFFICE_SUBNET=$(ip -o -f inet addr show | awk '/scope global/ {print $4}' | head -1);
+DOCKER_CONTAINER_IP=$(ip addr show eth0 | awk '/inet / {gsub(/\/.*/,"",$2); print $2}' | head -1);
 DOCKER_ENABLED=${DOCKER_ENABLED:-true};
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 NGINX_CONF_DIR="/etc/nginx/sites-enabled"
 NGINX_WORKER_PROCESSES=${NGINX_WORKER_PROCESSES:-$(grep processor /proc/cpuinfo | wc -l)};
 NGINX_WORKER_CONNECTIONS=${NGINX_WORKER_CONNECTIONS:-$(ulimit -n)};
-
 SERVICE_SSO_AUTH_HOST_ADDR=${SERVICE_SSO_AUTH_HOST_ADDR:-${CONTROL_PANEL_PORT_80_TCP_ADDR}};
 
 if [ ! -d "$NGINX_CONF_DIR" ]; then
@@ -64,6 +64,7 @@ DOCUMENT_SERVER_ENABLED=false
 DOCUMENT_SERVER_HOST=${DOCUMENT_SERVER_HOST:-""};
 DOCUMENT_SERVER_PROTOCOL=${DOCUMENT_SERVER_PROTOCOL:-"http"};
 DOCUMENT_SERVER_API_URL="\/web-apps\/apps\/api\/documents\/api\.js";
+DOCUMENT_SERVER_HOST_IP="";
 
 CONTROL_PANEL_ENABLED=false
 MAIL_SERVER_ENABLED=false
@@ -78,6 +79,36 @@ MYSQL_SERVER_PASS=${MYSQL_SERVER_PASS:-${MYSQL_SERVER_ROOT_PASSWORD}}
 MYSQL_SERVER_EXTERNAL=${MYSQL_SERVER_EXTERNAL:-false};
 
 mkdir -p "${SSL_CERTIFICATES_DIR}/.well-known/acme-challenge"
+
+check_ip_is_internal(){
+
+	local IPRE='\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)';
+	local IP=($(echo "$1" | sed -ne 's:^'"$IPRE"'/.*$:\1 \2 \3 \4:p'));
+	local MASK=($(echo "$1" | sed -ne 's:^[^/]*/'"$IPRE"'$:\1 \2 \3 \4:p'))
+	
+	if [ ${#MASK[@]} -ne 4 ]; then
+  		local BITCNT=($(echo "$1" | sed -ne 's:^[^/]*/\([0-9]\+\)$:\1:p'))
+  		BITCNT=$(( ((2**${BITCNT})-1) << (32-${BITCNT}) ))
+  		for (( I=0; I<4; I++ )); do
+	    		MASK[$I]=$(( ($BITCNT >> (8 * (3 - $I))) & 255 ))
+  		done
+	fi
+	
+	local NETWORK=()
+
+	for (( I=0; I<4; I++ )); do
+	  	NETWORK[$I]=$(( ${IP[$I]} & ${MASK[$I]} ))
+	done
+	
+	
+	local INIP=($(echo "$2" | sed -ne 's:^'"$IPRE"'$:\1 \2 \3 \4:p'))
+	
+	for (( I=0; I<4; I++ )); do
+	   	[[ $(( ${INIP[$I]} & ${MASK[$I]} )) -ne ${NETWORK[$I]} ]] && exit 0;
+	done
+	
+	echo "true"
+}
 
 check_partnerdata(){
 	PARTNER_DATA_FILE="${ONLYOFFICE_DATA_DIR}/json-data.txt";
@@ -100,7 +131,6 @@ check_partnerdata(){
 log_debug () {
   echo "onlyoffice: [Debug] $1"
 }
-
 
 
 check_partnerdata
@@ -164,6 +194,15 @@ elif [ ${DOCUMENT_SERVER_PORT_80_TCP_ADDR} ]; then
 	DOCUMENT_SERVER_ENABLED=true;
 	DOCUMENT_SERVER_HOST=${DOCUMENT_SERVER_PORT_80_TCP_ADDR};
 fi
+
+if [ $DOCUMENT_SERVER_ENABLED ] && [ $DOCKER_ONLYOFFICE_SUBNET ] && [ -z "$SERVER_HOST" ]; then
+	DOCUMENT_SERVER_HOST_IP=$(dig +short ${DOCUMENT_SERVER_HOST});
+
+	if check_ip_is_internal $DOCKER_ONLYOFFICE_SUBNET $DOCUMENT_SERVER_HOST_IP; then
+		SERVER_HOST=${DOCKER_CONTAINER_IP};
+	fi
+fi
+
 
 if [ ${MYSQL_SERVER_HOST} != "localhost" ]; then
 	MYSQL_SERVER_EXTERNAL=true;
