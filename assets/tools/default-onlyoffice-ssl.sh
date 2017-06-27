@@ -12,6 +12,7 @@ cp /app/onlyoffice/config/nginx/onlyoffice-ssl default-onlyoffice-ssl.conf;
 
 SSL_CERTIFICATE_PATH="/var/www/onlyoffice/Data/certs/onlyoffice.crt"
 SSL_KEY_PATH="/var/www/onlyoffice/Data/certs/onlyoffice.key"
+ONLYOFFICE_SERVICES_DIR="/var/www/onlyoffice/Services"
 
 sed "s,{{SSL_CERTIFICATE_PATH}},${SSL_CERTIFICATE_PATH}," -i default-onlyoffice-ssl.conf;
 sed "s,{{SSL_KEY_PATH}},${SSL_KEY_PATH}," -i default-onlyoffice-ssl.conf;
@@ -36,7 +37,8 @@ else
 fi
 
 sed '/certificate/s/\(value\s*=\s*\"\).*\"/\1${SSL_CERTIFICATE_PATH}"\"/' -i ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config
-sed '/certificatePrivateKey/s/\(value\s*=\s*\"\).*\"/\1${SSL_KEY_PATH}"\"/' -i ${ONLYOFFICE_SERVICES_DIR}//TeamLabSvc/TeamLabSvc.exe.Config;
+sed '/certificatePrivateKey/s/\(value\s*=\s*\"\).*\"/\1${SSL_KEY_PATH}"\"/' -i ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config;
+sed '/startTls/s/\(value\s*=\s*\"\).*\"/\1optional"\"/' -i ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config;
 
 sed '/mail\.default-api-scheme/s/\(value\s*=\s*\"\).*\"/\1https\"/' -i /var/www/onlyoffice/Services/MailAggregator/ASC.Mail.Aggregator.CollectionService.exe.config;
 
