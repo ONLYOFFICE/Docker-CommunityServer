@@ -1,0 +1,4 @@
+[mysqld]
+sql_mode = 'NO_ENGINE_SUBSTITUTION'
+max_connections = 1000
+max_allowed_packet = 1048576000
