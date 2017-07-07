@@ -27,14 +27,7 @@ RUN echo "${SOURCE_REPO_URL}" >> /etc/apt/sources.list && \
     cd openssl-1.1.0f && \
     ./config && \
     make && \
-    sudo make install && \
-    cd .. && \
-    rm -f openssl-1.1.0f.tar.gz && \ wget https://www.openssl.org/source/openssl-1.1.0f.tar.gz && \
-    tar xzvf openssl-1.1.0f.tar.gz && \
-    cd openssl-1.1.0f && \
-    ./config && \
-    make && \
-    sudo make install && \
+    make install && \
     cd .. && \
     rm -f openssl-1.1.0f.tar.gz && \
     wget http://nginx.org/keys/nginx_signing.key && \
