@@ -25,7 +25,7 @@ services:
      - onlyoffice-mail-server
     environment:
      - DOCUMENT_SERVER_PORT_80_TCP_ADDR=onlyoffice-document-server
-     - MYSQL_ROOT_PASSWORD=my-secret-pw
+     - MYSQL_SERVER_ROOT_PASSWORD=my-secret-pw
      - MYSQL_SERVER_DB_NAME=onlyoffice 
      - MYSQL_SERVER_HOST=onlyoffice-mysql-server 
      - MYSQL_SERVER_USER=onlyoffice_user
