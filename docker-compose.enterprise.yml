@@ -1,9 +1,26 @@
 version: '3'
 services:
+  onlyoffice-mysql-server:
+    container_name: onlyoffice-mysql-server
+    image: mysql:5.7
+    environment:
+     - MYSQL_ROOT_PASSWORD=my-secret-pw
+     - MYSQL_DATABASE=onlyoffice
+     - MYSQL_USER=onlyoffice_user
+     - MYSQL_PASSWORD=onlyoffice_pass 
+    networks:
+     - onlyoffice
+    stdin_open: true
+    tty: true
+    restart: always
+    volumes:
+     - ./config/mysql/conf.d:/etc/mysql/conf.d 
+     - mysql_data:/var/lib/mysql
   onlyoffice-community-server:
     container_name: onlyoffice-community-server
-    image: onlyoffice4enterprise/communityserver-ee:8.9.2.27
+    image: onlyoffice4enterprise/communityserver-ee:latest
     depends_on:
+     - onlyoffice-mysql-server
      - onlyoffice-document-server
      - onlyoffice-mail-server
     environment:
@@ -11,6 +28,18 @@ services:
      - DOCUMENT_SERVER_PORT_80_TCP_ADDR=onlyoffice-document-server
      - CONTROL_PANEL_PORT_80_TCP=80
      - CONTROL_PANEL_PORT_80_TCP_ADDR=onlyoffice-control-panel
+     - MYSQL_ROOT_PASSWORD=my-secret-pw
+     - MYSQL_SERVER_DB_NAME=onlyoffice 
+     - MYSQL_SERVER_HOST=onlyoffice-mysql-server 
+     - MYSQL_SERVER_USER=onlyoffice_user
+     - MYSQL_SERVER_PASS=onlyoffice_pass 
+     - MAIL_SERVER_API_PORT=8081
+     - MAIL_SERVER_API_HOST=onlyoffice-mail-server
+     - MAIL_SERVER_DB_HOST=onlyoffice-mysql-server
+     - MAIL_SERVER_DB_PORT=3306
+     - MAIL_SERVER_DB_NAME=onlyoffice_mailserver
+     - MAIL_SERVER_DB_USER=root
+     - MAIL_SERVER_DB_PASS=my-secret-pw
     networks:
      - onlyoffice
     ports:
@@ -21,14 +50,13 @@ services:
     tty: true
     restart: always
     volumes:
-     - community_mysql:/var/lib/mysql
      - community_data:/var/www/onlyoffice/Data
      - community_log:/var/log/onlyoffice
      - document_data:/var/www/onlyoffice/DocumentServerData
      - ./certs:/var/www/onlyoffice/Data/certs
   onlyoffice-document-server:
     container_name: onlyoffice-document-server
-    image: onlyoffice4enterprise/documentserver-ee:4.3.2.3
+    image: onlyoffice4enterprise/documentserver-ee:latest
     stdin_open: true
     tty: true
     restart: always
@@ -43,8 +71,16 @@ services:
        - ./document_fonts:/usr/share/fonts/truetype/custom
   onlyoffice-mail-server:
     container_name: onlyoffice-mail-server
-    image: onlyoffice/mailserver:1.6.21
+    image: onlyoffice/mailserver:latest
+    depends_on:
+      - onlyoffice-mysql-server
     hostname: ${MAIL_SERVER_HOSTNAME}
+    environment:
+       - MYSQL_SERVER=onlyoffice-mysql-server
+       - MYSQL_SERVER_PORT=3306
+       - MYSQL_ROOT_USER=root
+       - MYSQL_ROOT_PASSWD=my-secret-pw
+       - MYSQL_SERVER_DB_NAME=onlyoffice_mailserver
     networks:
       - onlyoffice
     restart: always
@@ -59,7 +95,6 @@ services:
       - mail_data:/var/vmail
       - mail_certs:/etc/pki/tls/mailserver
       - mail_log:/var/log
-      - mail_mysql:/var/lib/mysql
   onlyoffice-control-panel:
     container_name: onlyoffice-control-panel
     depends_on:
@@ -94,3 +129,4 @@ volumes:
   community_log:
   controlpanel_data:
   controlpanel_log:
+  mysql_data:
