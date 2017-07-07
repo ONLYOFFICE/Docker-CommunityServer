@@ -1,5 +1,4 @@
 FROM ubuntu:14.04
-MAINTAINER Ascensio System SIA <support@onlyoffice.com>
 
 ARG RELEASE_DATE="2016-06-21"
 ARG RELEASE_DATE_SIGN=""
@@ -9,7 +8,8 @@ ARG DEBIAN_FRONTEND=noninteractive
 
 LABEL onlyoffice.community.release-date="${RELEASE_DATE}" \
       onlyoffice.community.version="${VERSION}" \
-      onlyoffice.community.release-date.sign="${RELEASE_DATE_SIGN}" 
+      onlyoffice.community.release-date.sign="${RELEASE_DATE_SIGN}" \
+      maintainer="Ascensio System SIA <support@onlyoffice.com>"
 
 ENV LANG en_US.UTF-8  
 ENV LANGUAGE en_US:en  
