@@ -100,7 +100,7 @@ services:
      - onlyoffice-document-server
      - onlyoffice-mail-server
      - onlyoffice-community-server
-    image: onlyoffice4enterprise/controlpanel-ee:1.6.1.106
+    image: onlyoffice4enterprise/controlpanel-ee:latest
     expose:
       - '80'
       - '443'
