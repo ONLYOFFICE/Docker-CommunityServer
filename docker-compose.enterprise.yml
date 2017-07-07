@@ -107,8 +107,8 @@ services:
     restart: always
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - controlpanel_data:/var/www/onlyoffice-controlpanel/Data
-      - controlpanel_log:/var/log/onlyoffice-controlpanel
+      - controlpanel_data:/var/www/onlyoffice/Data
+      - controlpanel_log:/var/log/onlyoffice
     networks:
       - onlyoffice
     stdin_open: true
