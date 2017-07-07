@@ -874,10 +874,6 @@ if [ -n "$PID" ]; then
   kill -9 $PID
 fi
 
-if [ ! -f ${ONLYOFFICE_CRON_DIR}/letsencrypt ]; then
-  cp ${SYSCONF_TEMPLATES_DIR}/cron/letsencrypt  ${ONLYOFFICE_CRON_DIR}/letsencrypt;
-fi
-
 cron
 
 if [ "${DOCKER_ENABLED}" == "true" ]; then
