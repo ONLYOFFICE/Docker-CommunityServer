@@ -24,7 +24,6 @@ services:
      - onlyoffice-document-server
      - onlyoffice-mail-server
     environment:
-     - MAIL_SERVER_DB_HOST=onlyoffice-mail-server
      - DOCUMENT_SERVER_PORT_80_TCP_ADDR=onlyoffice-document-server
      - CONTROL_PANEL_PORT_80_TCP=80
      - CONTROL_PANEL_PORT_80_TCP_ADDR=onlyoffice-control-panel
