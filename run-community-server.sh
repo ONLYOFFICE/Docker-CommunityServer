@@ -55,6 +55,9 @@ ONLYOFFICE_HTTPS_HSTS_ENABLED=${ONLYOFFICE_HTTPS_HSTS_ENABLED:-true}
 ONLYOFFICE_HTTPS_HSTS_MAXAGE=${ONLYOFFICE_HTTPS_HSTS_MAXAG:-63072000}
 
 SYSCONF_TEMPLATES_DIR="${DIR}/config"
+
+mkdir -p ${SYSCONF_TEMPLATES_DIR}/nginx;
+
 SYSCONF_TOOLS_DIR="${DIR}/assets/tools"
 
 ONLYOFFICE_SERVICES_INTERNAL_HOST=${ONLYOFFICE_SERVICES_PORT_9865_TCP_ADDR:-${ONLYOFFICE_SERVICES_INTERNAL_HOST}}
@@ -150,13 +153,13 @@ fi
 #	fi	
 # fi
 
-cp ${SYSCONF_TEMPLATES_DIR}/nginx/nginx.conf ${NGINX_ROOT_DIR}/nginx.conf
+cp ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-nginx.conf.template ${NGINX_ROOT_DIR}/nginx.conf
 
 sed 's/^worker_processes.*/'"worker_processes ${NGINX_WORKER_PROCESSES};"'/' -i ${NGINX_ROOT_DIR}/nginx.conf
 sed 's/worker_connections.*/'"worker_connections ${NGINX_WORKER_CONNECTIONS};"'/' -i ${NGINX_ROOT_DIR}/nginx.conf
 
 
-cp ${SYSCONF_TEMPLATES_DIR}/nginx/onlyoffice-init ${NGINX_CONF_DIR}/onlyoffice
+cp ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-common-init.conf.template ${NGINX_CONF_DIR}/onlyoffice
 rm -f ${NGINX_ROOT_DIR}/conf.d/*.conf
 
 rsyslogd
@@ -418,7 +421,7 @@ change_connections "default" "${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.e
 change_connections "default" "${ONLYOFFICE_SERVICES_DIR}/MailAggregator/ASC.Mail.Aggregator.CollectionService.exe.config";
 change_connections "default" "${ONLYOFFICE_SERVICES_DIR}/MailAggregator/ASC.Mail.EmlDownloader.exe.config";
 change_connections "default" "${ONLYOFFICE_SERVICES_DIR}/MailWatchdog/ASC.Mail.Watchdog.Service.exe.config";
-change_connections "core" "${ONLYOFFICE_APISYSTEM_DIR}/Web.config";
+change_connections "default" "${ONLYOFFICE_APISYSTEM_DIR}/Web.config";
 sed 's!\(sql_host\s*=\s*\)\S*!\1'${MYSQL_SERVER_HOST}'!' -i ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/sphinx-min.conf.in;
 sed 's!\(sql_pass\s*=\s*\)\S*!\1'${MYSQL_SERVER_PASS}'!' -i ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/sphinx-min.conf.in;
 sed 's!\(sql_user\s*=\s*\)\S*!\1'${MYSQL_SERVER_USER}'!' -i ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/sphinx-min.conf.in;
@@ -434,7 +437,7 @@ done
 
 # setup HTTPS
 if [ -f "${SSL_CERTIFICATE_PATH}" -a -f "${SSL_KEY_PATH}" ]; then
-	cp ${SYSCONF_TEMPLATES_DIR}/nginx/onlyoffice-ssl ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
+	cp ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-common-ssl.conf.template ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
 
 	mkdir -p ${LOG_DIR}/nginx
 
@@ -483,7 +486,7 @@ if [ -f "${SSL_CERTIFICATE_PATH}" -a -f "${SSL_KEY_PATH}" ]; then
 	sed '/mail\.default-api-scheme/s/\(value\s*=\s*\"\).*\"/\1https\"/' -i ${ONLYOFFICE_SERVICES_DIR}/MailAggregator/ASC.Mail.Aggregator.CollectionService.exe.config;
 
 else
-	cp ${SYSCONF_TEMPLATES_DIR}/nginx/onlyoffice ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice;
+	cp ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-common.conf.template ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice;
 fi
 
 
