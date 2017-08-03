@@ -58,30 +58,26 @@ ONLYOFFICE Community Server is a free open source collaborative system developed
 
 Before you start **ONLYOFFICE Community Server**, you need to create the following folders:
 
-1. For **Community Server** setup
-```
-sudo mkdir -p "/app/onlyoffice/setup";
-```
-
-2. For MySQL server
+1. For MySQL server
 ```
 sudo mkdir -p "/app/onlyoffice/mysql/conf.d";
 sudo mkdir -p "/app/onlyoffice/mysql/data";
 sudo mkdir -p "/app/onlyoffice/mysql/initdb";
 ```
 
-3. For **Community Server** logs and data
+2. For **Community Server** data and logs
 ```
 sudo mkdir -p "/app/onlyoffice/CommunityServer/data";
 sudo mkdir -p "/app/onlyoffice/CommunityServer/logs";
 ```
 
-4. For **Document server** data
+3. For **Document server** data and logs
 ```
 sudo mkdir -p "/app/onlyoffice/DocumentServer/data";
+sudo mkdir -p "/app/onlyoffice/DocumentServer/logs";
 ```
 
-5. And for **Mail Server** logs and data
+4. And for **Mail Server** data and logs
 ```
 sudo mkdir -p "/app/onlyoffice/MailServer/data/certs";
 sudo mkdir -p "/app/onlyoffice/MailServer/logs";
@@ -303,11 +299,12 @@ sudo docker run --net onlyoffice -i -t -d --restart=always --name onlyoffice-doc
 	-v /app/onlyoffice/DocumentServer/logs:/var/log/onlyoffice \
 	onlyoffice/documentserver
 ```
+To learn more, refer to the [ONLYOFFICE Document Server documentation](https://github.com/ONLYOFFICE/Docker-MailServer "ONLYOFFICE Mail Server documentation").
 
 **STEP 3**: Install ONLYOFFICE Mail Server. 
 
 For the mail server correct work you need to specify its hostname 'yourdomain.com'.
-To learn more, refer to the [ONLYOFFICE Mail Server documentation](https://github.com/ONLYOFFICE/Docker-MailServer "ONLYOFFICE Mail Server documentation").
+To learn more, refer to the [ONLYOFFICE Mail Server documentation](https://github.com/ONLYOFFICE/Docker-DocumentServer "ONLYOFFICE Document Server documentation").
 
 ```bash
 sudo docker run --init --net onlyoffice --privileged -i -t -d --restart=always --name onlyoffice-mail-server -p 25:25 -p 143:143 -p 587:587 \
