@@ -76,14 +76,9 @@ sudo mkdir -p "/app/onlyoffice/CommunityServer/data";
 sudo mkdir -p "/app/onlyoffice/CommunityServer/logs";
 ```
 
-4. For **Document server** logs and data
+4. For **Document server** data
 ```
 sudo mkdir -p "/app/onlyoffice/DocumentServer/data";
-sudo mkdir -p "/app/onlyoffice/DocumentServer/logs/documentserver/FileConverterService";
-sudo mkdir -p "/app/onlyoffice/DocumentServer/logs/documentserver/CoAuthoringService";
-sudo mkdir -p "/app/onlyoffice/DocumentServer/logs/documentserver/DocService";
-sudo mkdir -p "/app/onlyoffice/DocumentServer/logs/documentserver/SpellCheckerService";
-sudo mkdir -p "/app/onlyoffice/DocumentServer/fonts";
 ```
 
 5. And for **Mail Server** logs and data
