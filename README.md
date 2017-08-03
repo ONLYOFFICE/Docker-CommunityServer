@@ -3,7 +3,7 @@
 * [Recommended System Requirements](#recommended-system-requirements)
 * [Installing Prerequisites](#installing-prerequisites)
 * [Installing MySQL](#installing-mysql)
-* [Running Docker Image](#running-docker-image)
+* [Installing Community Server](#installing-community-server)
 * [Configuring Docker Image](#configuring-docker-image)
     - [Storing Data](#storing-data)
     - [Running ONLYOFFICE Community Server on Different Port](#running-onlyoffice-community-server-on-different-port)
@@ -121,7 +121,7 @@ sudo docker run --net onlyoffice -i -t -d --restart=always --name onlyoffice-mys
  mysql:5.7
  ```
 
-## Running Docker Image
+## Installing Community Server
 
 Use this command to install **ONLYOFFICE Community Server**:
 ```
@@ -291,7 +291,11 @@ docker network create --driver bridge onlyoffice
 ```
 Then launch containers on it using the 'docker run --net onlyoffice' option:
 
-**STEP 2**: Install ONLYOFFICE Document Server.
+**STEP 2**: Install MySQL.
+
+Follow [these steps](#installing-mysql) to install MySQL server.
+
+**STEP 3**: Install ONLYOFFICE Document Server.
 
 ```bash
 sudo docker run --net onlyoffice -i -t -d --restart=always --name onlyoffice-document-server \
@@ -301,7 +305,7 @@ sudo docker run --net onlyoffice -i -t -d --restart=always --name onlyoffice-doc
 ```
 To learn more, refer to the [ONLYOFFICE Document Server documentation](https://github.com/ONLYOFFICE/Docker-MailServer "ONLYOFFICE Mail Server documentation").
 
-**STEP 3**: Install ONLYOFFICE Mail Server. 
+**STEP 4**: Install ONLYOFFICE Mail Server. 
 
 For the mail server correct work you need to specify its hostname 'yourdomain.com'.
 To learn more, refer to the [ONLYOFFICE Mail Server documentation](https://github.com/ONLYOFFICE/Docker-DocumentServer "ONLYOFFICE Document Server documentation").
@@ -322,7 +326,7 @@ sudo docker run --init --net onlyoffice --privileged -i -t -d --restart=always -
 
 The additional parameters for mail server are available [here](https://github.com/ONLYOFFICE/Docker-CommunityServer/blob/master/docker-compose.yml#L75).
 
-**STEP 4**: Install ONLYOFFICE Community Server
+**STEP 5**: Install ONLYOFFICE Community Server
 
 ```bash
 sudo docker run --net onlyoffice -i -t -d --restart=always --name onlyoffice-community-server -p 80:80 -p 443:443 -p 5222:5222 \
