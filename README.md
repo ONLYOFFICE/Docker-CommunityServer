@@ -299,8 +299,10 @@ Follow [these steps](#installing-mysql) to install MySQL server.
 
 ```bash
 sudo docker run --net onlyoffice -i -t -d --restart=always --name onlyoffice-document-server \
-	-v /app/onlyoffice/DocumentServer/data:/var/www/onlyoffice/Data \
-	-v /app/onlyoffice/DocumentServer/logs:/var/log/onlyoffice \
+	-v /app/onlyoffice/DocumentServer/logs:/var/log/onlyoffice  \
+	-v /app/onlyoffice/DocumentServer/data:/var/www/onlyoffice/Data  \
+	-v /app/onlyoffice/DocumentServer/lib:/var/lib/onlyoffice \
+	-v /app/onlyoffice/DocumentServer/db:/var/lib/postgresql \
 	onlyoffice/documentserver
 ```
 To learn more, refer to the [ONLYOFFICE Document Server documentation](https://github.com/ONLYOFFICE/Docker-DocumentServer "ONLYOFFICE Document Server documentation").
