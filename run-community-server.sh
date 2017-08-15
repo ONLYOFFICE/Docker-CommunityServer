@@ -263,6 +263,17 @@ if [ ${MAIL_SERVER_DB_HOST} ]; then
 		    echo "MAIL_SERVER_API_HOST is empty";
 	            exit 502;
        		fi
+	else
+		if [[ ! $MAIL_SERVER_API_HOST =~ $VALID_IP_ADDRESS_REGEX ]]; then
+			MAIL_SERVER_API_HOST=$(dig +short ${MAIL_SERVER_API_HOST});
+		fi
+
+		if [ -z "${MAIL_SERVER_API_HOST}" ]; then
+		    echo "MAIL_SERVER_API_HOST not correct";
+
+                    exit 502;
+		fi
+
 	fi
 fi
 
