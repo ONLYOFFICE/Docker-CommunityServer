@@ -18,6 +18,7 @@ ONLYOFFICE_CRON_DIR="/etc/cron.d"
 ONLYOFFICE_CRON_PATH="/etc/cron.d/onlyoffice"
 DOCKER_ONLYOFFICE_SUBNET=$(ip -o -f inet addr show | awk '/scope global/ {print $4}' | head -1);
 DOCKER_CONTAINER_IP=$(ip addr show eth0 | awk '/inet / {gsub(/\/.*/,"",$2); print $2}' | head -1);
+DOCKER_CONTAINER_NAME="onlyoffice-community-server";
 DOCKER_ENABLED=${DOCKER_ENABLED:-true};
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 NGINX_CONF_DIR="/etc/nginx/sites-enabled"
@@ -202,7 +203,13 @@ if [ $DOCUMENT_SERVER_ENABLED ] && [ $DOCKER_ONLYOFFICE_SUBNET ] && [ -z "$SERVE
 	DOCUMENT_SERVER_HOST_IP=$(dig +short ${DOCUMENT_SERVER_HOST});
 
 	if check_ip_is_internal $DOCKER_ONLYOFFICE_SUBNET $DOCUMENT_SERVER_HOST_IP; then
-		SERVER_HOST=${DOCKER_CONTAINER_IP};
+		_DOCKER_CONTAINER_IP=$(dig +short ${DOCKER_CONTAINER_NAME});
+
+		if [ "${DOCKER_CONTAINER_IP}" == "${_DOCKER_CONTAINER_IP}" ]; then
+			SERVER_HOST=${DOCKER_CONTAINER_NAME};
+		else
+			SERVER_HOST=${DOCKER_CONTAINER_IP};
+		fi
 	fi
 fi
 
