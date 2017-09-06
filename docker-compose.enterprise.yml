@@ -25,6 +25,8 @@ services:
      - onlyoffice-mail-server
     environment:
      - DOCUMENT_SERVER_PORT_80_TCP_ADDR=onlyoffice-document-server
+     - DOCUMENT_SERVER_JWT_ENABLED=true
+     - DOCUMENT_SERVER_JWT_SECRET="secret"
      - CONTROL_PANEL_PORT_80_TCP=80
      - CONTROL_PANEL_PORT_80_TCP_ADDR=onlyoffice-control-panel
      - MYSQL_SERVER_ROOT_PASSWORD=my-secret-pw
@@ -59,6 +61,9 @@ services:
     stdin_open: true
     tty: true
     restart: always
+    environment:
+     - JWT_ENABLED=true
+     - JWT_SECRET="secret"
     networks:
       - onlyoffice
     expose:
