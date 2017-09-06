@@ -172,7 +172,6 @@ if [ ${ONLYOFFICE_SERVICES_INTERNAL_HOST} ]; then
 	ONLYOFFICE_SERVICES_EXTERNAL=true;
 
 	sed '/endpoint/s/http:\/\/localhost:9865\/teamlabJabber/http:\/\/'${ONLYOFFICE_SERVICES_INTERNAL_HOST}':9865\/teamlabJabber/' -i ${ONLYOFFICE_ROOT_DIR}/Web.config
-	sed '/endpoint/s/http:\/\/localhost:9888\/teamlabSignalr/http:\/\/'${ONLYOFFICE_SERVICES_INTERNAL_HOST}':9888\/teamlabSignalr/' -i ${ONLYOFFICE_ROOT_DIR}/Web.config
 	sed '/endpoint/s/http:\/\/localhost:9866\/teamlabSearcher/http:\/\/'${ONLYOFFICE_SERVICES_INTERNAL_HOST}':9866\/teamlabSearcher/' -i ${ONLYOFFICE_ROOT_DIR}/Web.config
 	sed '/endpoint/s/http:\/\/localhost:9871\/teamlabNotify/http:\/\/'${ONLYOFFICE_SERVICES_INTERNAL_HOST}':9871\/teamlabNotify/' -i ${ONLYOFFICE_ROOT_DIR}/Web.config
 	sed '/endpoint/s/http:\/\/localhost:9882\/teamlabBackup/http:\/\/'${ONLYOFFICE_SERVICES_INTERNAL_HOST}':9882\/teamlabBackup/' -i ${ONLYOFFICE_ROOT_DIR}/Web.config
@@ -849,7 +848,6 @@ if [ "${ONLYOFFICE_SERVICES_EXTERNAL}" == "true" ]; then
 	service onlyofficeMailWatchdog stop
 	service onlyofficeNotify stop
 	service onlyofficeBackup stop
-	service onlyofficeSignalR stop
 	service onlyofficeAutoreply stop
 
 	rm -f /etc/init.d/onlyofficeFeed
@@ -859,7 +857,6 @@ if [ "${ONLYOFFICE_SERVICES_EXTERNAL}" == "true" ]; then
 	rm -f /etc/init.d/onlyofficeMailWatchdog
 	rm -f /etc/init.d/onlyofficeNotify
 	rm -f /etc/init.d/onlyofficeBackup
-	rm -f /etc/init.d/onlyofficeSignalR
 	rm -f /etc/init.d/onlyofficeAutoreply
 
 	sed '/onlyoffice/d' -i ${ONLYOFFICE_CRON_PATH}
@@ -873,7 +870,7 @@ else
 	service onlyofficeMailWatchdog restart
 	service onlyofficeNotify restart
 	service onlyofficeBackup restart
-	service onlyofficeSignalR stop
+	service onlyofficeSocketIO restart
  	service onlyofficeAutoreply stop
 	service onlyofficeHealthCheck stop
 fi
