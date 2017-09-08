@@ -67,6 +67,7 @@ DOCUMENT_SERVER_ENABLED=false
 
 DOCUMENT_SERVER_JWT_ENABLED=${DOCUMENT_SERVER_JWT_ENABLED:-false};
 DOCUMENT_SERVER_JWT_SECRET=${DOCUMENT_SERVER_JWT_SECRET:-""};
+DOCUMENT_SERVER_JWT_HEADER=${DOCUMENT_SERVER_JWT_HEADER:-""};
 DOCUMENT_SERVER_HOST=${DOCUMENT_SERVER_HOST:-""};
 DOCUMENT_SERVER_PROTOCOL=${DOCUMENT_SERVER_PROTOCOL:-"http"};
 DOCUMENT_SERVER_API_URL="\/web-apps\/apps\/api\/documents\/api\.js";
@@ -544,6 +545,7 @@ if [ "${DOCUMENT_SERVER_ENABLED}" == "true" ]; then
 
     if [ "${DOCUMENT_SERVER_JWT_ENABLED}" == "true" ]; then
 	    sed '/files\.docservice\.secret/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_JWT_SECRET}'\"!' -i ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
+	    sed '/files\.docservice\.header/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_JWT_HEADER}'\"!' -i ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
     fi
 
     if [ -n "${DOCKER_ONLYOFFICE_SUBNET}" ] && [ -n "${SERVER_HOST}" ]; then
