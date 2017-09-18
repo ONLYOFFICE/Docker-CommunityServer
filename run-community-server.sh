@@ -833,7 +833,7 @@ else
 
 		service monoserve$index restart
 
-                (ping_onlyoffice "http://localhost/warmup${index}/auth.aspx") &
+#                (ping_onlyoffice "http://localhost/warmup${index}/auth.aspx") &
 	done
 
 	service monoserveApiSystem restart
@@ -881,7 +881,7 @@ service god restart
 
 if [ "${ONLYOFFICE_MODE}" == "SERVER" ]; then
 
-        wait
+#        wait
 
         mv ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice ${NGINX_CONF_DIR}/onlyoffice
 
