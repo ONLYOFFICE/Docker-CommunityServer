@@ -26,6 +26,10 @@ NGINX_WORKER_PROCESSES=${NGINX_WORKER_PROCESSES:-$(grep processor /proc/cpuinfo 
 NGINX_WORKER_CONNECTIONS=${NGINX_WORKER_CONNECTIONS:-$(ulimit -n)};
 SERVICE_SSO_AUTH_HOST_ADDR=${SERVICE_SSO_AUTH_HOST_ADDR:-${CONTROL_PANEL_PORT_80_TCP_ADDR}};
 
+DEFAULT_ONLYOFFICE_CORE_MACHINEKEY="$(sudo sed -n '/"core.machinekey"/s!.*value\s*=\s*"\([^"]*\)".*!\1!p' ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config)";
+
+ONLYOFFICE_CORE_MACHINEKEY=${ONLYOFFICE_CORE_MACHINEKEY:-${DEFAULT_ONLYOFFICE_CORE_MACHINEKEY}};
+
 if [ ! -d "$NGINX_CONF_DIR" ]; then
    mkdir -p $NGINX_CONF_DIR;
 fi
@@ -687,7 +691,10 @@ do
 	if [ $serverID == 1 ]; then
 		sed '/web.warmup.count/s/value=\"\S*\"/value=\"'${ONLYOFFICE_MONOSERVE_COUNT}'\"/g' -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
 		sed '/web.warmup.domain/s/value=\"\S*\"/value=\"localhost\/warmup\"/g' -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
-	
+		sed '/core.machinekey/s/value=\"\S*\"/value=\"'${ONLYOFFICE_CORE_MACHINEKEY}'\"/g' -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
+		sed '/core.machinekey/s/value=\"\S*\"/value=\"'${ONLYOFFICE_CORE_MACHINEKEY}'\"/g' -i  ${ONLYOFFICE_SERVICES_DIR}/Services/TeamLabSvc/TeamLabSvc.exe.Config
+		sed '/core.machinekey/s/value=\"\S*\"/value=\"'${ONLYOFFICE_CORE_MACHINEKEY}'\"/g' -i  ${ONLYOFFICE_SERVICES_DIR}/Services/MailAggregator/ASC.Mail.EmlDownloader.exe.config
+
 		continue;
 	fi
 
@@ -702,6 +709,11 @@ do
 
 	sed '/web.warmup.count/s/value=\"\S*\"/value=\"'${ONLYOFFICE_MONOSERVE_COUNT}'\"/g' -i  ${ONLYOFFICE_ROOT_DIR}$serverID/web.appsettings.config
 	sed '/web.warmup.domain/s/value=\"\S*\"/value=\"localhost\/warmup'${serverID}'\"/g' -i  ${ONLYOFFICE_ROOT_DIR}$serverID/web.appsettings.config
+
+	sed '/core.machinekey/s/value=\"\S*\"/value=\"'${ONLYOFFICE_CORE_MACHINEKEY}'\"/g' -i  ${ONLYOFFICE_ROOT_DIR}$serverID/web.appsettings.config
+	sed '/core.machinekey/s/value=\"\S*\"/value=\"'${ONLYOFFICE_CORE_MACHINEKEY}'\"/g' -i  ${ONLYOFFICE_SERVICES_DIR}$serverID/Services/TeamLabSvc/TeamLabSvc.exe.Config
+	sed '/core.machinekey/s/value=\"\S*\"/value=\"'${ONLYOFFICE_CORE_MACHINEKEY}'\"/g' -i  ${ONLYOFFICE_SERVICES_DIR}$serverID/Services/MailAggregator/ASC.Mail.EmlDownloader.exe.config
+
 
         sed '/conversionPattern\s*value=\"%folder{LogDirectory}/s!web!web'${serverID}'!g' -i ${ONLYOFFICE_ROOT_DIR}$serverID/web.log4net.config;
 
