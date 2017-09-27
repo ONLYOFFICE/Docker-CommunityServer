@@ -691,9 +691,9 @@ do
 	if [ $serverID == 1 ]; then
 		sed '/web.warmup.count/s/value=\"\S*\"/value=\"'${ONLYOFFICE_MONOSERVE_COUNT}'\"/g' -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
 		sed '/web.warmup.domain/s/value=\"\S*\"/value=\"localhost\/warmup\"/g' -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
-		sed '/core.machinekey/s/value=\"\S*\"/value=\"'${ONLYOFFICE_CORE_MACHINEKEY}'\"/g' -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
-		sed '/core.machinekey/s/value=\"\S*\"/value=\"'${ONLYOFFICE_CORE_MACHINEKEY}'\"/g' -i  ${ONLYOFFICE_SERVICES_DIR}/Services/TeamLabSvc/TeamLabSvc.exe.Config
-		sed '/core.machinekey/s/value=\"\S*\"/value=\"'${ONLYOFFICE_CORE_MACHINEKEY}'\"/g' -i  ${ONLYOFFICE_SERVICES_DIR}/Services/MailAggregator/ASC.Mail.EmlDownloader.exe.config
+                sed "/core.machinekey/s!value=\".*\"!value=\"${ONLYOFFICE_CORE_MACHINEKEY}\"!g" -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
+                sed "/core.machinekey/s!value=\".*\"!value=\"${ONLYOFFICE_CORE_MACHINEKEY}\"!g" -i  ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config
+                sed "/core.machinekey/s!value=\".*\"!value=\"${ONLYOFFICE_CORE_MACHINEKEY}\"!g" -i  ${ONLYOFFICE_SERVICES_DIR}/MailAggregator/ASC.Mail.EmlDownloader.exe.config
 
 		continue;
 	fi
@@ -710,10 +710,9 @@ do
 	sed '/web.warmup.count/s/value=\"\S*\"/value=\"'${ONLYOFFICE_MONOSERVE_COUNT}'\"/g' -i  ${ONLYOFFICE_ROOT_DIR}$serverID/web.appsettings.config
 	sed '/web.warmup.domain/s/value=\"\S*\"/value=\"localhost\/warmup'${serverID}'\"/g' -i  ${ONLYOFFICE_ROOT_DIR}$serverID/web.appsettings.config
 
-	sed '/core.machinekey/s/value=\"\S*\"/value=\"'${ONLYOFFICE_CORE_MACHINEKEY}'\"/g' -i  ${ONLYOFFICE_ROOT_DIR}$serverID/web.appsettings.config
-	sed '/core.machinekey/s/value=\"\S*\"/value=\"'${ONLYOFFICE_CORE_MACHINEKEY}'\"/g' -i  ${ONLYOFFICE_SERVICES_DIR}$serverID/Services/TeamLabSvc/TeamLabSvc.exe.Config
-	sed '/core.machinekey/s/value=\"\S*\"/value=\"'${ONLYOFFICE_CORE_MACHINEKEY}'\"/g' -i  ${ONLYOFFICE_SERVICES_DIR}$serverID/Services/MailAggregator/ASC.Mail.EmlDownloader.exe.config
-
+        sed "/core.machinekey/s!value=\".*\"!value=\"${ONLYOFFICE_CORE_MACHINEKEY}\"!g" -i  ${ONLYOFFICE_ROOT_DIR}$serverID/web.appsettings.config
+        sed "/core.machinekey/s!value=\".*\"!value=\"${ONLYOFFICE_CORE_MACHINEKEY}\"!g" -i  ${ONLYOFFICE_SERVICES_DIR}/Services/TeamLabSvc/TeamLabSvc.exe.Config
+        sed "/core.machinekey/s!value=\".*\"!value=\"${ONLYOFFICE_CORE_MACHINEKEY}\"!g" -i  ${ONLYOFFICE_SERVICES_DIR}/Services/MailAggregator/ASC.Mail.EmlDownloader.exe.config
 
         sed '/conversionPattern\s*value=\"%folder{LogDirectory}/s!web!web'${serverID}'!g' -i ${ONLYOFFICE_ROOT_DIR}$serverID/web.log4net.config;
 
