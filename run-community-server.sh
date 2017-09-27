@@ -711,9 +711,7 @@ do
 	sed '/web.warmup.domain/s/value=\"\S*\"/value=\"localhost\/warmup'${serverID}'\"/g' -i  ${ONLYOFFICE_ROOT_DIR}$serverID/web.appsettings.config
 
         sed "/core.machinekey/s!value=\".*\"!value=\"${ONLYOFFICE_CORE_MACHINEKEY}\"!g" -i  ${ONLYOFFICE_ROOT_DIR}$serverID/web.appsettings.config
-        sed "/core.machinekey/s!value=\".*\"!value=\"${ONLYOFFICE_CORE_MACHINEKEY}\"!g" -i  ${ONLYOFFICE_SERVICES_DIR}/Services/TeamLabSvc/TeamLabSvc.exe.Config
-        sed "/core.machinekey/s!value=\".*\"!value=\"${ONLYOFFICE_CORE_MACHINEKEY}\"!g" -i  ${ONLYOFFICE_SERVICES_DIR}/Services/MailAggregator/ASC.Mail.EmlDownloader.exe.config
-
+     
         sed '/conversionPattern\s*value=\"%folder{LogDirectory}/s!web!web'${serverID}'!g' -i ${ONLYOFFICE_ROOT_DIR}$serverID/web.log4net.config;
 
 
