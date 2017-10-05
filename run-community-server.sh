@@ -874,6 +874,7 @@ if [ "${ONLYOFFICE_SERVICES_EXTERNAL}" == "true" ]; then
 
 else
 
+	service onlyofficeSocketIO restart
 	service onlyofficeFeed restart
 	service onlyofficeIndex restart
 	service onlyofficeJabber restart
@@ -881,7 +882,6 @@ else
 	service onlyofficeMailWatchdog restart
 	service onlyofficeNotify restart
 	service onlyofficeBackup restart
-	service onlyofficeSocketIO restart
  	service onlyofficeAutoreply stop
 	service onlyofficeHealthCheck stop
 fi
