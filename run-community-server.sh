@@ -543,6 +543,7 @@ if [ "${DOCUMENT_SERVER_ENABLED}" == "true" ]; then
 
     # change web.appsettings link to editor
     sed '/files\.docservice\.url\.converter/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_PROTOCOL}':\/\/'${DOCUMENT_SERVER_HOST}'\/ConvertService\.ashx\"!' -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
+    sed '/files\.docservice\.url\.docbuilder/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_PROTOCOL}':\/\/'${DOCUMENT_SERVER_HOST}'\/docbuilder\"!' -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
     sed '/files\.docservice\.url\.api/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_API_URL}'\"!' -i ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
     sed '/files\.docservice\.url\.storage/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_PROTOCOL}':\/\/'${DOCUMENT_SERVER_HOST}'\/FileUploader\.ashx\"!' -i ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
     sed '/files\.docservice\.url\.command/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_PROTOCOL}':\/\/'${DOCUMENT_SERVER_HOST}'\/coauthoring\/CommandService\.ashx\"!' -i ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
