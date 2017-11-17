@@ -30,6 +30,12 @@ DEFAULT_ONLYOFFICE_CORE_MACHINEKEY="$(sudo sed -n '/"core.machinekey"/s!.*value\
 
 ONLYOFFICE_CORE_MACHINEKEY=${ONLYOFFICE_CORE_MACHINEKEY:-${DEFAULT_ONLYOFFICE_CORE_MACHINEKEY}};
 
+if cat /proc/1/cgroup | grep -qE "docker|lxc"; then
+        DOCKER_ENABLED=true;
+else
+	DOCKER_ENABLED=false;
+fi
+
 if [ ! -d "$NGINX_CONF_DIR" ]; then
    mkdir -p $NGINX_CONF_DIR;
 fi
