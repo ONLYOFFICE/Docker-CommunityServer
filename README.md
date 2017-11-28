@@ -95,7 +95,9 @@ After that you need to create MySQL server Docker container. Create the configur
 echo "[mysqld]
 sql_mode = 'NO_ENGINE_SUBSTITUTION'
 max_connections = 1000
-max_allowed_packet = 1048576000" > /app/onlyoffice/mysql/conf.d/onlyoffice.cnf
+max_allowed_packet = 1048576000
+group_concat_max_len = 2048
+log-error = /var/log/mysql/error.log" > /app/onlyoffice/mysql/conf.d/onlyoffice.cnf
 ```
 
 Create the SQL script which will generate the users and issue the rights to them. The `onlyoffice_user` is required for **ONLYOFFICE Community Server**, and the `mail_admin` is required for **ONLYOFFICE Mail Server** in case it is going to be installed:
@@ -301,8 +303,8 @@ Follow [these steps](#installing-mysql) to install MySQL server.
 sudo docker run --net onlyoffice -i -t -d --restart=always --name onlyoffice-document-server \
 	-v /app/onlyoffice/DocumentServer/logs:/var/log/onlyoffice  \
 	-v /app/onlyoffice/DocumentServer/data:/var/www/onlyoffice/Data  \
-	-v /app/onlyoffice/DocumentServer/lib:/var/lib/onlyoffice \
-	-v /app/onlyoffice/DocumentServer/db:/var/lib/postgresql \
+	-v /app/onlyoffice/DocumentServer/fonts:/usr/share/fonts/truetype/custom \
+	-v /app/onlyoffice/DocumentServer/forgotten:/var/lib/onlyoffice/documentserver/App_Data/cache/files/forgotten \
 	onlyoffice/documentserver
 ```
 To learn more, refer to the [ONLYOFFICE Document Server documentation](https://github.com/ONLYOFFICE/Docker-DocumentServer "ONLYOFFICE Document Server documentation").
@@ -336,17 +338,14 @@ sudo docker run --net onlyoffice -i -t -d --restart=always --name onlyoffice-com
  -e MYSQL_SERVER_DB_NAME=onlyoffice \
  -e MYSQL_SERVER_HOST=onlyoffice-mysql-server \
  -e MYSQL_SERVER_USER=onlyoffice_user \
- -e MYSQL_SERVER_PASS=onlyoffice_pass \
- 
- -e DOCUMENT_SERVER_PORT_80_TCP_ADDR=onlyoffice-document-server \
- 
+ -e MYSQL_SERVER_PASS=onlyoffice_pass \ 
+ -e DOCUMENT_SERVER_PORT_80_TCP_ADDR=onlyoffice-document-server \ 
  -e MAIL_SERVER_API_HOST=${MAIL_SERVER_IP} \
  -e MAIL_SERVER_DB_HOST=onlyoffice-mysql-server \
  -e MAIL_SERVER_DB_NAME=onlyoffice_mailserver \
  -e MAIL_SERVER_DB_PORT=3306 \
  -e MAIL_SERVER_DB_USER=root \
- -e MAIL_SERVER_DB_PASS=my-secret-pw \
- 
+ -e MAIL_SERVER_DB_PASS=my-secret-pw \ 
  -v /app/onlyoffice/CommunityServer/data:/var/www/onlyoffice/Data \
  -v /app/onlyoffice/CommunityServer/logs:/var/log/onlyoffice \
  onlyoffice/communityserver
