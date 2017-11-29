@@ -373,7 +373,7 @@ bash opensource-install.sh -md yourdomain.com
 Or, use [docker-compose](https://docs.docker.com/compose/install "docker-compose"). For the mail server correct work you need to clone the current repository, open the [docker-compose.yml file](https://github.com/ONLYOFFICE/Docker-CommunityServer/blob/master/docker-compose.yml "docker-compose.yml file") and replace the `${MAIL_SERVER_HOSTNAME}` variable with your own hostname for the **Mail Server**. After that, assuming you have docker-compose installed, execute the following command:
 
 ```bash
-wget link-to-your-modified-docker-compose/docker-compose.yml
+cd link-to-your-modified-docker-compose
 docker-compose up -d
 ```
 
