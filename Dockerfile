@@ -37,7 +37,8 @@ RUN echo "${SOURCE_REPO_URL}" >> /etc/apt/sources.list && \
     apt-get install --force-yes -yq default-jdk && \
     add-apt-repository -y ppa:webupd8team/java && \
     apt-get -y update && \
-    apt-get install --force-yes -yq oracle-java8-installer && echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | sudo /usr/bin/debconf-set-selections && \
+    echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | sudo /usr/bin/debconf-set-selections && \
+    apt-get install --force-yes -yq oracle-java8-installer &&  \
     wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | apt-key add - && \
     apt-get install --force-yes -yq apt-transport-https && \
     echo "deb https://artifacts.elastic.co/packages/5.x/apt stable main" | tee -a /etc/apt/sources.list.d/elastic-5.x.list && \
