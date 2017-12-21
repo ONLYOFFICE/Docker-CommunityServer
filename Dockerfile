@@ -34,15 +34,22 @@ RUN echo "${SOURCE_REPO_URL}" >> /etc/apt/sources.list && \
     apt-key add nginx_signing.key && \
     echo "deb http://nginx.org/packages/mainline/ubuntu/ trusty nginx" >> /etc/apt/sources.list.d/nginx.list && \
     echo "deb-src http://nginx.org/packages/mainline/ubuntu/ trusty nginx" >> /etc/apt/sources.list.d/nginx.list && \	
-    add-apt-repository -y ppa:builds/sphinxsearch-rel22 && \
+    apt-get install --force-yes -yq default-jdk && \
+    add-apt-repository ppa:webupd8team/java && \
+    apt-get -y update && \
+    apt-get install --force-yes -yq oracle-java8-installer && \
+    wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | apt-key add - && \
+    apt-get install --force-yes -yq apt-transport-https && \
+    echo "deb https://artifacts.elastic.co/packages/5.x/apt stable main" | tee -a /etc/apt/sources.list.d/elastic-5.x.list && \
+    apt-get update && \
+    apt-get install --force-yes -yq elasticsearch && \
     add-apt-repository -y ppa:certbot/certbot && \
-    echo "Start=No" >> /etc/init.d/sphinxsearch && \
     curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash - && \
     apt-get install -y nodejs && \
     apt-get -y update && \
     apt-get install --force-yes -yq mono-complete ca-certificates-mono && \
     echo "#!/bin/sh\nexit 0" > /usr/sbin/policy-rc.d && \
-    apt-get install --force-yes -yq dumb-init certbot sphinxsearch onlyoffice-communityserver htop nano dnsutils && \
+    apt-get install --force-yes -yq dumb-init certbot onlyoffice-communityserver htop nano dnsutils && \
     rm -rf /var/lib/apt/lists/*
 
 

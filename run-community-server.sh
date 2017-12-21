@@ -456,11 +456,6 @@ change_connections "default" "${ONLYOFFICE_SERVICES_DIR}/MailAggregator/ASC.Mail
 change_connections "default" "${ONLYOFFICE_SERVICES_DIR}/MailAggregator/ASC.Mail.EmlDownloader.exe.config";
 change_connections "default" "${ONLYOFFICE_SERVICES_DIR}/MailWatchdog/ASC.Mail.Watchdog.Service.exe.config";
 change_connections "default" "${ONLYOFFICE_APISYSTEM_DIR}/Web.config";
-sed 's!\(sql_host\s*=\s*\)\S*!\1'${MYSQL_SERVER_HOST}'!' -i ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/sphinx-min.conf.in;
-sed 's!\(sql_pass\s*=\s*\)\S*!\1'${MYSQL_SERVER_PASS}'!' -i ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/sphinx-min.conf.in;
-sed 's!\(sql_user\s*=\s*\)\S*!\1'${MYSQL_SERVER_USER}'!' -i ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/sphinx-min.conf.in;
-sed 's!\(sql_db\s*=\s*\)\S*!\1'${MYSQL_SERVER_DB_NAME}'!' -i ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/sphinx-min.conf.in;
-sed 's!\(sql_port\s*=\s*\)\S*!\1'${MYSQL_SERVER_PORT}'!' -i ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/sphinx-min.conf.in;
 
 
 # update mysql db
@@ -537,8 +532,6 @@ if [ ${ONLYOFFICE_SERVICES_INTERNAL_HOST} ]; then
 	sed "s/localhost/${ONLYOFFICE_SERVICES_INTERNAL_HOST}/" -i ${NGINX_CONF_DIR}/includes/onlyoffice-communityserver-services.conf
 fi
 
-
-echo "Start=No" >> /etc/init.d/sphinxsearch
 
 if ! grep -q "name=\"textindex\"" ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config; then
 	sed -i 's/.*<add\s*name="default"\s*connectionString=.*/&\n<add name="textindex" connectionString="Server=localhost;Port=9306;Pooling=True;Character Set=utf8;AutoEnlist=false" providerName="MySql.Data.MySqlClient"\/>/' ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config; 
@@ -886,6 +879,7 @@ else
 
 	service onlyofficeSocketIO restart
 	service onlyofficeFeed restart
+	service elasticsearch restart
 	service onlyofficeIndex restart
 	service onlyofficeJabber restart
 	service onlyofficeMailAggregator restart
