@@ -35,9 +35,9 @@ RUN echo "${SOURCE_REPO_URL}" >> /etc/apt/sources.list && \
     echo "deb http://nginx.org/packages/mainline/ubuntu/ trusty nginx" >> /etc/apt/sources.list.d/nginx.list && \
     echo "deb-src http://nginx.org/packages/mainline/ubuntu/ trusty nginx" >> /etc/apt/sources.list.d/nginx.list && \	
     apt-get install --force-yes -yq default-jdk && \
-    add-apt-repository ppa:webupd8team/java && \
+    add-apt-repository -y ppa:webupd8team/java && \
     apt-get -y update && \
-    apt-get install --force-yes -yq oracle-java8-installer && \
+    apt-get install --force-yes -yq oracle-java8-installer && echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | sudo /usr/bin/debconf-set-selections && \
     wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | apt-key add - && \
     apt-get install --force-yes -yq apt-transport-https && \
     echo "deb https://artifacts.elastic.co/packages/5.x/apt stable main" | tee -a /etc/apt/sources.list.d/elastic-5.x.list && \
