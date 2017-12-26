@@ -851,6 +851,8 @@ else
 	service monoserveApiSystem restart
 fi
 
+/usr/share/elasticsearch/bin/elasticsearch-plugin install ingest-attachment | echo y
+ 
 if [ "${ONLYOFFICE_SERVICES_EXTERNAL}" == "true" ]; then
 	rm -f "${ONLYOFFICE_GOD_DIR}"/onlyoffice.god;
 	rm -f "${ONLYOFFICE_GOD_DIR}"/mail.god;
