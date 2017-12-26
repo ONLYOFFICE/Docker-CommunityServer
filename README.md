@@ -15,6 +15,7 @@
         + [Available Configuration Parameters](#available-configuration-parameters)
 * [Installing ONLYOFFICE Community Server integrated with Document and Mail Servers](#installing-onlyoffice-community-server-integrated-with-document-and-mail-servers)
 * [Upgrading ONLYOFFICE Community Server](#upgrading-onlyoffice-community-server)
+* [Connecting Your Own Modules](#connecting-your-own-modules)
 * [Project Information](#project-information)
 * [User Feedback and Support](#user-feedback-and-support)
 
@@ -417,6 +418,10 @@ It will update all the installed components automatically. If you want to update
 bash opensource-install.sh -u true -cv 9.1.0.393 -ids false -ims false
 ```
 Where `9.1.0.393` is the number of **Community Server** version which you are going to update to.
+
+## Connecting Your Own Modules
+
+You can now create your own modules and connect them to ONLYOFFICE Community Server. See [this repository](https://github.com/ONLYOFFICE/CommunityServer-CustomModules "https://github.com/ONLYOFFICE/CommunityServer-CustomModules") for more details.
 
 ## Project Information
 
