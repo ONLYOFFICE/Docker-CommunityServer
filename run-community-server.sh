@@ -533,10 +533,6 @@ if [ ${ONLYOFFICE_SERVICES_INTERNAL_HOST} ]; then
 fi
 
 
-if ! grep -q "name=\"textindex\"" ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config; then
-	sed -i 's/.*<add\s*name="default"\s*connectionString=.*/&\n<add name="textindex" connectionString="Server=localhost;Port=9306;Pooling=True;Character Set=utf8;AutoEnlist=false" providerName="MySql.Data.MySqlClient"\/>/' ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config; 
-fi
-
 if [ "${DOCUMENT_SERVER_ENABLED}" == "true" ]; then
 
     cp ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-proxy-to-documentserver.conf.template ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-proxy-to-documentserver.conf;
@@ -851,8 +847,15 @@ else
 	service monoserveApiSystem restart
 fi
 
+#configure elasticsearch
 /usr/share/elasticsearch/bin/elasticsearch-plugin install ingest-attachment | echo y
- 
+mkdir -p "$LOG_DIR/Index"
+mkdir -p "$ONLYOFFICE_DATA_DIR/Index"
+chown -R elasticsearch:elasticsearch "$ONLYOFFICE_DATA_DIR/Index"
+chown -R elasticsearch:elasticsearch "$LOG_DIR/Index"
+sed 's,#path.data: /path/to/data,path.data: '"${ONLYOFFICE_DATA_DIR}"'/Index/,' -i  "/etc/elasticsearch/elasticsearch.yml"
+sed 's,#path.logs: /path/to/logs,path.logs: '"${LOG_DIR}"'/Index/,' -i  "/etc/elasticsearch/elasticsearch.yml"
+		
 if [ "${ONLYOFFICE_SERVICES_EXTERNAL}" == "true" ]; then
 	rm -f "${ONLYOFFICE_GOD_DIR}"/onlyoffice.god;
 	rm -f "${ONLYOFFICE_GOD_DIR}"/mail.god;
