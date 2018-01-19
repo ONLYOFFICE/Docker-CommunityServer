@@ -847,6 +847,7 @@ else
 	service monoserveApiSystem restart
 fi
 
+
 #configure elasticsearch
 /usr/share/elasticsearch/bin/elasticsearch-plugin install ingest-attachment | echo y
 mkdir -p "$LOG_DIR/Index"
