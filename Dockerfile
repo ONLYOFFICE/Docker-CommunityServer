@@ -24,6 +24,10 @@ RUN apt-get -y update && \
     locale-gen en_US.UTF-8 && \
     apt-get -y update && \
     apt-get install -yq software-properties-common wget curl cron rsyslog && \
+    wget http://nginx.org/keys/nginx_signing.key && \
+    apt-key add nginx_signing.key && \
+    echo "deb http://nginx.org/packages/mainline/ubuntu/ xenial nginx" >> /etc/apt/sources.list.d/nginx.list && \
+    echo "deb-src http://nginx.org/packages/mainline/ubuntu/ xenial nginx" >> /etc/apt/sources.list.d/nginx.list && \	
     apt-get install -yq default-jdk && \
     wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | apt-key add - && \
     apt-get install -yq apt-transport-https && \
