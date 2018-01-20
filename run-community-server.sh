@@ -790,16 +790,6 @@ if [ "${MYSQL_SERVER_EXTERNAL}" == "true" ]; then
 	rm -f "${ONLYOFFICE_GOD_DIR}"/mysql.god;
 fi
 
-#configure elasticsearch
-service elasticsearch stop
-/usr/share/elasticsearch/bin/elasticsearch-plugin install ingest-attachment | echo y
-mkdir -p "$LOG_DIR/Index"
-mkdir -p "$ONLYOFFICE_DATA_DIR/Index"
-chown -R elasticsearch:elasticsearch "$ONLYOFFICE_DATA_DIR/Index"
-chown -R elasticsearch:elasticsearch "$LOG_DIR/Index"
-sed 's,#path.data: /path/to/data,path.data: '"${ONLYOFFICE_DATA_DIR}"'/Index/,' -i  "/etc/elasticsearch/elasticsearch.yml"
-sed 's,#path.logs: /path/to/logs,path.logs: '"${LOG_DIR}"'/Index/,' -i  "/etc/elasticsearch/elasticsearch.yml"
-service elasticsearch start
 
 if [ "${ONLYOFFICE_MODE}" == "SERVICES" ]; then
 	service nginx stop
@@ -841,6 +831,17 @@ else
         if [ "$(ls -alhd ${ONLYOFFICE_DATA_DIR} | awk '{ print $3 }')" != "onlyoffice" ]; then
               chown -R onlyoffice:onlyoffice ${ONLYOFFICE_DATA_DIR}
         fi
+
+		#configure elasticsearch
+service elasticsearch stop
+/usr/share/elasticsearch/bin/elasticsearch-plugin install ingest-attachment | echo y
+mkdir -p "$LOG_DIR/Index"
+mkdir -p "$ONLYOFFICE_DATA_DIR/Index"
+chown -R elasticsearch:elasticsearch "$ONLYOFFICE_DATA_DIR/Index"
+chown -R elasticsearch:elasticsearch "$LOG_DIR/Index"
+sed 's,#path.data: /path/to/data,path.data: '"${ONLYOFFICE_DATA_DIR}"'/Index/,' -i  "/etc/elasticsearch/elasticsearch.yml"
+sed 's,#path.logs: /path/to/logs,path.logs: '"${LOG_DIR}"'/Index/,' -i  "/etc/elasticsearch/elasticsearch.yml"
+service elasticsearch start
 
 	for serverID in $(seq 1 ${ONLYOFFICE_MONOSERVE_COUNT});
 	do
