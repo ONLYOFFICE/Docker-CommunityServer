@@ -81,7 +81,7 @@ DOCUMENT_SERVER_JWT_HEADER=${DOCUMENT_SERVER_JWT_HEADER:-""};
 DOCUMENT_SERVER_HOST=${DOCUMENT_SERVER_HOST:-""};
 DOCUMENT_SERVER_HOST_PROXY=${DOCUMENT_SERVER_HOST};
 DOCUMENT_SERVER_PROTOCOL=${DOCUMENT_SERVER_PROTOCOL:-"http"};
-DOCUMENT_SERVER_API_URL="\/web-apps\/apps\/api\/documents\/api\.js";
+DOCUMENT_SERVER_API_URL="";
 DOCUMENT_SERVER_HOST_IP="";
 
 CONTROL_PANEL_ENABLED=false
@@ -206,12 +206,12 @@ fi
 
 if [ ${DOCUMENT_SERVER_HOST} ]; then
 	DOCUMENT_SERVER_ENABLED=true;
-	DOCUMENT_SERVER_API_URL="${DOCUMENT_SERVER_PROTOCOL}://${DOCUMENT_SERVER_HOST}${DOCUMENT_SERVER_API_URL}";
+	DOCUMENT_SERVER_API_URL="${DOCUMENT_SERVER_PROTOCOL}:\/\/${DOCUMENT_SERVER_HOST}";
 elif [ ${DOCUMENT_SERVER_PORT_80_TCP_ADDR} ]; then
 	DOCUMENT_SERVER_ENABLED=true;
 	DOCUMENT_SERVER_HOST=${DOCUMENT_SERVER_PORT_80_TCP_ADDR};
 	DOCUMENT_SERVER_HOST_PROXY="localhost\/ds-vpath";
-	DOCUMENT_SERVER_API_URL="\/ds-vpath${DOCUMENT_SERVER_API_URL}";
+	DOCUMENT_SERVER_API_URL="\/ds-vpath";
 fi
 
 if [ "${DOCUMENT_SERVER_ENABLED}" == "true" ] && [ $DOCKER_ONLYOFFICE_SUBNET ] && [ -z "$SERVER_HOST" ]; then
@@ -551,27 +551,18 @@ if [ "${DOCUMENT_SERVER_ENABLED}" == "true" ]; then
     sed 's,{{DOCUMENT_SERVER_HOST_ADDR}},'"${DOCUMENT_SERVER_PROTOCOL}:\/\/${DOCUMENT_SERVER_HOST}"',' -i ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-proxy-to-documentserver.conf;
 
     # change web.appsettings link to editor
-    sed '/files\.docservice\.url\.converter/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_PROTOCOL}':\/\/'${DOCUMENT_SERVER_HOST}'\/ConvertService\.ashx\"!' -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
-    sed '/files\.docservice\.url\.docbuilder/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_PROTOCOL}':\/\/'${DOCUMENT_SERVER_HOST}'\/docbuilder\"!' -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
-    sed '/files\.docservice\.url\.api/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_API_URL}'\"!' -i ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
-    sed '/files\.docservice\.url\.storage/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_PROTOCOL}':\/\/'${DOCUMENT_SERVER_HOST}'\/FileUploader\.ashx\"!' -i ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
-    sed '/files\.docservice\.url\.command/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_PROTOCOL}':\/\/'${DOCUMENT_SERVER_HOST}'\/coauthoring\/CommandService\.ashx\"!' -i ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
+    sed '/files\.docservice\.url\.internal/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_PROTOCOL}':\/\/'${DOCUMENT_SERVER_HOST}'\/\"!' -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
+    sed '/files\.docservice\.url\.public/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_API_URL}'\/\"!' -i ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
 
     if [ "${DOCUMENT_SERVER_JWT_ENABLED}" == "true" ]; then
-	    sed '/files\.docservice\.secret/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_JWT_SECRET}'\"!' -i ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
-	    sed '/files\.docservice\.secret.header/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_JWT_HEADER}'\"!' -i ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
+        sed '/files\.docservice\.secret/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_JWT_SECRET}'\"!' -i ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
+        sed '/files\.docservice\.secret.header/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_JWT_HEADER}'\"!' -i ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
     fi
 
     if [ -n "${DOCKER_ONLYOFFICE_SUBNET}" ] && [ -n "${SERVER_HOST}" ]; then
-	sed '/files\.docservice\.url\.portal/s!\(value\s*=\s*\"\)[^\"]*\"!\1http:\/\/'${SERVER_HOST}'\"!' -i ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
+        sed '/files\.docservice\.url\.portal/s!\(value\s*=\s*\"\)[^\"]*\"!\1http:\/\/'${SERVER_HOST}'\"!' -i ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
     fi
 
-    if ! grep -q "files\.docservice\.url\.command" ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config; then
-          sed '/files\.docservice\.url\.storage/a <add key=\"files\.docservice\.url\.command\" value=\"'${DOCUMENT_SERVER_PROTOCOL}':\/\/'${DOCUMENT_SERVER_HOST}'\/coauthoring\/CommandService\.ashx\" \/>/' -i ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
-    else
-          sed '/files\.docservice\.url\.command/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_PROTOCOL}':\/\/'${DOCUMENT_SERVER_HOST}'\/coauthoring\/CommandService\.ashx\"!' -i ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
-    fi
-	
 fi
 
 if [ "${MAIL_SERVER_ENABLED}" == "true" ]; then
