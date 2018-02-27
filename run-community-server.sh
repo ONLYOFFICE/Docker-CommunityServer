@@ -89,7 +89,6 @@ DOCUMENT_SERVER_HOST_IP="";
 
 CONTROL_PANEL_ENABLED=false
 MAIL_SERVER_ENABLED=false
-EXTERNAL_IP=${EXTERNAL_IP:-$(dig +short myip.opendns.com @resolver1.opendns.com)};
 
 MYSQL_SERVER_ROOT_PASSWORD=${MYSQL_SERVER_ROOT_PASSWORD:-""}
 MYSQL_SERVER_HOST=${MYSQL_SERVER_HOST:-"localhost"}
@@ -267,23 +266,13 @@ MAIL_SERVER_DB_USER=${MAIL_SERVER_DB_USER:-"mail_admin"};
 MAIL_SERVER_DB_PASS=${MAIL_SERVER_DB_PASS:-"Isadmin123"};
 
 if [ ${MAIL_SERVER_DB_HOST} ]; then
- if [ ! bash ${SYSCONF_TOOLS_DIR}/wait-for-it.sh  ${MAIL_SERVER_DB_HOST}:25 --timeout=300 --quiet -s -- echo "MailServer is up" ]; then
-	unset MAIL_SERVER_DB_HOST;
-	unset MAIL_SERVER_PORT_3306_TCP_ADDR;
-	MAIL_SERVER_DB_HOST="";
-	echo "";
- fi
-fi
-
-
-if [ ${MAIL_SERVER_DB_HOST} ]; then
 	MAIL_SERVER_ENABLED=true;
 
 	if [ -z "${MAIL_SERVER_API_HOST}" ]; then
 	        if [[ $MAIL_SERVER_DB_HOST =~ $VALID_IP_ADDRESS_REGEX ]]; then
 			MAIL_SERVER_API_HOST=${MAIL_SERVER_DB_HOST};
-        	elif [[ $EXTERNAL_IP =~ $VALID_IP_ADDRESS_REGEX ]]; then
-			MAIL_SERVER_API_HOST=${EXTERNAL_IP};
+        	elif [[ "$(dig +short $MAIL_SERVER_DB_HOST)" =~ $VALID_IP_ADDRESS_REGEX ]]; then
+			MAIL_SERVER_API_HOST=$(dig +short ${MAIL_SERVER_DB_HOST});
 	   	else
 		    echo "MAIL_SERVER_API_HOST is empty";
 	            exit 502;
@@ -301,6 +290,17 @@ if [ ${MAIL_SERVER_DB_HOST} ]; then
 
 	fi
 fi
+
+
+if [ ${MAIL_SERVER_API_HOST} ]; then
+ if [ ! bash ${SYSCONF_TOOLS_DIR}/wait-for-it.sh  ${MAIL_SERVER_API_HOST}:25 --timeout=300 --quiet -s -- echo "MailServer is up" ]; then
+	unset MAIL_SERVER_DB_HOST;
+	unset MAIL_SERVER_PORT_3306_TCP_ADDR;
+	MAIL_SERVER_DB_HOST="";
+	echo "";
+ fi
+fi
+
 
 
 REDIS_SERVER_HOST=${REDIS_SERVER_PORT_3306_TCP_ADDR:-${REDIS_SERVER_HOST}};
@@ -601,12 +601,16 @@ if [ "${MAIL_SERVER_ENABLED}" == "true" ]; then
 
     MYSQL_MAIL_SERVER_ID=$(mysql_scalar_exec "select id from mail_server_server where mx_record='${MAIL_SERVER_HOSTNAME}' limit 1");
 
+
     echo "MYSQL mail server id '${MYSQL_MAIL_SERVER_ID}'";
-    if [ -z ${MYSQL_MAIL_SERVER_ID} ]; then
-        
-        VALID_IP_ADDRESS_REGEX="^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$";
-        if [[ $EXTERNAL_IP =~ $VALID_IP_ADDRESS_REGEX ]]; then
-            log_debug "External ip $EXTERNAL_IP is valid";
+
+	SENDER_IP="";
+
+	if check_ip_is_internal $DOCKER_ONLYOFFICE_SUBNET $MAIL_SERVER_API_HOST; then
+		SENDER_IP=$(hostname -i);
+	elif [[ "$(dig +short myip.opendns.com @resolver1.opendns.com)" =~ $VALID_IP_ADDRESS_REGEX ]]; then
+		SENDER_IP=$(dig +short myip.opendns.com @resolver1.opendns.com);
+        	log_debug "External ip $EXTERNAL_IP is valid";
         else
             log_debug "External ip $EXTERNAL_IP is not valid";
             exit 502;
@@ -615,7 +619,10 @@ if [ "${MAIL_SERVER_ENABLED}" == "true" ]; then
         mysql --silent --skip-column-names -h ${MAIL_SERVER_DB_HOST} \
             --port=${MAIL_SERVER_DB_PORT} -u "${MAIL_SERVER_DB_USER}" \
             --password="${MAIL_SERVER_DB_PASS}" -D "${MAIL_SERVER_DB_NAME}" \
-            -e "INSERT INTO greylisting_whitelist (Source, Comment, Disabled) VALUES (\"SenderIP:${EXTERNAL_IP}\", '', 0);";
+            -e "REPLACE INTO greylisting_whitelist (Source, Comment, Disabled) VALUES (\"SenderIP:${SENDER_IP}\", '', 0);";
+
+    if [ -z ${MYSQL_MAIL_SERVER_ID} ]; then
+
 
         mysql_scalar_exec <<END
         ALTER TABLE mail_server_server CHANGE COLUMN connection_string connection_string TEXT NOT NULL AFTER mx_record;
