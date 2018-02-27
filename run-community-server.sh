@@ -58,6 +58,9 @@ ONLYOFFICE_HTTPS=${ONLYOFFICE_HTTPS:-false}
 SSL_CERTIFICATES_DIR="${ONLYOFFICE_DATA_DIR}/certs"
 SSL_CERTIFICATE_PATH=${SSL_CERTIFICATE_PATH:-${SSL_CERTIFICATES_DIR}/onlyoffice.crt}
 SSL_KEY_PATH=${SSL_KEY_PATH:-${SSL_CERTIFICATES_DIR}/onlyoffice.key}
+SSL_CERTIFICATE_PATH_PFX=${SSL_CERTIFICATE_PATH_PFX:-${SSL_CERTIFICATES_DIR}/onlyoffice.pfx}
+SSL_CERTIFICATE_PATH_PFX_PWD="onlyoffice";
+
 SSL_DHPARAM_PATH=${SSL_DHPARAM_PATH:-${SSL_CERTIFICATES_DIR}/dhparam.pem}
 SSL_VERIFY_CLIENT=${SSL_VERIFY_CLIENT:-off}
 SSL_OCSP_CERTIFICATE_PATH=${SSL_OCSP_CERTIFICATE_PATH:-${SSL_CERTIFICATES_DIR}/stapling.trusted.crt}
@@ -480,12 +483,17 @@ if [ -f "${SSL_CERTIFICATE_PATH}" -a -f "${SSL_KEY_PATH}" ]; then
 	sed 's,{{SSL_KEY_PATH}},'"${SSL_KEY_PATH}"',' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
 
 	# if dhparam path is valid, add to the config, otherwise remove the option
-	if [ -r "${SSL_DHPARAM_PATH}" ]; then
-		sed 's,{{SSL_DHPARAM_PATH}},'"${SSL_DHPARAM_PATH}"',' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
-	else
-		sed '/ssl_dhparam {{SSL_DHPARAM_PATH}};/d' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
+	if [ ! -f ${SSL_DHPARAM_PATH} ]; then
+		 sudo openssl dhparam -out dhparam.pem 2048
+		 mv dhparam.pem ${SSL_DHPARAM_PATH};
 	fi
 
+	sed 's,{{SSL_DHPARAM_PATH}},'"${SSL_DHPARAM_PATH}"',' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
+
+	if [ ! -f ${SSL_CERTIFICATE_PATH_PFX} ]; then
+		openssl pkcs12 -export -out ${SSL_CERTIFICATE_PATH_PFX} -inkey ${SSL_KEY_PATH} -in ${SSL_CERTIFICATE_PATH} -password pass:${SSL_CERTIFICATE_PATH_PFX_PWD};
+		chown onlyoffice:onlyoffice ${SSL_CERTIFICATE_PATH_PFX}
+	fi
 
 	# if dhparam path is valid, add to the config, otherwise remove the option
 	if [ -r "${SSL_OCSP_CERTIFICATE_PATH}" ]; then
@@ -513,9 +521,9 @@ if [ -f "${SSL_CERTIFICATE_PATH}" -a -f "${SSL_KEY_PATH}" ]; then
 		sed '/{{ONLYOFFICE_HTTPS_HSTS_MAXAGE}}/d' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
 	fi
 
-	# sed '/certificate/s/\(value\s*=\s*\"\).*\"/\1${SSL_CERTIFICATE_PATH}"\"/' -i ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config
-	# sed '/certificatePrivateKey/s/\(value\s*=\s*\"\).*\"/\1${SSL_KEY_PATH}"\"/' -i ${ONLYOFFICE_SERVICES_DIR}//TeamLabSvc/TeamLabSvc.exe.Config;
-	# sed '/startTls/s/\(value\s*=\s*\"\).*\"/\1optional"\"/' -i ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config;
+	sed '/certificate"/s!\(value\s*=\s*\"\).*\"!\1'${SSL_CERTIFICATE_PATH_PFX}'\"!' -i ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config
+	sed '/certificatePassword/s/\(value\s*=\s*\"\).*\"/\1'${SSL_CERTIFICATE_PATH_PFX_PWD}'\"/' -i ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config
+	sed '/startTls/s/\(value\s*=\s*\"\).*\"/\1optional\"/' -i ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config;
 
 	sed '/mail\.default-api-scheme/s/\(value\s*=\s*\"\).*\"/\1https\"/' -i ${ONLYOFFICE_SERVICES_DIR}/MailAggregator/ASC.Mail.Aggregator.CollectionService.exe.config;
 
