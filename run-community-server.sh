@@ -604,22 +604,27 @@ if [ "${MAIL_SERVER_ENABLED}" == "true" ]; then
 
     echo "MYSQL mail server id '${MYSQL_MAIL_SERVER_ID}'";
 
-	SENDER_IP="";
+    SENDER_IP="";
 
 	if check_ip_is_internal $DOCKER_ONLYOFFICE_SUBNET $MAIL_SERVER_API_HOST; then
 		SENDER_IP=$(hostname -i);
 	elif [[ "$(dig +short myip.opendns.com @resolver1.opendns.com)" =~ $VALID_IP_ADDRESS_REGEX ]]; then
 		SENDER_IP=$(dig +short myip.opendns.com @resolver1.opendns.com);
         	log_debug "External ip $EXTERNAL_IP is valid";
-        else
-            log_debug "External ip $EXTERNAL_IP is not valid";
-            exit 502;
-        fi
+	else
+		SENDER_IP=$(hostname -i);
+	fi
+
 
         mysql --silent --skip-column-names -h ${MAIL_SERVER_DB_HOST} \
             --port=${MAIL_SERVER_DB_PORT} -u "${MAIL_SERVER_DB_USER}" \
             --password="${MAIL_SERVER_DB_PASS}" -D "${MAIL_SERVER_DB_NAME}" \
-            -e "REPLACE INTO greylisting_whitelist (Source, Comment, Disabled) VALUES (\"SenderIP:${SENDER_IP}\", '', 0);";
+	    -e "DELETE FROM greylisting_whitelist WHERE Comment='onlyoffice-community-server';";
+
+        mysql --silent --skip-column-names -h ${MAIL_SERVER_DB_HOST} \
+            --port=${MAIL_SERVER_DB_PORT} -u "${MAIL_SERVER_DB_USER}" \
+            --password="${MAIL_SERVER_DB_PASS}" -D "${MAIL_SERVER_DB_NAME}" \
+            -e "REPLACE INTO greylisting_whitelist (Source, Comment, Disabled) VALUES (\"SenderIP:${SENDER_IP}\", 'onlyoffice-community-server', 0);";
 
     if [ -z ${MYSQL_MAIL_SERVER_ID} ]; then
 
