@@ -706,16 +706,17 @@ if [ "${ONLYOFFICE_MODE}" == "SERVER" ]; then
 
 for serverID in $(seq 1 ${ONLYOFFICE_MONOSERVE_COUNT});
 do
-	
-	if [ $serverID == 1 ]; then
-		sed '/web.warmup.count/s/value=\"\S*\"/value=\"'${ONLYOFFICE_MONOSERVE_COUNT}'\"/g' -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
-		sed '/web.warmup.domain/s/value=\"\S*\"/value=\"localhost\/warmup\"/g' -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
+	 if [ $serverID == 1 ]; then
+                sed '/web.warmup.count/s/value=\"\S*\"/value=\"'${ONLYOFFICE_MONOSERVE_COUNT}'\"/g' -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
+                sed '/web.warmup.domain/s/value=\"\S*\"/value=\"localhost\/warmup\"/g' -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
                 sed "/core.machinekey/s!value=\".*\"!value=\"${ONLYOFFICE_CORE_MACHINEKEY}\"!g" -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
                 sed "/core.machinekey/s!value=\".*\"!value=\"${ONLYOFFICE_CORE_MACHINEKEY}\"!g" -i  ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config
+                sed "/core\.machinekey/s!\"core\.machinekey\".*!\"core\.machinekey\":\"${ONLYOFFICE_CORE_MACHINEKEY}\",!" -i ${ONLYOFFICE_SERVICES_DIR}/ASC.Socket.IO/config/config.json
                 sed "/core.machinekey/s!value=\".*\"!value=\"${ONLYOFFICE_CORE_MACHINEKEY}\"!g" -i  ${ONLYOFFICE_SERVICES_DIR}/MailAggregator/ASC.Mail.EmlDownloader.exe.config
+                sed "/core.machinekey/s!value=\".*\"!value=\"${ONLYOFFICE_CORE_MACHINEKEY}\"!g" -i  ${ONLYOFFICE_SERVICES_DIR}/MailAggregator/ASC.Mail.Aggregator.CollectionService.exe.config
 
-		continue;
-	fi
+                continue;
+        fi
 
 	rm -rfd ${ONLYOFFICE_ROOT_DIR}$serverID;
 
