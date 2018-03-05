@@ -18,7 +18,7 @@ ENV LC_ALL en_US.UTF-8
 RUN apt-get -y update && \
     apt-get install -yq sudo locales && \
     echo "${SOURCE_REPO_URL}" >> /etc/apt/sources.list && \
-    echo "deb http://download.mono-project.com/repo/ubuntu xenial main" | tee /etc/apt/sources.list.d/mono-official.list && \
+    echo "deb http://download.mono-project.com/repo/ubuntu stable-xenial main" | tee /etc/apt/sources.list.d/mono-official.list && \
     apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys CB2DE8E5 && \
     apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF && \
     locale-gen en_US.UTF-8 && \
