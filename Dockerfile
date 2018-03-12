@@ -37,7 +37,7 @@ RUN echo "${SOURCE_REPO_URL}" >> /etc/apt/sources.list && \
     add-apt-repository -y ppa:builds/sphinxsearch-rel22 && \
     add-apt-repository -y ppa:certbot/certbot && \
     echo "Start=No" >> /etc/init.d/sphinxsearch && \
-    curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash - && \
+    curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash - && \
     apt-get install -y nodejs && \
     apt-get -y update && \
     apt-get install --force-yes -yq mono-complete ca-certificates-mono && \
