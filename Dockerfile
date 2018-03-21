@@ -27,11 +27,11 @@ RUN apt-get -y update && \
     wget http://nginx.org/keys/nginx_signing.key && \
     apt-key add nginx_signing.key && \
     echo "deb http://nginx.org/packages/mainline/ubuntu/ xenial nginx" >> /etc/apt/sources.list.d/nginx.list && \
-    echo "deb-src http://nginx.org/packages/mainline/ubuntu/ xenial nginx" >> /etc/apt/sources.list.d/nginx.list && \	
+    echo "deb-src http://nginx.org/packages/mainline/ubuntu/ xenial nginx" >> /etc/apt/sources.list.d/nginx.list && \
     apt-get install -yq default-jdk && \
     wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | apt-key add - && \
     apt-get install -yq apt-transport-https && \
-    echo "deb https://artifacts.elastic.co/packages/5.x/apt stable main" | tee -a /etc/apt/sources.list.d/elastic-5.x.list && \
+    echo "deb https://artifacts.elastic.co/packages/6.x/apt stable main" | tee -a /etc/apt/sources.list.d/elastic-6.x.list && \
     apt-get update && \
     apt-get install -yq elasticsearch && \
     add-apt-repository -y ppa:certbot/certbot && \
@@ -40,7 +40,12 @@ RUN apt-get -y update && \
     apt-get -y update && \
     apt-get install -yq nginx mono-complete ca-certificates-mono && \
     echo "#!/bin/sh\nexit 0" > /usr/sbin/policy-rc.d && \
-    apt-get install -yq dumb-init certbot htop nano dnsutils onlyoffice-communityserver && \
+    apt-get install -yq dumb-init python-certbot-nginx htop nano dnsutils redis-server  && \
+    wget https://bootstrap.pypa.io/get-pip.py && \
+    python3 get-pip.py && \
+    rm -f get-pip.py && \
+    python3 -m pip install --upgrade radicale && \
+    apt-get install onlyoffice-communityserver && \
     rm -rf /var/lib/apt/lists/*
 
 ADD config /app/onlyoffice/config/
