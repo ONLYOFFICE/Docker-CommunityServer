@@ -5,6 +5,7 @@ set -x
 SERVER_HOST=${SERVER_HOST:-""};
 ONLYOFFICE_DIR="/var/www/onlyoffice"
 ONLYOFFICE_DATA_DIR="${ONLYOFFICE_DIR}/Data"
+ONLYOFFICE_PRIVATE_DATA_DIR="${ONLYOFFICE_DATA_DIR}/.private"
 ONLYOFFICE_SERVICES_DIR="${ONLYOFFICE_DIR}/Services"
 ONLYOFFICE_SQL_DIR="${ONLYOFFICE_DIR}/Sql"
 ONLYOFFICE_ROOT_DIR="${ONLYOFFICE_DIR}/WebStudio"
@@ -29,6 +30,14 @@ SERVICE_SSO_AUTH_HOST_ADDR=${SERVICE_SSO_AUTH_HOST_ADDR:-${CONTROL_PANEL_PORT_80
 DEFAULT_ONLYOFFICE_CORE_MACHINEKEY="$(sudo sed -n '/"core.machinekey"/s!.*value\s*=\s*"\([^"]*\)".*!\1!p' ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config)";
 
 ONLYOFFICE_CORE_MACHINEKEY=${ONLYOFFICE_CORE_MACHINEKEY:-${DEFAULT_ONLYOFFICE_CORE_MACHINEKEY}};
+
+if [ ! -d "${ONLYOFFICE_PRIVATE_DATA_DIR}" ]; then
+   mkdir -p ${ONLYOFFICE_PRIVATE_DATA_DIR};
+fi
+
+echo "${ONLYOFFICE_CORE_MACHINEKEY}" > ${ONLYOFFICE_PRIVATE_DATA_DIR}/machinekey
+
+chmod -R 444 ${ONLYOFFICE_PRIVATE_DATA_DIR}
 
 if cat /proc/1/cgroup | grep -qE "docker|lxc"; then
         DOCKER_ENABLED=true;
@@ -58,6 +67,9 @@ ONLYOFFICE_HTTPS=${ONLYOFFICE_HTTPS:-false}
 SSL_CERTIFICATES_DIR="${ONLYOFFICE_DATA_DIR}/certs"
 SSL_CERTIFICATE_PATH=${SSL_CERTIFICATE_PATH:-${SSL_CERTIFICATES_DIR}/onlyoffice.crt}
 SSL_KEY_PATH=${SSL_KEY_PATH:-${SSL_CERTIFICATES_DIR}/onlyoffice.key}
+SSL_CERTIFICATE_PATH_PFX=${SSL_CERTIFICATE_PATH_PFX:-${SSL_CERTIFICATES_DIR}/onlyoffice.pfx}
+SSL_CERTIFICATE_PATH_PFX_PWD="onlyoffice";
+
 SSL_DHPARAM_PATH=${SSL_DHPARAM_PATH:-${SSL_CERTIFICATES_DIR}/dhparam.pem}
 SSL_VERIFY_CLIENT=${SSL_VERIFY_CLIENT:-off}
 SSL_OCSP_CERTIFICATE_PATH=${SSL_OCSP_CERTIFICATE_PATH:-${SSL_CERTIFICATES_DIR}/stapling.trusted.crt}
@@ -81,12 +93,11 @@ DOCUMENT_SERVER_JWT_HEADER=${DOCUMENT_SERVER_JWT_HEADER:-""};
 DOCUMENT_SERVER_HOST=${DOCUMENT_SERVER_HOST:-""};
 DOCUMENT_SERVER_HOST_PROXY=${DOCUMENT_SERVER_HOST};
 DOCUMENT_SERVER_PROTOCOL=${DOCUMENT_SERVER_PROTOCOL:-"http"};
-DOCUMENT_SERVER_API_URL="\/web-apps\/apps\/api\/documents\/api\.js";
+DOCUMENT_SERVER_API_URL="";
 DOCUMENT_SERVER_HOST_IP="";
 
 CONTROL_PANEL_ENABLED=false
 MAIL_SERVER_ENABLED=false
-EXTERNAL_IP=${EXTERNAL_IP:-$(dig +short myip.opendns.com @resolver1.opendns.com)};
 
 MYSQL_SERVER_ROOT_PASSWORD=${MYSQL_SERVER_ROOT_PASSWORD:-""}
 MYSQL_SERVER_HOST=${MYSQL_SERVER_HOST:-"localhost"}
@@ -206,12 +217,12 @@ fi
 
 if [ ${DOCUMENT_SERVER_HOST} ]; then
 	DOCUMENT_SERVER_ENABLED=true;
-	DOCUMENT_SERVER_API_URL="${DOCUMENT_SERVER_PROTOCOL}://${DOCUMENT_SERVER_HOST}${DOCUMENT_SERVER_API_URL}";
+	DOCUMENT_SERVER_API_URL="${DOCUMENT_SERVER_PROTOCOL}:\/\/${DOCUMENT_SERVER_HOST}";
 elif [ ${DOCUMENT_SERVER_PORT_80_TCP_ADDR} ]; then
 	DOCUMENT_SERVER_ENABLED=true;
 	DOCUMENT_SERVER_HOST=${DOCUMENT_SERVER_PORT_80_TCP_ADDR};
 	DOCUMENT_SERVER_HOST_PROXY="localhost\/ds-vpath";
-	DOCUMENT_SERVER_API_URL="\/ds-vpath${DOCUMENT_SERVER_API_URL}";
+	DOCUMENT_SERVER_API_URL="\/ds-vpath";
 fi
 
 if [ "${DOCUMENT_SERVER_ENABLED}" == "true" ] && [ $DOCKER_ONLYOFFICE_SUBNET ] && [ -z "$SERVER_HOST" ]; then
@@ -264,23 +275,13 @@ MAIL_SERVER_DB_USER=${MAIL_SERVER_DB_USER:-"mail_admin"};
 MAIL_SERVER_DB_PASS=${MAIL_SERVER_DB_PASS:-"Isadmin123"};
 
 if [ ${MAIL_SERVER_DB_HOST} ]; then
- if [ ! bash ${SYSCONF_TOOLS_DIR}/wait-for-it.sh  ${MAIL_SERVER_DB_HOST}:25 --timeout=300 --quiet -s -- echo "MailServer is up" ]; then
-	unset MAIL_SERVER_DB_HOST;
-	unset MAIL_SERVER_PORT_3306_TCP_ADDR;
-	MAIL_SERVER_DB_HOST="";
-	echo "";
- fi
-fi
-
-
-if [ ${MAIL_SERVER_DB_HOST} ]; then
 	MAIL_SERVER_ENABLED=true;
 
 	if [ -z "${MAIL_SERVER_API_HOST}" ]; then
 	        if [[ $MAIL_SERVER_DB_HOST =~ $VALID_IP_ADDRESS_REGEX ]]; then
 			MAIL_SERVER_API_HOST=${MAIL_SERVER_DB_HOST};
-        	elif [[ $EXTERNAL_IP =~ $VALID_IP_ADDRESS_REGEX ]]; then
-			MAIL_SERVER_API_HOST=${EXTERNAL_IP};
+        	elif [[ "$(dig +short $MAIL_SERVER_DB_HOST)" =~ $VALID_IP_ADDRESS_REGEX ]]; then
+			MAIL_SERVER_API_HOST=$(dig +short ${MAIL_SERVER_DB_HOST});
 	   	else
 		    echo "MAIL_SERVER_API_HOST is empty";
 	            exit 502;
@@ -298,6 +299,17 @@ if [ ${MAIL_SERVER_DB_HOST} ]; then
 
 	fi
 fi
+
+
+if [ ${MAIL_SERVER_API_HOST} ]; then
+ if [ ! bash ${SYSCONF_TOOLS_DIR}/wait-for-it.sh  ${MAIL_SERVER_API_HOST}:25 --timeout=300 --quiet -s -- echo "MailServer is up" ]; then
+	unset MAIL_SERVER_DB_HOST;
+	unset MAIL_SERVER_PORT_3306_TCP_ADDR;
+	MAIL_SERVER_DB_HOST="";
+	echo "";
+ fi
+fi
+
 
 
 REDIS_SERVER_HOST=${REDIS_SERVER_PORT_3306_TCP_ADDR:-${REDIS_SERVER_HOST}};
@@ -475,12 +487,17 @@ if [ -f "${SSL_CERTIFICATE_PATH}" -a -f "${SSL_KEY_PATH}" ]; then
 	sed 's,{{SSL_KEY_PATH}},'"${SSL_KEY_PATH}"',' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
 
 	# if dhparam path is valid, add to the config, otherwise remove the option
-	if [ -r "${SSL_DHPARAM_PATH}" ]; then
-		sed 's,{{SSL_DHPARAM_PATH}},'"${SSL_DHPARAM_PATH}"',' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
-	else
-		sed '/ssl_dhparam {{SSL_DHPARAM_PATH}};/d' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
+	if [ ! -f ${SSL_DHPARAM_PATH} ]; then
+		 sudo openssl dhparam -out dhparam.pem 2048
+		 mv dhparam.pem ${SSL_DHPARAM_PATH};
 	fi
 
+	sed 's,{{SSL_DHPARAM_PATH}},'"${SSL_DHPARAM_PATH}"',' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
+
+	if [ ! -f ${SSL_CERTIFICATE_PATH_PFX} ]; then
+		openssl pkcs12 -export -out ${SSL_CERTIFICATE_PATH_PFX} -inkey ${SSL_KEY_PATH} -in ${SSL_CERTIFICATE_PATH} -password pass:${SSL_CERTIFICATE_PATH_PFX_PWD};
+		chown onlyoffice:onlyoffice ${SSL_CERTIFICATE_PATH_PFX}
+	fi
 
 	# if dhparam path is valid, add to the config, otherwise remove the option
 	if [ -r "${SSL_OCSP_CERTIFICATE_PATH}" ]; then
@@ -508,9 +525,9 @@ if [ -f "${SSL_CERTIFICATE_PATH}" -a -f "${SSL_KEY_PATH}" ]; then
 		sed '/{{ONLYOFFICE_HTTPS_HSTS_MAXAGE}}/d' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
 	fi
 
-	# sed '/certificate/s/\(value\s*=\s*\"\).*\"/\1${SSL_CERTIFICATE_PATH}"\"/' -i ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config
-	# sed '/certificatePrivateKey/s/\(value\s*=\s*\"\).*\"/\1${SSL_KEY_PATH}"\"/' -i ${ONLYOFFICE_SERVICES_DIR}//TeamLabSvc/TeamLabSvc.exe.Config;
-	# sed '/startTls/s/\(value\s*=\s*\"\).*\"/\1optional"\"/' -i ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config;
+	sed '/certificate"/s!\(value\s*=\s*\"\).*\"!\1'${SSL_CERTIFICATE_PATH_PFX}'\"!' -i ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config
+	sed '/certificatePassword/s/\(value\s*=\s*\"\).*\"/\1'${SSL_CERTIFICATE_PATH_PFX_PWD}'\"/' -i ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config
+	sed '/startTls/s/\(value\s*=\s*\"\).*\"/\1optional\"/' -i ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config;
 
 	sed '/mail\.default-api-scheme/s/\(value\s*=\s*\"\).*\"/\1https\"/' -i ${ONLYOFFICE_SERVICES_DIR}/MailAggregator/ASC.Mail.Aggregator.CollectionService.exe.config;
 
@@ -540,27 +557,18 @@ if [ "${DOCUMENT_SERVER_ENABLED}" == "true" ]; then
     sed 's,{{DOCUMENT_SERVER_HOST_ADDR}},'"${DOCUMENT_SERVER_PROTOCOL}:\/\/${DOCUMENT_SERVER_HOST}"',' -i ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-proxy-to-documentserver.conf;
 
     # change web.appsettings link to editor
-    sed '/files\.docservice\.url\.converter/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_PROTOCOL}':\/\/'${DOCUMENT_SERVER_HOST}'\/ConvertService\.ashx\"!' -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
-    sed '/files\.docservice\.url\.docbuilder/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_PROTOCOL}':\/\/'${DOCUMENT_SERVER_HOST}'\/docbuilder\"!' -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
-    sed '/files\.docservice\.url\.api/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_API_URL}'\"!' -i ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
-    sed '/files\.docservice\.url\.storage/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_PROTOCOL}':\/\/'${DOCUMENT_SERVER_HOST}'\/FileUploader\.ashx\"!' -i ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
-    sed '/files\.docservice\.url\.command/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_PROTOCOL}':\/\/'${DOCUMENT_SERVER_HOST}'\/coauthoring\/CommandService\.ashx\"!' -i ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
+    sed '/files\.docservice\.url\.internal/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_PROTOCOL}':\/\/'${DOCUMENT_SERVER_HOST}'\/\"!' -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
+    sed '/files\.docservice\.url\.public/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_API_URL}'\/\"!' -i ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
 
     if [ "${DOCUMENT_SERVER_JWT_ENABLED}" == "true" ]; then
-	    sed '/files\.docservice\.secret/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_JWT_SECRET}'\"!' -i ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
-	    sed '/files\.docservice\.secret.header/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_JWT_HEADER}'\"!' -i ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
+        sed '/files\.docservice\.secret/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_JWT_SECRET}'\"!' -i ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
+        sed '/files\.docservice\.secret.header/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_JWT_HEADER}'\"!' -i ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
     fi
 
     if [ -n "${DOCKER_ONLYOFFICE_SUBNET}" ] && [ -n "${SERVER_HOST}" ]; then
-	sed '/files\.docservice\.url\.portal/s!\(value\s*=\s*\"\)[^\"]*\"!\1http:\/\/'${SERVER_HOST}'\"!' -i ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
+        sed '/files\.docservice\.url\.portal/s!\(value\s*=\s*\"\)[^\"]*\"!\1http:\/\/'${SERVER_HOST}'\"!' -i ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
     fi
 
-    if ! grep -q "files\.docservice\.url\.command" ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config; then
-          sed '/files\.docservice\.url\.storage/a <add key=\"files\.docservice\.url\.command\" value=\"'${DOCUMENT_SERVER_PROTOCOL}':\/\/'${DOCUMENT_SERVER_HOST}'\/coauthoring\/CommandService\.ashx\" \/>/' -i ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
-    else
-          sed '/files\.docservice\.url\.command/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_PROTOCOL}':\/\/'${DOCUMENT_SERVER_HOST}'\/coauthoring\/CommandService\.ashx\"!' -i ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
-    fi
-	
 fi
 
 if [ "${MAIL_SERVER_ENABLED}" == "true" ]; then
@@ -591,21 +599,33 @@ if [ "${MAIL_SERVER_ENABLED}" == "true" ]; then
 
     MYSQL_MAIL_SERVER_ID=$(mysql_scalar_exec "select id from mail_server_server where mx_record='${MAIL_SERVER_HOSTNAME}' limit 1");
 
+
     echo "MYSQL mail server id '${MYSQL_MAIL_SERVER_ID}'";
-    if [ -z ${MYSQL_MAIL_SERVER_ID} ]; then
-        
-        VALID_IP_ADDRESS_REGEX="^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$";
-        if [[ $EXTERNAL_IP =~ $VALID_IP_ADDRESS_REGEX ]]; then
-            log_debug "External ip $EXTERNAL_IP is valid";
-        else
-            log_debug "External ip $EXTERNAL_IP is not valid";
-            exit 502;
-        fi
+
+    SENDER_IP="";
+
+	if check_ip_is_internal $DOCKER_ONLYOFFICE_SUBNET $MAIL_SERVER_API_HOST; then
+		SENDER_IP=$(hostname -i);
+	elif [[ "$(dig +short myip.opendns.com @resolver1.opendns.com)" =~ $VALID_IP_ADDRESS_REGEX ]]; then
+		SENDER_IP=$(dig +short myip.opendns.com @resolver1.opendns.com);
+        	log_debug "External ip $EXTERNAL_IP is valid";
+	else
+		SENDER_IP=$(hostname -i);
+	fi
+
 
         mysql --silent --skip-column-names -h ${MAIL_SERVER_DB_HOST} \
             --port=${MAIL_SERVER_DB_PORT} -u "${MAIL_SERVER_DB_USER}" \
             --password="${MAIL_SERVER_DB_PASS}" -D "${MAIL_SERVER_DB_NAME}" \
-            -e "INSERT INTO greylisting_whitelist (Source, Comment, Disabled) VALUES (\"SenderIP:${EXTERNAL_IP}\", '', 0);";
+	    -e "DELETE FROM greylisting_whitelist WHERE Comment='onlyoffice-community-server';";
+
+        mysql --silent --skip-column-names -h ${MAIL_SERVER_DB_HOST} \
+            --port=${MAIL_SERVER_DB_PORT} -u "${MAIL_SERVER_DB_USER}" \
+            --password="${MAIL_SERVER_DB_PASS}" -D "${MAIL_SERVER_DB_NAME}" \
+            -e "REPLACE INTO greylisting_whitelist (Source, Comment, Disabled) VALUES (\"SenderIP:${SENDER_IP}\", 'onlyoffice-community-server', 0);";
+
+    if [ -z ${MYSQL_MAIL_SERVER_ID} ]; then
+
 
         mysql_scalar_exec <<END
         ALTER TABLE mail_server_server CHANGE COLUMN connection_string connection_string TEXT NOT NULL AFTER mx_record;
@@ -624,8 +644,6 @@ END
             log_debug "id2 is '${id2}'";
         fi
         
-        sed '/mail\.certificate-permit/s/\(value *= *\"\).*\"/\1true\"/' -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
-        sed '/mail\.certificate-permit/s/\(value *= *\"\).*\"/\1true\"/' -i  ${ONLYOFFICE_DIR}/Services/MailAggregator/ASC.Mail.Aggregator.CollectionService.exe.config
     else
         id1=$(mysql_scalar_exec "select imap_settings_id from mail_server_server where mx_record='${MAIL_SERVER_HOSTNAME}' limit 1");
         if [ ${LOG_DEBUG} ]; then
@@ -686,16 +704,17 @@ if [ "${ONLYOFFICE_MODE}" == "SERVER" ]; then
 
 for serverID in $(seq 1 ${ONLYOFFICE_MONOSERVE_COUNT});
 do
-	
-	if [ $serverID == 1 ]; then
-		sed '/web.warmup.count/s/value=\"\S*\"/value=\"'${ONLYOFFICE_MONOSERVE_COUNT}'\"/g' -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
-		sed '/web.warmup.domain/s/value=\"\S*\"/value=\"localhost\/warmup\"/g' -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
+	 if [ $serverID == 1 ]; then
+                sed '/web.warmup.count/s/value=\"\S*\"/value=\"'${ONLYOFFICE_MONOSERVE_COUNT}'\"/g' -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
+                sed '/web.warmup.domain/s/value=\"\S*\"/value=\"localhost\/warmup\"/g' -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
                 sed "/core.machinekey/s!value=\".*\"!value=\"${ONLYOFFICE_CORE_MACHINEKEY}\"!g" -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
                 sed "/core.machinekey/s!value=\".*\"!value=\"${ONLYOFFICE_CORE_MACHINEKEY}\"!g" -i  ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config
+                sed "/core\.machinekey/s!\"core\.machinekey\".*!\"core\.machinekey\":\"${ONLYOFFICE_CORE_MACHINEKEY}\",!" -i ${ONLYOFFICE_SERVICES_DIR}/ASC.Socket.IO/config/config.json
                 sed "/core.machinekey/s!value=\".*\"!value=\"${ONLYOFFICE_CORE_MACHINEKEY}\"!g" -i  ${ONLYOFFICE_SERVICES_DIR}/MailAggregator/ASC.Mail.EmlDownloader.exe.config
+                sed "/core.machinekey/s!value=\".*\"!value=\"${ONLYOFFICE_CORE_MACHINEKEY}\"!g" -i  ${ONLYOFFICE_SERVICES_DIR}/MailAggregator/ASC.Mail.Aggregator.CollectionService.exe.config
 
-		continue;
-	fi
+                continue;
+        fi
 
 	rm -rfd ${ONLYOFFICE_ROOT_DIR}$serverID;
 
