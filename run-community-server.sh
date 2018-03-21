@@ -468,11 +468,6 @@ change_connections "default" "${ONLYOFFICE_SERVICES_DIR}/MailAggregator/ASC.Mail
 change_connections "default" "${ONLYOFFICE_SERVICES_DIR}/MailAggregator/ASC.Mail.EmlDownloader.exe.config";
 change_connections "default" "${ONLYOFFICE_SERVICES_DIR}/MailWatchdog/ASC.Mail.Watchdog.Service.exe.config";
 change_connections "default" "${ONLYOFFICE_APISYSTEM_DIR}/Web.config";
-sed 's!\(sql_host\s*=\s*\)\S*!\1'${MYSQL_SERVER_HOST}'!' -i ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/sphinx-min.conf.in;
-sed 's!\(sql_pass\s*=\s*\)\S*!\1'${MYSQL_SERVER_PASS}'!' -i ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/sphinx-min.conf.in;
-sed 's!\(sql_user\s*=\s*\)\S*!\1'${MYSQL_SERVER_USER}'!' -i ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/sphinx-min.conf.in;
-sed 's!\(sql_db\s*=\s*\)\S*!\1'${MYSQL_SERVER_DB_NAME}'!' -i ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/sphinx-min.conf.in;
-sed 's!\(sql_port\s*=\s*\)\S*!\1'${MYSQL_SERVER_PORT}'!' -i ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/sphinx-min.conf.in;
 
 
 # update mysql db
@@ -554,12 +549,6 @@ if [ ${ONLYOFFICE_SERVICES_INTERNAL_HOST} ]; then
 	sed "s/localhost/${ONLYOFFICE_SERVICES_INTERNAL_HOST}/" -i ${NGINX_CONF_DIR}/includes/onlyoffice-communityserver-services.conf
 fi
 
-
-echo "Start=No" >> /etc/init.d/sphinxsearch
-
-if ! grep -q "name=\"textindex\"" ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config; then
-	sed -i 's/.*<add\s*name="default"\s*connectionString=.*/&\n<add name="textindex" connectionString="Server=localhost;Port=9306;Pooling=True;Character Set=utf8;AutoEnlist=false" providerName="MySql.Data.MySqlClient"\/>/' ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config; 
-fi
 
 if [ "${DOCUMENT_SERVER_ENABLED}" == "true" ]; then
 
@@ -820,6 +809,7 @@ if [ "${MYSQL_SERVER_EXTERNAL}" == "true" ]; then
 	rm -f "${ONLYOFFICE_GOD_DIR}"/mysql.god;
 fi
 
+
 if [ "${ONLYOFFICE_MODE}" == "SERVICES" ]; then
 	service nginx stop
 
@@ -860,6 +850,17 @@ else
         if [ "$(ls -alhd ${ONLYOFFICE_DATA_DIR} | awk '{ print $3 }')" != "onlyoffice" ]; then
               chown -R onlyoffice:onlyoffice ${ONLYOFFICE_DATA_DIR}
         fi
+
+		#configure elasticsearch
+service elasticsearch stop
+/usr/share/elasticsearch/bin/elasticsearch-plugin install ingest-attachment | echo y
+mkdir -p "$LOG_DIR/Index"
+mkdir -p "$ONLYOFFICE_DATA_DIR/Index"
+chown -R elasticsearch:elasticsearch "$ONLYOFFICE_DATA_DIR/Index"
+chown -R elasticsearch:elasticsearch "$LOG_DIR/Index"
+sed 's,#path.data: /path/to/data,path.data: '"${ONLYOFFICE_DATA_DIR}"'/Index/,' -i  "/etc/elasticsearch/elasticsearch.yml"
+sed 's,#path.logs: /path/to/logs,path.logs: '"${LOG_DIR}"'/Index/,' -i  "/etc/elasticsearch/elasticsearch.yml"
+service elasticsearch start
 
 	for serverID in $(seq 1 ${ONLYOFFICE_MONOSERVE_COUNT});
 	do
