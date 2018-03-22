@@ -45,7 +45,7 @@ RUN apt-get -y update && \
     python3 get-pip.py && \
     rm -f get-pip.py && \
     python3 -m pip install --upgrade radicale && \
-    apt-get install onlyoffice-communityserver && \
+    apt-get install -yq onlyoffice-communityserver && \
     rm -rf /var/lib/apt/lists/*
 
 ADD config /app/onlyoffice/config/
