@@ -890,7 +890,7 @@ if [ "${ONLYOFFICE_SERVICES_EXTERNAL}" == "true" ]; then
 	service onlyofficeNotify stop
 	service onlyofficeBackup stop
 	service onlyofficeAutoreply stop
-	service onlyofficeMigrate stop
+	service onlyofficeStorageMigrate stop
 
 	rm -f /etc/init.d/onlyofficeFeed
 	rm -f /etc/init.d/onlyofficeIndex
@@ -900,7 +900,7 @@ if [ "${ONLYOFFICE_SERVICES_EXTERNAL}" == "true" ]; then
 	rm -f /etc/init.d/onlyofficeNotify
 	rm -f /etc/init.d/onlyofficeBackup
 	rm -f /etc/init.d/onlyofficeAutoreply
-    rm -f /etc/init.d/onlyofficeMigrate
+    rm -f /etc/init.d/onlyofficeStorageMigrate
 
 	sed '/onlyoffice/d' -i ${ONLYOFFICE_CRON_PATH}
 
@@ -916,7 +916,7 @@ else
 	service onlyofficeBackup restart
  	service onlyofficeAutoreply stop
 	service onlyofficeHealthCheck stop
-	service onlyofficeMigrate restart
+	service onlyofficeStorageMigrate restart
 fi
 
 service god restart
