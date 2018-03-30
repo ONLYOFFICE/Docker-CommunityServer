@@ -40,11 +40,7 @@ RUN apt-get -y update && \
     apt-get -y update && \
     apt-get install -yq nginx mono-complete ca-certificates-mono && \
     echo "#!/bin/sh\nexit 0" > /usr/sbin/policy-rc.d && \
-    apt-get install -yq dumb-init python-certbot-nginx htop nano dnsutils redis-server  && \
-    wget https://bootstrap.pypa.io/get-pip.py && \
-    python3 get-pip.py && \
-    rm -f get-pip.py && \
-    python3 -m pip install --upgrade radicale && \
+    apt-get install -yq dumb-init python-certbot-nginx htop nano dnsutils redis-server python3-pip  && \
     apt-get install -yq onlyoffice-communityserver && \
     rm -rf /var/lib/apt/lists/*
 
