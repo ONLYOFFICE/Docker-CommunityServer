@@ -869,6 +869,8 @@ fi
 
 if [ "${ONLYOFFICE_SERVICES_EXTERNAL}" == "true" ]; then
 	rm -f "${ONLYOFFICE_GOD_DIR}"/onlyoffice.god;
+	rm -f "${ONLYOFFICE_GOD_DIR}"/elasticsearch.god;
+	rm -f "${ONLYOFFICE_GOD_DIR}"/redis.god;
 	rm -f "${ONLYOFFICE_GOD_DIR}"/mail.god;
 
 	service onlyofficeFeed stop
@@ -882,6 +884,8 @@ if [ "${ONLYOFFICE_SERVICES_EXTERNAL}" == "true" ]; then
 	service onlyofficeStorageMigrate stop
 	service elasticsearch stop
 
+
+	rm -f /etc/init.d/elasticsearch
 	rm -f /etc/init.d/onlyofficeFeed
 	rm -f /etc/init.d/onlyofficeIndex
 	rm -f /etc/init.d/onlyofficeJabber
