@@ -880,6 +880,7 @@ if [ "${ONLYOFFICE_SERVICES_EXTERNAL}" == "true" ]; then
 	service onlyofficeBackup stop
 	service onlyofficeAutoreply stop
 	service onlyofficeStorageMigrate stop
+	service elasticsearch stop
 
 	rm -f /etc/init.d/onlyofficeFeed
 	rm -f /etc/init.d/onlyofficeIndex
@@ -906,6 +907,7 @@ else
  	service onlyofficeAutoreply stop
 	service onlyofficeHealthCheck stop
 	service onlyofficeStorageMigrate restart
+	service elasticsearch restart
 fi
 
 service god restart
