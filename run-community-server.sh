@@ -883,6 +883,8 @@ if [ "${ONLYOFFICE_SERVICES_EXTERNAL}" == "true" ]; then
 	rm -f "${ONLYOFFICE_GOD_DIR}"/redis.god;
 	rm -f "${ONLYOFFICE_GOD_DIR}"/mail.god;
 
+
+	service onlyofficeRadicale stop
 	service onlyofficeFeed stop
 	service onlyofficeIndex stop
 	service onlyofficeJabber stop
@@ -896,6 +898,7 @@ if [ "${ONLYOFFICE_SERVICES_EXTERNAL}" == "true" ]; then
 
 
 	rm -f /etc/init.d/elasticsearch
+	rm -f /etc/init.d/onlyofficeRadicale
 	rm -f /etc/init.d/onlyofficeFeed
 	rm -f /etc/init.d/onlyofficeIndex
 	rm -f /etc/init.d/onlyofficeJabber
@@ -910,6 +913,7 @@ if [ "${ONLYOFFICE_SERVICES_EXTERNAL}" == "true" ]; then
 
 else
 
+	service onlyofficeRadicale restart
 	service onlyofficeSocketIO restart
 	service onlyofficeFeed restart
 	service onlyofficeIndex restart
