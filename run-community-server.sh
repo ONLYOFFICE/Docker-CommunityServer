@@ -851,6 +851,16 @@ else
               chown -R onlyoffice:onlyoffice ${ONLYOFFICE_DATA_DIR}
         fi
 
+	mkdir -p "$LOG_DIR/Index"
+	mkdir -p "$ONLYOFFICE_DATA_DIR/Index"
+
+        if [ "$(ls -alhd $ONLYOFFICE_DATA_DIR/Index | awk '{ print $3 }')" != "elasticsearch" ]; then
+		chown -R elasticsearch:elasticsearch "$ONLYOFFICE_DATA_DIR/Index"
+        fi
+
+	chown -R elasticsearch:elasticsearch "$LOG_DIR/Index"
+
+
 	for serverID in $(seq 1 ${ONLYOFFICE_MONOSERVE_COUNT});
 	do
 		index=$serverID;
