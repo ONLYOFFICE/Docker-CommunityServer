@@ -2,7 +2,7 @@ version: '3'
 services:
   onlyoffice-mysql-server:
     container_name: onlyoffice-mysql-server
-    image: mysql:5.7.20
+    image: mysql:5.7.21
     environment:
      - MYSQL_ROOT_PASSWORD=my-secret-pw
     networks:
