@@ -2,7 +2,7 @@ version: '3'
 services:
   onlyoffice-mysql-server:
     container_name: onlyoffice-mysql-server
-    image: mysql:5.7.20
+    image: mysql:5.7.21
     environment:
      - MYSQL_ROOT_PASSWORD=my-secret-pw
     networks:
@@ -22,11 +22,13 @@ services:
      - onlyoffice-document-server
      - onlyoffice-mail-server
     environment:
-     - ONLYOFFICE_CORE_MACHINEKEY="core_secret"
+     - ONLYOFFICE_CORE_MACHINEKEY=core_secret
+     - CONTROL_PANEL_PORT_80_TCP=80
+     - CONTROL_PANEL_PORT_80_TCP_ADDR=onlyoffice-control-panel
      - DOCUMENT_SERVER_PORT_80_TCP_ADDR=onlyoffice-document-server
      - DOCUMENT_SERVER_JWT_ENABLED=true
-     - DOCUMENT_SERVER_JWT_SECRET="jwt_secret"
-     - DOCUMENT_SERVER_JWT_HEADER="AuthorizationJwt"
+     - DOCUMENT_SERVER_JWT_SECRET=jwt_secret
+     - DOCUMENT_SERVER_JWT_HEADER=AuthorizationJwt
      - MYSQL_SERVER_ROOT_PASSWORD=my-secret-pw
      - MYSQL_SERVER_DB_NAME=onlyoffice
      - MYSQL_SERVER_HOST=onlyoffice-mysql-server
@@ -61,8 +63,8 @@ services:
     restart: always
     environment:
      - JWT_ENABLED=true
-     - JWT_SECRET="jwt_secret"
-     - JWT_HEADER="AuthorizationJwt"
+     - JWT_SECRET=jwt_secret
+     - JWT_HEADER=AuthorizationJwt
     networks:
       - onlyoffice
     expose:
@@ -107,7 +109,7 @@ services:
      - onlyoffice-community-server
     image: onlyoffice4enterprise/controlpanel-ee:2.6.0.171
     environment:
-     - ONLYOFFICE_CORE_MACHINEKEY="core_secret"
+     - ONLYOFFICE_CORE_MACHINEKEY=core_secret
     expose:
       - '80'
       - '443'
@@ -130,6 +132,7 @@ volumes:
   mail_mysql:
   document_data:
   document_log:
+  document_forgotten:
   community_mysql:
   community_data:
   community_log:

@@ -22,6 +22,7 @@ services:
      - onlyoffice-document-server
      - onlyoffice-mail-server
     environment:
+     - ONLYOFFICE_CORE_MACHINEKEY=core_secret
      - DOCUMENT_SERVER_PORT_80_TCP_ADDR=onlyoffice-document-server
      - MYSQL_SERVER_ROOT_PASSWORD=my-secret-pw
      - MYSQL_SERVER_DB_NAME=onlyoffice 
