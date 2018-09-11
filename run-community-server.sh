@@ -916,6 +916,7 @@ else
 
 	service onlyofficeRadicale restart
 	service onlyofficeSocketIO restart
+	service onlyofficeThumb restart
 	service onlyofficeFeed restart
 	service onlyofficeIndex restart
 	service onlyofficeJabber restart
