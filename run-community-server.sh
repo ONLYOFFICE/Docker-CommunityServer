@@ -39,7 +39,7 @@ echo "${ONLYOFFICE_CORE_MACHINEKEY}" > ${ONLYOFFICE_PRIVATE_DATA_DIR}/machinekey
 
 chmod -R 444 ${ONLYOFFICE_PRIVATE_DATA_DIR}
 
-if cat /proc/1/cgroup | grep -qE "docker|lxc"; then
+if cat /proc/1/cgroup | grep -qE "docker|lxc|kubepods"; then
         DOCKER_ENABLED=true;
 else
 	DOCKER_ENABLED=false;
