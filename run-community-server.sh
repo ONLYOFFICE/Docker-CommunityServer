@@ -454,12 +454,6 @@ if [ ${DB_CHARACTER_SET_NAME} != "utf8" ]; then
 	mysql_scalar_exec "ALTER DATABASE ${MYSQL_SERVER_DB_NAME} CHARACTER SET utf8 COLLATE utf8_general_ci";
 fi
 
-if [ "${DB_TABLES_COUNT}" -eq "0" ]; then
-      	mysql_batch_exec ${ONLYOFFICE_SQL_DIR}/onlyoffice.sql
-       	mysql_batch_exec ${ONLYOFFICE_SQL_DIR}/onlyoffice.data.sql
-       	mysql_batch_exec ${ONLYOFFICE_SQL_DIR}/onlyoffice.resources.sql
-fi
-
 # change mysql config files
 change_connections "default" "${ONLYOFFICE_ROOT_DIR}/web.connections.config";
 change_connections "teamlabsite" "${ONLYOFFICE_ROOT_DIR}/web.connections.config";
@@ -467,13 +461,19 @@ change_connections "default" "${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.e
 change_connections "default" "${ONLYOFFICE_SERVICES_DIR}/MailAggregator/ASC.Mail.Aggregator.CollectionService.exe.config";
 change_connections "default" "${ONLYOFFICE_SERVICES_DIR}/MailAggregator/ASC.Mail.EmlDownloader.exe.config";
 change_connections "default" "${ONLYOFFICE_SERVICES_DIR}/MailWatchdog/ASC.Mail.Watchdog.Service.exe.config";
+change_connections "default" "${ONLYOFFICE_SERVICES_DIR}/MailCleaner/ASC.Mail.StorageCleaner.exe.config";
 change_connections "default" "${ONLYOFFICE_APISYSTEM_DIR}/Web.config";
 
-
-# update mysql db
-for i in $(ls ${ONLYOFFICE_SQL_DIR}/onlyoffice.upgrade*); do
-        mysql_batch_exec ${i};
-done
+if [ "${DB_TABLES_COUNT}" -eq "0" ]; then
+      	mysql_batch_exec ${ONLYOFFICE_SQL_DIR}/onlyoffice.sql
+       	mysql_batch_exec ${ONLYOFFICE_SQL_DIR}/onlyoffice.data.sql
+       	mysql_batch_exec ${ONLYOFFICE_SQL_DIR}/onlyoffice.resources.sql
+else
+	# update mysql db
+	for i in $(ls ${ONLYOFFICE_SQL_DIR}/onlyoffice.upgrade*); do
+        	mysql_batch_exec ${i};
+	done
+fi
 
 
 # setup HTTPS
@@ -707,7 +707,7 @@ do
                 sed '/web.warmup.count/s/value=\"\S*\"/value=\"'${ONLYOFFICE_MONOSERVE_COUNT}'\"/g' -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
                 sed '/web.warmup.domain/s/value=\"\S*\"/value=\"localhost\/warmup\"/g' -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
                 sed "/core.machinekey/s!value=\".*\"!value=\"${ONLYOFFICE_CORE_MACHINEKEY}\"!g" -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
-				sed "/core.machinekey/s!value=\".*\"!value=\"${ONLYOFFICE_CORE_MACHINEKEY}\"!g" -i  ${ONLYOFFICE_APISYSTEM_DIR}/Web.config
+		sed "/core.machinekey/s!value=\".*\"!value=\"${ONLYOFFICE_CORE_MACHINEKEY}\"!g" -i  ${ONLYOFFICE_APISYSTEM_DIR}/Web.config
                 sed "/core.machinekey/s!value=\".*\"!value=\"${ONLYOFFICE_CORE_MACHINEKEY}\"!g" -i  ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config
                 sed "/core\.machinekey/s!\"core\.machinekey\".*!\"core\.machinekey\":\"${ONLYOFFICE_CORE_MACHINEKEY}\",!" -i ${ONLYOFFICE_SERVICES_DIR}/ASC.Socket.IO/config/config.json
                 sed "/core.machinekey/s!value=\".*\"!value=\"${ONLYOFFICE_CORE_MACHINEKEY}\"!g" -i  ${ONLYOFFICE_SERVICES_DIR}/MailAggregator/ASC.Mail.EmlDownloader.exe.config
@@ -885,11 +885,14 @@ if [ "${ONLYOFFICE_SERVICES_EXTERNAL}" == "true" ]; then
 
 
 	service onlyofficeRadicale stop
+	service onlyofficeSocketIO stop
+        service onlyofficeThumb stop
 	service onlyofficeFeed stop
 	service onlyofficeIndex stop
 	service onlyofficeJabber stop
 	service onlyofficeMailAggregator stop
 	service onlyofficeMailWatchdog stop
+	service onlyofficeMailCleaner stop
 	service onlyofficeNotify stop
 	service onlyofficeBackup stop
 	service onlyofficeAutoreply stop
@@ -899,11 +902,14 @@ if [ "${ONLYOFFICE_SERVICES_EXTERNAL}" == "true" ]; then
 
 	rm -f /etc/init.d/elasticsearch
 	rm -f /etc/init.d/onlyofficeRadicale
+	rm -f /etc/init.d/onlyofficeSocketIO
+	rm -f /etc/init.d/onlyofficeThumb
 	rm -f /etc/init.d/onlyofficeFeed
 	rm -f /etc/init.d/onlyofficeIndex
 	rm -f /etc/init.d/onlyofficeJabber
 	rm -f /etc/init.d/onlyofficeMailAggregator
 	rm -f /etc/init.d/onlyofficeMailWatchdog
+	rm -f /etc/init.d/onlyofficeMailCleaner
 	rm -f /etc/init.d/onlyofficeNotify
 	rm -f /etc/init.d/onlyofficeBackup
 	rm -f /etc/init.d/onlyofficeAutoreply
@@ -921,6 +927,7 @@ else
 	service onlyofficeJabber restart
 	service onlyofficeMailAggregator restart
 	service onlyofficeMailWatchdog restart
+	service onlyofficeMailCleaner restart
 	service onlyofficeNotify restart
 	service onlyofficeBackup restart
  	service onlyofficeAutoreply stop
