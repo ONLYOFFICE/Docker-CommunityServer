@@ -581,7 +581,7 @@ if [ "${MAIL_SERVER_ENABLED}" == "true" ]; then
         MAIL_SERVER_HOSTNAME=$(mysql --silent --skip-column-names -h ${MAIL_SERVER_DB_HOST} \
             --port=${MAIL_SERVER_DB_PORT} -u "${MAIL_SERVER_DB_USER}" \
             --password="${MAIL_SERVER_DB_PASS}" -D "${MAIL_SERVER_DB_NAME}" -e "SELECT Comment from greylisting_whitelist where Source='SenderIP:${MAIL_SERVER_API_HOST}' limit 1;");
-        if [[ "$?" -eq "0" ]]; then
+        if [[ "$?" -eq "0" ]] && [[ -n ${MAIL_SERVER_HOSTNAME} ]]; then
             break;
         fi
         
@@ -667,7 +667,7 @@ END
             --port=${MAIL_SERVER_DB_PORT} -u "${MAIL_SERVER_DB_USER}" \
             --password="${MAIL_SERVER_DB_PASS}" -D "${MAIL_SERVER_DB_NAME}" \
             -e "select access_token from api_keys where id=1;");
-        if [[ "$?" -eq "0" ]]; then
+        if [[ "$?" -eq "0" ]] && [[ -n ${MYSQL_MAIL_SERVER_ACCESS_TOKEN} ]]; then
             break;
         fi
         sleep 10;
