@@ -330,6 +330,11 @@ if [ ${REDIS_SERVER_HOST} ]; then
         REDIS_SERVER_EXTERNAL=true;
 fi
 
+if [ -e /etc/redis/redis.conf ]; then
+ sed -i "s/bind .*/bind 127.0.0.1/g" /etc/redis/redis.conf
+fi
+
+
 mysql_scalar_exec(){
 	local queryResult="";
 

@@ -1,4 +1,4 @@
-FROM ubuntu:16.04
+FROM ubuntu:18.04
 
 ARG RELEASE_DATE="2016-06-21"
 ARG RELEASE_DATE_SIGN=""
@@ -16,11 +16,12 @@ ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
 
 RUN apt-get -y update && \
+    apt-get -yq install gnupg2 && \
+    apt-get install -yq sudo locales && \
     addgroup --system --gid 107 onlyoffice && \
     adduser -uid 104 --quiet --home /var/www/onlyoffice --system --gid 107 onlyoffice && \
-    apt-get install -yq sudo locales && \
     echo "${SOURCE_REPO_URL}" >> /etc/apt/sources.list && \
-    echo "deb http://download.mono-project.com/repo/ubuntu stable-xenial main" | tee /etc/apt/sources.list.d/mono-official.list && \
+    echo "deb http://download.mono-project.com/repo/ubuntu stable-bionic main" | tee /etc/apt/sources.list.d/mono-official.list && \
     apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys CB2DE8E5 && \
     apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF && \
     locale-gen en_US.UTF-8 && \
@@ -28,8 +29,8 @@ RUN apt-get -y update && \
     apt-get install -yq software-properties-common wget curl cron rsyslog && \
     wget http://nginx.org/keys/nginx_signing.key && \
     apt-key add nginx_signing.key && \
-    echo "deb http://nginx.org/packages/mainline/ubuntu/ xenial nginx" >> /etc/apt/sources.list.d/nginx.list && \
-    echo "deb-src http://nginx.org/packages/mainline/ubuntu/ xenial nginx" >> /etc/apt/sources.list.d/nginx.list && \
+    echo "deb http://nginx.org/packages/mainline/ubuntu/ bionic nginx" >> /etc/apt/sources.list.d/nginx.list && \
+    echo "deb-src http://nginx.org/packages/mainline/ubuntu/ bionic nginx" >> /etc/apt/sources.list.d/nginx.list && \
     apt-get install -yq default-jre && \
     wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | apt-key add - && \
     apt-get install -yq apt-transport-https && \
@@ -42,7 +43,12 @@ RUN apt-get -y update && \
     apt-get -y update && \
     apt-get install -yq nginx mono-complete ca-certificates-mono && \
     echo "#!/bin/sh\nexit 0" > /usr/sbin/policy-rc.d && \
-    apt-get install -yq dumb-init python-certbot-nginx htop nano dnsutils redis-server python3-pip  && \
+    apt-get install -yq dumb-init python-certbot-nginx htop nano dnsutils redis-server python3-pip multiarch-support && \
+    wget http://archive.ubuntu.com/ubuntu/pool/main/libe/libevent/libevent-2.0-5_2.0.21-stable-2_amd64.deb && \
+    wget http://archive.ubuntu.com/ubuntu/pool/main/libe/libevent/libevent-core-2.0-5_2.0.21-stable-2_amd64.deb && \
+    wget http://archive.ubuntu.com/ubuntu/pool/main/libe/libevent/libevent-pthreads-2.0-5_2.0.21-stable-2_amd64.deb && \
+    dpkg -i libevent-2.0-5_2.0.21-stable-2_amd64.deb libevent-core-2.0-5_2.0.21-stable-2_amd64.deb libevent-pthreads-2.0-5_2.0.21-stable-2_amd64.deb && \
+    rm -f libevent-2.0-5_2.0.21-stable-2_amd64.deb libevent-core-2.0-5_2.0.21-stable-2_amd64.deb libevent-pthreads-2.0-5_2.0.21-stable-2_amd64.deb && \
     apt-get install -yq onlyoffice-communityserver && \
     rm -rf /var/lib/apt/lists/*
 
