@@ -139,6 +139,36 @@ check_ip_is_internal(){
 	echo "true"
 }
 
+normalize_subnet(){
+        local IPRE='\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)';
+        local IP=($(echo "$1" | sed -ne 's:^'"$IPRE"'/.*$:\1 \2 \3 \4:p'));
+
+        local MASK=($(echo "$1" | sed -ne 's:^[^/]*/'"$IPRE"'$:\1 \2 \3 \4:p'))
+
+        if [ ${#MASK[@]} -ne 4 ]; then
+                local BITCNT=($(echo "$1" | sed -ne 's:^[^/]*/\([0-9]\+\)$:\1:p'))
+                BITCNT=$(( ((2**${BITCNT})-1) << (32-${BITCNT}) ))
+                for (( I=0; I<4; I++ )); do
+                        MASK[$I]=$(( ($BITCNT >> (8 * (3 - $I))) & 255 ))
+                done
+        fi
+
+        local NETWORK=()
+
+        for (( I=0; I<4; I++ )); do
+                NETWORK[$I]=$(( ${IP[$I]} & ${MASK[$I]} ))
+        done
+
+        local IP_MASK=$(echo "$1" | sed -ne 's:^[^/]*/\([0-9]\+\)$:\1:p');
+
+
+        echo ${NETWORK[0]}.${NETWORK[1]}.${NETWORK[2]}.${NETWORK[3]}/$IP_MASK
+}
+
+if [ ${DOCKER_ONLYOFFICE_SUBNET} ]; then
+	DOCKER_ONLYOFFICE_SUBNET=$(normalize_subnet $DOCKER_ONLYOFFICE_SUBNET);
+fi
+
 check_partnerdata(){
 	PARTNER_DATA_FILE="${ONLYOFFICE_DATA_DIR}/json-data.txt";
 
