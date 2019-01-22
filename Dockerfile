@@ -20,6 +20,8 @@ RUN apt-get -y update && \
     apt-get install -yq sudo locales && \
     addgroup --system --gid 107 onlyoffice && \
     adduser -uid 104 --quiet --home /var/www/onlyoffice --system --gid 107 onlyoffice && \
+    addgroup --system --gid 104 elasticsearch && \
+    adduser -uid 103 --quiet --home /nonexistent --system --gid 104 elasticsearch && \
     echo "${SOURCE_REPO_URL}" >> /etc/apt/sources.list && \
     echo "deb http://download.mono-project.com/repo/ubuntu stable-bionic main" | tee /etc/apt/sources.list.d/mono-official.list && \
     apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys CB2DE8E5 && \
