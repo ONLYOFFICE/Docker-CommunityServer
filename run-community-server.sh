@@ -469,6 +469,11 @@ change_connections "default" "${ONLYOFFICE_SERVICES_DIR}/MailWatchdog/ASC.Mail.W
 change_connections "default" "${ONLYOFFICE_SERVICES_DIR}/MailCleaner/ASC.Mail.StorageCleaner.exe.config";
 change_connections "default" "${ONLYOFFICE_APISYSTEM_DIR}/Web.config";
 
+sed "s!\"host\":.*,!\"host\":\"${MYSQL_SERVER_HOST}\",!" -i ${ONLYOFFICE_SERVICES_DIR}/ASC.UrlShortener/config/config.json
+sed "s!\"user\":.*,!\"user\":\"${MYSQL_SERVER_USER}\",!" -i ${ONLYOFFICE_SERVICES_DIR}/ASC.UrlShortener/config/config.json
+sed "s!\"password\":.*,!\"password\":\"${MYSQL_SERVER_PASS}\",!" -i ${ONLYOFFICE_SERVICES_DIR}/ASC.UrlShortener/config/config.json
+sed "s!\"database\":.*!\"database\":\"${MYSQL_SERVER_DB_NAME}\"!" -i ${ONLYOFFICE_SERVICES_DIR}/ASC.UrlShortener/config/config.json
+
 if [ "${DB_TABLES_COUNT}" -eq "0" ]; then
       	mysql_batch_exec ${ONLYOFFICE_SQL_DIR}/onlyoffice.sql
        	mysql_batch_exec ${ONLYOFFICE_SQL_DIR}/onlyoffice.data.sql
@@ -493,7 +498,7 @@ if [ -f "${SSL_CERTIFICATE_PATH}" -a -f "${SSL_KEY_PATH}" ]; then
 
 	# if dhparam path is valid, add to the config, otherwise remove the option
 	if [ ! -f ${SSL_DHPARAM_PATH} ]; then
-		 sudo openssl dhparam -out dhparam.pem 2048
+		 sudo openssl dhparam -out dhparam.pem 4096
 		 mv dhparam.pem ${SSL_DHPARAM_PATH};
 	fi
 
@@ -714,9 +719,12 @@ do
                 sed "/core.machinekey/s!value=\".*\"!value=\"${ONLYOFFICE_CORE_MACHINEKEY}\"!g" -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
 		sed "/core.machinekey/s!value=\".*\"!value=\"${ONLYOFFICE_CORE_MACHINEKEY}\"!g" -i  ${ONLYOFFICE_APISYSTEM_DIR}/Web.config
                 sed "/core.machinekey/s!value=\".*\"!value=\"${ONLYOFFICE_CORE_MACHINEKEY}\"!g" -i  ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config
-                sed "/core\.machinekey/s!\"core\.machinekey\".*!\"core\.machinekey\":\"${ONLYOFFICE_CORE_MACHINEKEY}\",!" -i ${ONLYOFFICE_SERVICES_DIR}/ASC.Socket.IO/config/config.json
+		sed "/core\.machinekey/s!\"core\.machinekey\".*!\"core\.machinekey\":\"${ONLYOFFICE_CORE_MACHINEKEY}\",!" -i ${ONLYOFFICE_SERVICES_DIR}/ASC.Socket.IO/config/config.json
+		sed "s!machine_key\s*=.*!machine_key = ${ONLYOFFICE_CORE_MACHINEKEY}!g" -i  ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/radicale.config
+		sed "/s!\"core.machinekey\":.*,!\"core.machinekey\":\"${ONLYOFFICE_CORE_MACHINEKEY}\",!g" -i ${ONLYOFFICE_SERVICES_DIR}/ASC.UrlShortener/config/config.json
                 sed "/core.machinekey/s!value=\".*\"!value=\"${ONLYOFFICE_CORE_MACHINEKEY}\"!g" -i  ${ONLYOFFICE_SERVICES_DIR}/MailAggregator/ASC.Mail.EmlDownloader.exe.config
                 sed "/core.machinekey/s!value=\".*\"!value=\"${ONLYOFFICE_CORE_MACHINEKEY}\"!g" -i  ${ONLYOFFICE_SERVICES_DIR}/MailAggregator/ASC.Mail.Aggregator.CollectionService.exe.config
+		sed "/core.machinekey/s!value=\".*\"!value=\"${ONLYOFFICE_CORE_MACHINEKEY}\"!g" -i  ${ONLYOFFICE_SERVICES_DIR}/MailCleaner/ASC.Mail.StorageCleaner.exe.config
 
                 continue;
         fi
@@ -733,8 +741,6 @@ do
 	sed '/web.warmup.count/s/value=\"\S*\"/value=\"'${ONLYOFFICE_MONOSERVE_COUNT}'\"/g' -i  ${ONLYOFFICE_ROOT_DIR}$serverID/web.appsettings.config
 	sed '/web.warmup.domain/s/value=\"\S*\"/value=\"localhost\/warmup'${serverID}'\"/g' -i  ${ONLYOFFICE_ROOT_DIR}$serverID/web.appsettings.config
 
-        sed "/core.machinekey/s!value=\".*\"!value=\"${ONLYOFFICE_CORE_MACHINEKEY}\"!g" -i  ${ONLYOFFICE_ROOT_DIR}$serverID/web.appsettings.config
-     
         sed '/conversionPattern\s*value=\"%folder{LogDirectory}/s!web!web'${serverID}'!g' -i ${ONLYOFFICE_ROOT_DIR}$serverID/web.log4net.config;
 
 
