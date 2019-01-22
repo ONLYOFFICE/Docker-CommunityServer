@@ -43,7 +43,7 @@ RUN apt-get -y update && \
     apt-get -y update && \
     apt-get install -yq nginx mono-complete ca-certificates-mono && \
     echo "#!/bin/sh\nexit 0" > /usr/sbin/policy-rc.d && \
-    apt-get install -yq dumb-init python-certbot-nginx htop nano dnsutils redis-server python3-pip multiarch-support && \
+    apt-get install -yq dumb-init python-certbot-nginx htop nano dnsutils redis-server python3-pip multiarch-support iproute2 && \
     wget http://archive.ubuntu.com/ubuntu/pool/main/libe/libevent/libevent-2.0-5_2.0.21-stable-2_amd64.deb && \
     wget http://archive.ubuntu.com/ubuntu/pool/main/libe/libevent/libevent-core-2.0-5_2.0.21-stable-2_amd64.deb && \
     wget http://archive.ubuntu.com/ubuntu/pool/main/libe/libevent/libevent-pthreads-2.0-5_2.0.21-stable-2_amd64.deb && \
