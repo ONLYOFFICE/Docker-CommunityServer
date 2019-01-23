@@ -938,6 +938,7 @@ if [ "${ONLYOFFICE_SERVICES_EXTERNAL}" == "true" ]; then
 	service onlyofficeBackup stop
 	service onlyofficeAutoreply stop
 	service onlyofficeStorageMigrate stop
+	service onlyofficeUrlShortener stop
 	service elasticsearch stop
 
 
@@ -955,6 +956,7 @@ if [ "${ONLYOFFICE_SERVICES_EXTERNAL}" == "true" ]; then
 	rm -f /etc/init.d/onlyofficeBackup
 	rm -f /etc/init.d/onlyofficeAutoreply
 	rm -f /etc/init.d/onlyofficeStorageMigrate
+	rm -f /etc/init.d/onlyofficeUrlShortener
 
 	sed '/onlyoffice/d' -i ${ONLYOFFICE_CRON_PATH}
 
@@ -974,6 +976,7 @@ else
  	service onlyofficeAutoreply stop
 	service onlyofficeHealthCheck stop
 	service onlyofficeStorageMigrate restart
+	service onlyofficeUrlShortener restart
 	service elasticsearch restart
 fi
 
