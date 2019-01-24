@@ -751,7 +751,7 @@ do
                 sed "/core.machinekey/s!value=\".*\"!value=\"${ONLYOFFICE_CORE_MACHINEKEY}\"!g" -i  ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config
 		sed "/core\.machinekey/s!\"core\.machinekey\".*!\"core\.machinekey\":\"${ONLYOFFICE_CORE_MACHINEKEY}\",!" -i ${ONLYOFFICE_SERVICES_DIR}/ASC.Socket.IO/config/config.json
 		sed "s!machine_key\s*=.*!machine_key = ${ONLYOFFICE_CORE_MACHINEKEY}!g" -i  ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/radicale.config
-		sed "/s!\"core.machinekey\":.*,!\"core.machinekey\":\"${ONLYOFFICE_CORE_MACHINEKEY}\",!g" -i ${ONLYOFFICE_SERVICES_DIR}/ASC.UrlShortener/config/config.json
+		sed "s!\"core\.machinekey\":.*,!\"core\.machinekey\":\"${ONLYOFFICE_CORE_MACHINEKEY}\",!g" -i ${ONLYOFFICE_SERVICES_DIR}/ASC.UrlShortener/config/config.json
                 sed "/core.machinekey/s!value=\".*\"!value=\"${ONLYOFFICE_CORE_MACHINEKEY}\"!g" -i  ${ONLYOFFICE_SERVICES_DIR}/MailAggregator/ASC.Mail.EmlDownloader.exe.config
                 sed "/core.machinekey/s!value=\".*\"!value=\"${ONLYOFFICE_CORE_MACHINEKEY}\"!g" -i  ${ONLYOFFICE_SERVICES_DIR}/MailAggregator/ASC.Mail.Aggregator.CollectionService.exe.config
 		sed "/core.machinekey/s!value=\".*\"!value=\"${ONLYOFFICE_CORE_MACHINEKEY}\"!g" -i  ${ONLYOFFICE_SERVICES_DIR}/MailCleaner/ASC.Mail.StorageCleaner.exe.config
