@@ -11,9 +11,9 @@ LABEL onlyoffice.community.release-date="${RELEASE_DATE}" \
       onlyoffice.community.release-date.sign="${RELEASE_DATE_SIGN}" \
       maintainer="Ascensio System SIA <support@onlyoffice.com>"
 
-ENV LANG en_US.UTF-8
-ENV LANGUAGE en_US:en
-ENV LC_ALL en_US.UTF-8
+ENV LANG=en_US.UTF-8 \
+    LANGUAGE=en_US:en \
+    LC_ALL=en_US.UTF-8
 
 RUN apt-get -y update && \
     apt-get -yq install gnupg2 && \
@@ -59,9 +59,7 @@ ADD assets /app/onlyoffice/assets/
 ADD run-community-server.sh /app/onlyoffice/run-community-server.sh
 RUN chmod -R 755 /app/onlyoffice/*.sh
 
-VOLUME ["/var/log/onlyoffice"]
-VOLUME ["/var/www/onlyoffice/Data"]
-VOLUME ["/var/lib/mysql"]
+VOLUME ["/var/log/onlyoffice", "/var/www/onlyoffice/Data", "/var/lib/mysql"]
 
 EXPOSE 80 443 5222 3306 9865 9888 9866 9871 9882 5280
 
