@@ -2,6 +2,11 @@
 
 set -x
 
+echo "##########################################################"
+echo "#########  Start container configuration  ################"
+echo "##########################################################"
+
+
 SERVER_HOST=${SERVER_HOST:-""};
 ONLYOFFICE_DIR="/var/www/onlyoffice"
 ONLYOFFICE_DATA_DIR="${ONLYOFFICE_DIR}/Data"
@@ -26,9 +31,7 @@ NGINX_CONF_DIR="/etc/nginx/sites-enabled"
 NGINX_WORKER_PROCESSES=${NGINX_WORKER_PROCESSES:-$(grep processor /proc/cpuinfo | wc -l)};
 NGINX_WORKER_CONNECTIONS=${NGINX_WORKER_CONNECTIONS:-$(ulimit -n)};
 SERVICE_SSO_AUTH_HOST_ADDR=${SERVICE_SSO_AUTH_HOST_ADDR:-${CONTROL_PANEL_PORT_80_TCP_ADDR}};
-
 DEFAULT_ONLYOFFICE_CORE_MACHINEKEY="$(sudo sed -n '/"core.machinekey"/s!.*value\s*=\s*"\([^"]*\)".*!\1!p' ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config)";
-
 ONLYOFFICE_CORE_MACHINEKEY=${ONLYOFFICE_CORE_MACHINEKEY:-${DEFAULT_ONLYOFFICE_CORE_MACHINEKEY}};
 
 if [ ! -d "${ONLYOFFICE_PRIVATE_DATA_DIR}" ]; then
@@ -39,7 +42,7 @@ echo "${ONLYOFFICE_CORE_MACHINEKEY}" > ${ONLYOFFICE_PRIVATE_DATA_DIR}/machinekey
 
 chmod -R 444 ${ONLYOFFICE_PRIVATE_DATA_DIR}
 
-if cat /proc/1/cgroup | grep -qE "docker|lxc"; then
+if cat /proc/1/cgroup | grep -qE "docker|lxc|kubepods"; then
         DOCKER_ENABLED=true;
 else
 	DOCKER_ENABLED=false;
@@ -57,8 +60,7 @@ NGINX_ROOT_DIR="/etc/nginx"
 
 VALID_IP_ADDRESS_REGEX="^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$";
 
-
-LOG_DEBUG="DEBUG";
+LOG_DEBUG="";
 
 LOG_DIR="/var/log/onlyoffice/"
 
@@ -218,7 +220,7 @@ sed 's/worker_connections.*/'"worker_connections ${NGINX_WORKER_CONNECTIONS};"'/
 cp ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-common-init.conf.template ${NGINX_CONF_DIR}/onlyoffice
 rm -f ${NGINX_ROOT_DIR}/conf.d/*.conf
 
-rsyslogd
+service rsyslog restart || true
 service nginx restart
 
 if [ ${ONLYOFFICE_SERVICES_INTERNAL_HOST} ]; then
@@ -473,8 +475,8 @@ fi
 mysql_check_connection;
 
 DB_IS_EXIST=$(mysql_scalar_exec "SELECT SCHEMA_NAME FROM information_schema.SCHEMATA WHERE SCHEMA_NAME='${MYSQL_SERVER_DB_NAME}'" "opt_ignore_db_name");
-DB_CHARACTER_SET_NAME=$(mysql_list_exec "SELECT DEFAULT_CHARACTER_SET_NAME FROM information_schema.SCHEMATA WHERE SCHEMA_NAME='${MYSQL_SERVER_DB_NAME}'" "opt_ignore_db_name");
-DB_COLLATION_NAME=$(mysql_list_exec "SELECT DEFAULT_COLLATION_NAME FROM information_schema.SCHEMATA WHERE SCHEMA_NAME='${MYSQL_SERVER_DB_NAME}'" "opt_ignore_db_name");
+DB_CHARACTER_SET_NAME=$(mysql_scalar_exec "SELECT DEFAULT_CHARACTER_SET_NAME FROM information_schema.SCHEMATA WHERE SCHEMA_NAME='${MYSQL_SERVER_DB_NAME}'" "opt_ignore_db_name");
+DB_COLLATION_NAME=$(mysql_scalar_exec "SELECT DEFAULT_COLLATION_NAME FROM information_schema.SCHEMATA WHERE SCHEMA_NAME='${MYSQL_SERVER_DB_NAME}'" "opt_ignore_db_name");
 DB_TABLES_COUNT=$(mysql_scalar_exec "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='${MYSQL_SERVER_DB_NAME}'");
 
 if [ -z ${DB_IS_EXIST} ]; then
@@ -936,7 +938,6 @@ if [ "${ONLYOFFICE_SERVICES_EXTERNAL}" == "true" ]; then
 	service onlyofficeMailCleaner stop
 	service onlyofficeNotify stop
 	service onlyofficeBackup stop
-	service onlyofficeAutoreply stop
 	service onlyofficeStorageMigrate stop
 	service onlyofficeUrlShortener stop
 	service elasticsearch stop
@@ -954,7 +955,6 @@ if [ "${ONLYOFFICE_SERVICES_EXTERNAL}" == "true" ]; then
 	rm -f /etc/init.d/onlyofficeMailCleaner
 	rm -f /etc/init.d/onlyofficeNotify
 	rm -f /etc/init.d/onlyofficeBackup
-	rm -f /etc/init.d/onlyofficeAutoreply
 	rm -f /etc/init.d/onlyofficeStorageMigrate
 	rm -f /etc/init.d/onlyofficeUrlShortener
 
@@ -973,8 +973,6 @@ else
 	service onlyofficeMailCleaner restart
 	service onlyofficeNotify restart
 	service onlyofficeBackup restart
- 	service onlyofficeAutoreply stop
-	service onlyofficeHealthCheck stop
 	service onlyofficeStorageMigrate restart
 	service onlyofficeUrlShortener restart
 	service elasticsearch restart
