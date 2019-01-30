@@ -846,6 +846,7 @@ if [ "${REDIS_SERVER_EXTERNAL}" == "true" ]; then
 	service redis-server stop
 else
 	service redis-server start
+	redis-cli flushall
 fi
 
 if [ "${MYSQL_SERVER_EXTERNAL}" == "true" ]; then
