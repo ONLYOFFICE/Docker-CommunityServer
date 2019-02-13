@@ -22,7 +22,7 @@ APP_MODE=${APP_MODE:-"SERVER"};
 APP_GOD_DIR="/etc/god/conf.d"
 APP_CRON_DIR="/etc/cron.d"
 APP_CRON_PATH="/etc/cron.d/onlyoffice"
-DOCKER_ONLYOFFICE_SUBNET=$(ip -o -f inet addr show | awk '/scope global/ {print $4}' | head -1);
+DOCKER_APP_SUBNET=$(ip -o -f inet addr show | awk '/scope global/ {print $4}' | head -1);
 DOCKER_CONTAINER_IP=$(ip addr show eth0 | awk '/inet / {gsub(/\/.*/,"",$2); print $2}' | head -1);
 DOCKER_CONTAINER_NAME="onlyoffice-community-server";
 DOCKER_ENABLED=${DOCKER_ENABLED:-true};
@@ -64,7 +64,7 @@ LOG_DEBUG="";
 
 LOG_DIR="/var/log/onlyoffice/"
 
-ONLYOFFICE_HTTPS=${ONLYOFFICE_HTTPS:-false}
+APP_HTTPS=${APP_HTTPS:-false}
 
 SSL_CERTIFICATES_DIR="${APP_DATA_DIR}/certs"
 SSL_CERTIFICATE_PATH=${SSL_CERTIFICATE_PATH:-${SSL_CERTIFICATES_DIR}/onlyoffice.crt}
@@ -76,7 +76,7 @@ SSL_DHPARAM_PATH=${SSL_DHPARAM_PATH:-${SSL_CERTIFICATES_DIR}/dhparam.pem}
 SSL_VERIFY_CLIENT=${SSL_VERIFY_CLIENT:-off}
 SSL_OCSP_CERTIFICATE_PATH=${SSL_OCSP_CERTIFICATE_PATH:-${SSL_CERTIFICATES_DIR}/stapling.trusted.crt}
 CA_CERTIFICATES_PATH=${CA_CERTIFICATES_PATH:-${SSL_CERTIFICATES_DIR}/ca.crt}
-ONLYOFFICE_HTTPS_HSTS_ENABLED=${ONLYOFFICE_HTTPS_HSTS_ENABLED:-true}
+APP_HTTPS_HSTS_ENABLED=${APP_HTTPS_HSTS_ENABLED:-true}
 APP_HTTPS_HSTS_MAXAGE=${APP_HTTPS_HSTS_MAXAGE:-63072000}
 
 SYSCONF_TEMPLATES_DIR="${DIR}/config"
@@ -85,8 +85,8 @@ mkdir -p ${SYSCONF_TEMPLATES_DIR}/nginx;
 
 SYSCONF_TOOLS_DIR="${DIR}/assets/tools"
 
-ONLYOFFICE_SERVICES_INTERNAL_HOST=${ONLYOFFICE_SERVICES_PORT_9865_TCP_ADDR:-${ONLYOFFICE_SERVICES_INTERNAL_HOST}}
-ONLYOFFICE_SERVICES_EXTERNAL=false
+APP_SERVICES_INTERNAL_HOST=${APP_SERVICES_PORT_9865_TCP_ADDR:-${APP_SERVICES_INTERNAL_HOST}}
+APP_SERVICES_EXTERNAL=false
 DOCUMENT_SERVER_ENABLED=false
 
 DOCUMENT_SERVER_JWT_ENABLED=${DOCUMENT_SERVER_JWT_ENABLED:-false};
@@ -167,8 +167,8 @@ normalize_subnet(){
         echo ${NETWORK[0]}.${NETWORK[1]}.${NETWORK[2]}.${NETWORK[3]}/$IP_MASK
 }
 
-if [ ${DOCKER_ONLYOFFICE_SUBNET} ]; then
-	DOCKER_ONLYOFFICE_SUBNET=$(normalize_subnet $DOCKER_ONLYOFFICE_SUBNET);
+if [ ${DOCKER_APP_SUBNET} ]; then
+	DOCKER_APP_SUBNET=$(normalize_subnet $DOCKER_APP_SUBNET);
 fi
 
 check_partnerdata(){
@@ -223,15 +223,15 @@ rm -f ${NGINX_ROOT_DIR}/conf.d/*.conf
 service rsyslog restart || true
 service nginx restart
 
-if [ ${ONLYOFFICE_SERVICES_INTERNAL_HOST} ]; then
-	ONLYOFFICE_SERVICES_EXTERNAL=true;
+if [ ${APP_SERVICES_INTERNAL_HOST} ]; then
+	APP_SERVICES_EXTERNAL=true;
 
-	sed '/endpoint/s/http:\/\/localhost:9865\/teamlabJabber/http:\/\/'${ONLYOFFICE_SERVICES_INTERNAL_HOST}':9865\/teamlabJabber/' -i ${APP_ROOT_DIR}/Web.config
-	sed '/endpoint/s/http:\/\/localhost:9866\/teamlabSearcher/http:\/\/'${ONLYOFFICE_SERVICES_INTERNAL_HOST}':9866\/teamlabSearcher/' -i ${APP_ROOT_DIR}/Web.config
-	sed '/endpoint/s/http:\/\/localhost:9871\/teamlabNotify/http:\/\/'${ONLYOFFICE_SERVICES_INTERNAL_HOST}':9871\/teamlabNotify/' -i ${APP_ROOT_DIR}/Web.config
-	sed '/endpoint/s/http:\/\/localhost:9882\/teamlabBackup/http:\/\/'${ONLYOFFICE_SERVICES_INTERNAL_HOST}':9882\/teamlabBackup/' -i ${APP_ROOT_DIR}/Web.config
+	sed '/endpoint/s/http:\/\/localhost:9865\/teamlabJabber/http:\/\/'${APP_SERVICES_INTERNAL_HOST}':9865\/teamlabJabber/' -i ${APP_ROOT_DIR}/Web.config
+	sed '/endpoint/s/http:\/\/localhost:9866\/teamlabSearcher/http:\/\/'${APP_SERVICES_INTERNAL_HOST}':9866\/teamlabSearcher/' -i ${APP_ROOT_DIR}/Web.config
+	sed '/endpoint/s/http:\/\/localhost:9871\/teamlabNotify/http:\/\/'${APP_SERVICES_INTERNAL_HOST}':9871\/teamlabNotify/' -i ${APP_ROOT_DIR}/Web.config
+	sed '/endpoint/s/http:\/\/localhost:9882\/teamlabBackup/http:\/\/'${APP_SERVICES_INTERNAL_HOST}':9882\/teamlabBackup/' -i ${APP_ROOT_DIR}/Web.config
 
-        sed '/BoshPath/s!\(value\s*=\s*\"\)[^\"]*\"!\1http:\/\/'${ONLYOFFICE_SERVICES_INTERNAL_HOST}':5280\/http-poll\/\"!' -i  ${APP_ROOT_DIR}/web.appsettings.config
+        sed '/BoshPath/s!\(value\s*=\s*\"\)[^\"]*\"!\1http:\/\/'${APP_SERVICES_INTERNAL_HOST}':5280\/http-poll\/\"!' -i  ${APP_ROOT_DIR}/web.appsettings.config
 
 	sed '/<endpoint/s!\"netTcpBinding\"!\"basicHttpBinding\"!' -i ${APP_ROOT_DIR}/Web.config;
 
@@ -240,7 +240,7 @@ if [ ${ONLYOFFICE_SERVICES_INTERNAL_HOST} ]; then
 	fi
 
 	if [ "${DOCKER_ENABLED}" == "true" ]; then
-		while ! bash ${SYSCONF_TOOLS_DIR}/wait-for-it.sh ${ONLYOFFICE_SERVICES_INTERNAL_HOST}:9871 --quiet -s -- echo "ONLYOFFICE SERVICES is up"; do
+		while ! bash ${SYSCONF_TOOLS_DIR}/wait-for-it.sh ${APP_SERVICES_INTERNAL_HOST}:9871 --quiet -s -- echo "ONLYOFFICE SERVICES is up"; do
     			sleep 1
 		done
 	fi
@@ -257,10 +257,10 @@ elif [ ${DOCUMENT_SERVER_PORT_80_TCP_ADDR} ]; then
 	DOCUMENT_SERVER_API_URL="\/ds-vpath";
 fi
 
-if [ "${DOCUMENT_SERVER_ENABLED}" == "true" ] && [ $DOCKER_ONLYOFFICE_SUBNET ] && [ -z "$SERVER_HOST" ]; then
+if [ "${DOCUMENT_SERVER_ENABLED}" == "true" ] && [ $DOCKER_APP_SUBNET ] && [ -z "$SERVER_HOST" ]; then
 	DOCUMENT_SERVER_HOST_IP=$(dig +short ${DOCUMENT_SERVER_HOST});
 
-	if check_ip_is_internal $DOCKER_ONLYOFFICE_SUBNET $DOCUMENT_SERVER_HOST_IP; then
+	if check_ip_is_internal $DOCKER_APP_SUBNET $DOCUMENT_SERVER_HOST_IP; then
 		_DOCKER_CONTAINER_IP=$(dig +short ${DOCKER_CONTAINER_NAME});
 
 		if [ "${DOCKER_CONTAINER_IP}" == "${_DOCKER_CONTAINER_IP}" ]; then
@@ -561,7 +561,7 @@ if [ -f "${SSL_CERTIFICATE_PATH}" -a -f "${SSL_KEY_PATH}" ]; then
 		sed '/{{CA_CERTIFICATES_PATH}}/d' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
 	fi
 
-	if [ "${ONLYOFFICE_HTTPS_HSTS_ENABLED}" == "true" ]; then
+	if [ "${APP_HTTPS_HSTS_ENABLED}" == "true" ]; then
 		sed 's/{{APP_HTTPS_HSTS_MAXAGE}}/'"${APP_HTTPS_HSTS_MAXAGE}"'/' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
 	else
 		sed '/{{APP_HTTPS_HSTS_MAXAGE}}/d' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
@@ -581,14 +581,14 @@ fi
 sed -i '1d' /etc/logrotate.d/nginx
 sed '1 i\/var/log/nginx/*.log /var/log/onlyoffice/nginx.*.log {' -i /etc/logrotate.d/nginx
 
-if [ ${DOCKER_ONLYOFFICE_SUBNET} ]; then
-	sed 's,{{DOCKER_ONLYOFFICE_SUBNET}},'"${DOCKER_ONLYOFFICE_SUBNET}"',' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
+if [ ${DOCKER_APP_SUBNET} ]; then
+	sed 's,{{DOCKER_APP_SUBNET}},'"${DOCKER_APP_SUBNET}"',' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
 else
-	sed '/{{DOCKER_ONLYOFFICE_SUBNET}}/d' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
+	sed '/{{DOCKER_APP_SUBNET}}/d' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
 fi
 
-if [ ${ONLYOFFICE_SERVICES_INTERNAL_HOST} ]; then
-	sed "s/localhost/${ONLYOFFICE_SERVICES_INTERNAL_HOST}/" -i ${NGINX_CONF_DIR}/includes/onlyoffice-communityserver-services.conf
+if [ ${APP_SERVICES_INTERNAL_HOST} ]; then
+	sed "s/localhost/${APP_SERVICES_INTERNAL_HOST}/" -i ${NGINX_CONF_DIR}/includes/onlyoffice-communityserver-services.conf
 fi
 
 if [ "${DOCUMENT_SERVER_JWT_ENABLED}" == "true" ]; then
@@ -607,7 +607,7 @@ if [ "${DOCUMENT_SERVER_ENABLED}" == "true" ]; then
     sed '/files\.docservice\.url\.public/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_API_URL}'\/\"!' -i ${APP_ROOT_DIR}/web.appsettings.config
     sed '/files\.docservice\.url\.public/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_API_URL}'\/\"!' -i ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config
 
-    if [ -n "${DOCKER_ONLYOFFICE_SUBNET}" ] && [ -n "${SERVER_HOST}" ]; then
+    if [ -n "${DOCKER_APP_SUBNET}" ] && [ -n "${SERVER_HOST}" ]; then
         sed '/files\.docservice\.url\.portal/s!\(value\s*=\s*\"\)[^\"]*\"!\1http:\/\/'${SERVER_HOST}'\"!' -i ${APP_ROOT_DIR}/web.appsettings.config
     fi
 
@@ -646,7 +646,7 @@ if [ "${MAIL_SERVER_ENABLED}" == "true" ]; then
 
     SENDER_IP="";
 
-	if check_ip_is_internal $DOCKER_ONLYOFFICE_SUBNET $MAIL_SERVER_API_HOST; then
+	if check_ip_is_internal $DOCKER_APP_SUBNET $MAIL_SERVER_API_HOST; then
 		SENDER_IP=$(hostname -i);
 	elif [[ "$(dig +short myip.opendns.com @resolver1.opendns.com)" =~ $VALID_IP_ADDRESS_REGEX ]]; then
 		SENDER_IP=$(dig +short myip.opendns.com @resolver1.opendns.com);
@@ -922,7 +922,7 @@ else
 	service monoserveApiSystem restart
 fi
 
-if [ "${ONLYOFFICE_SERVICES_EXTERNAL}" == "true" ]; then
+if [ "${APP_SERVICES_EXTERNAL}" == "true" ]; then
 	rm -f "${APP_GOD_DIR}"/onlyoffice.god;
 	rm -f "${APP_GOD_DIR}"/elasticsearch.god;
 	rm -f "${APP_GOD_DIR}"/redis.god;
