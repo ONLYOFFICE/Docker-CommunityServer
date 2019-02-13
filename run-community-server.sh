@@ -8,20 +8,20 @@ echo "##########################################################"
 
 
 SERVER_HOST=${SERVER_HOST:-""};
-ONLYOFFICE_DIR="/var/www/onlyoffice"
-ONLYOFFICE_DATA_DIR="${ONLYOFFICE_DIR}/Data"
-ONLYOFFICE_PRIVATE_DATA_DIR="${ONLYOFFICE_DATA_DIR}/.private"
-ONLYOFFICE_SERVICES_DIR="${ONLYOFFICE_DIR}/Services"
-ONLYOFFICE_SQL_DIR="${ONLYOFFICE_DIR}/Sql"
-ONLYOFFICE_ROOT_DIR="${ONLYOFFICE_DIR}/WebStudio"
-ONLYOFFICE_APISYSTEM_DIR="/var/www/onlyoffice/ApiSystem"
-ONLYOFFICE_MONOSERVER_PATH="/etc/init.d/monoserve";
-ONLYOFFICE_HYPERFASTCGI_PATH="/etc/hyperfastcgi/onlyoffice";
-ONLYOFFICE_MONOSERVE_COUNT=1;
-ONLYOFFICE_MODE=${ONLYOFFICE_MODE:-"SERVER"};
-ONLYOFFICE_GOD_DIR="/etc/god/conf.d"
-ONLYOFFICE_CRON_DIR="/etc/cron.d"
-ONLYOFFICE_CRON_PATH="/etc/cron.d/onlyoffice"
+APP_DIR="/var/www/onlyoffice"
+APP_DATA_DIR="${APP_DIR}/Data"
+APP_PRIVATE_DATA_DIR="${APP_DATA_DIR}/.private"
+APP_SERVICES_DIR="${APP_DIR}/Services"
+APP_SQL_DIR="${APP_DIR}/Sql"
+APP_ROOT_DIR="${APP_DIR}/WebStudio"
+APP_APISYSTEM_DIR="/var/www/onlyoffice/ApiSystem"
+APP_MONOSERVER_PATH="/etc/init.d/monoserve";
+APP_HYPERFASTCGI_PATH="/etc/hyperfastcgi/onlyoffice";
+APP_MONOSERVE_COUNT=1;
+APP_MODE=${APP_MODE:-"SERVER"};
+APP_GOD_DIR="/etc/god/conf.d"
+APP_CRON_DIR="/etc/cron.d"
+APP_CRON_PATH="/etc/cron.d/onlyoffice"
 DOCKER_ONLYOFFICE_SUBNET=$(ip -o -f inet addr show | awk '/scope global/ {print $4}' | head -1);
 DOCKER_CONTAINER_IP=$(ip addr show eth0 | awk '/inet / {gsub(/\/.*/,"",$2); print $2}' | head -1);
 DOCKER_CONTAINER_NAME="onlyoffice-community-server";
@@ -31,16 +31,16 @@ NGINX_CONF_DIR="/etc/nginx/sites-enabled"
 NGINX_WORKER_PROCESSES=${NGINX_WORKER_PROCESSES:-$(grep processor /proc/cpuinfo | wc -l)};
 NGINX_WORKER_CONNECTIONS=${NGINX_WORKER_CONNECTIONS:-$(ulimit -n)};
 SERVICE_SSO_AUTH_HOST_ADDR=${SERVICE_SSO_AUTH_HOST_ADDR:-${CONTROL_PANEL_PORT_80_TCP_ADDR}};
-DEFAULT_ONLYOFFICE_CORE_MACHINEKEY="$(sudo sed -n '/"core.machinekey"/s!.*value\s*=\s*"\([^"]*\)".*!\1!p' ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config)";
-ONLYOFFICE_CORE_MACHINEKEY=${ONLYOFFICE_CORE_MACHINEKEY:-${DEFAULT_ONLYOFFICE_CORE_MACHINEKEY}};
+DEFAULT_APP_CORE_MACHINEKEY="$(sudo sed -n '/"core.machinekey"/s!.*value\s*=\s*"\([^"]*\)".*!\1!p' ${APP_ROOT_DIR}/web.appsettings.config)";
+APP_CORE_MACHINEKEY=${APP_CORE_MACHINEKEY:-${DEFAULT_APP_CORE_MACHINEKEY}};
 
-if [ ! -d "${ONLYOFFICE_PRIVATE_DATA_DIR}" ]; then
-   mkdir -p ${ONLYOFFICE_PRIVATE_DATA_DIR};
+if [ ! -d "${APP_PRIVATE_DATA_DIR}" ]; then
+   mkdir -p ${APP_PRIVATE_DATA_DIR};
 fi
 
-echo "${ONLYOFFICE_CORE_MACHINEKEY}" > ${ONLYOFFICE_PRIVATE_DATA_DIR}/machinekey
+echo "${APP_CORE_MACHINEKEY}" > ${APP_PRIVATE_DATA_DIR}/machinekey
 
-chmod -R 444 ${ONLYOFFICE_PRIVATE_DATA_DIR}
+chmod -R 444 ${APP_PRIVATE_DATA_DIR}
 
 if cat /proc/1/cgroup | grep -qE "docker|lxc|kubepods"; then
         DOCKER_ENABLED=true;
@@ -52,8 +52,8 @@ if [ ! -d "$NGINX_CONF_DIR" ]; then
    mkdir -p $NGINX_CONF_DIR;
 fi
 
-if [ ! -d "${ONLYOFFICE_DIR}/DocumentServerData" ]; then
-   mkdir -p ${ONLYOFFICE_DIR}/DocumentServerData;
+if [ ! -d "${APP_DIR}/DocumentServerData" ]; then
+   mkdir -p ${APP_DIR}/DocumentServerData;
 fi
 
 NGINX_ROOT_DIR="/etc/nginx"
@@ -66,7 +66,7 @@ LOG_DIR="/var/log/onlyoffice/"
 
 ONLYOFFICE_HTTPS=${ONLYOFFICE_HTTPS:-false}
 
-SSL_CERTIFICATES_DIR="${ONLYOFFICE_DATA_DIR}/certs"
+SSL_CERTIFICATES_DIR="${APP_DATA_DIR}/certs"
 SSL_CERTIFICATE_PATH=${SSL_CERTIFICATE_PATH:-${SSL_CERTIFICATES_DIR}/onlyoffice.crt}
 SSL_KEY_PATH=${SSL_KEY_PATH:-${SSL_CERTIFICATES_DIR}/onlyoffice.key}
 SSL_CERTIFICATE_PATH_PFX=${SSL_CERTIFICATE_PATH_PFX:-${SSL_CERTIFICATES_DIR}/onlyoffice.pfx}
@@ -77,7 +77,7 @@ SSL_VERIFY_CLIENT=${SSL_VERIFY_CLIENT:-off}
 SSL_OCSP_CERTIFICATE_PATH=${SSL_OCSP_CERTIFICATE_PATH:-${SSL_CERTIFICATES_DIR}/stapling.trusted.crt}
 CA_CERTIFICATES_PATH=${CA_CERTIFICATES_PATH:-${SSL_CERTIFICATES_DIR}/ca.crt}
 ONLYOFFICE_HTTPS_HSTS_ENABLED=${ONLYOFFICE_HTTPS_HSTS_ENABLED:-true}
-ONLYOFFICE_HTTPS_HSTS_MAXAGE=${ONLYOFFICE_HTTPS_HSTS_MAXAG:-63072000}
+APP_HTTPS_HSTS_MAXAGE=${APP_HTTPS_HSTS_MAXAGE:-63072000}
 
 SYSCONF_TEMPLATES_DIR="${DIR}/config"
 
@@ -172,10 +172,10 @@ if [ ${DOCKER_ONLYOFFICE_SUBNET} ]; then
 fi
 
 check_partnerdata(){
-	PARTNER_DATA_FILE="${ONLYOFFICE_DATA_DIR}/json-data.txt";
+	PARTNER_DATA_FILE="${APP_DATA_DIR}/json-data.txt";
 
 	if [ -f ${PARTNER_DATA_FILE} ]; then
-		for serverID in $(seq 1 ${ONLYOFFICE_MONOSERVE_COUNT});
+		for serverID in $(seq 1 ${APP_MONOSERVE_COUNT});
 		do
 			index=$serverID;
 
@@ -183,7 +183,7 @@ check_partnerdata(){
 				index="";
 			fi
 
-			cp ${PARTNER_DATA_FILE} ${ONLYOFFICE_ROOT_DIR}${index}/App_Data/static/partnerdata/
+			cp ${PARTNER_DATA_FILE} ${APP_ROOT_DIR}${index}/App_Data/static/partnerdata/
 		done
 	fi
 }
@@ -198,16 +198,16 @@ check_partnerdata
 
 re='^[0-9]+$'
 
-if ! [[ ${ONLYOFFICE_MONOSERVE_COUNT} =~ $re ]] ; then
-	echo "error: ONLYOFFICE_MONOSERVE_COUNT not a number";
-	ONLYOFFICE_MONOSERVE_COUNT=2;
+if ! [[ ${APP_MONOSERVE_COUNT} =~ $re ]] ; then
+	echo "error: APP_MONOSERVE_COUNT not a number";
+	APP_MONOSERVE_COUNT=2;
 fi
 
-# if [ "${ONLYOFFICE_MONOSERVE_COUNT}" -eq "2" ] ; then
+# if [ "${APP_MONOSERVE_COUNT}" -eq "2" ] ; then
 #	KERNER_CPU=$(nproc);
 	
-#	if [ "${KERNER_CPU}" -gt "${ONLYOFFICE_MONOSERVE_COUNT}" ]; then
-#		ONLYOFFICE_MONOSERVE_COUNT=${KERNER_CPU};
+#	if [ "${KERNER_CPU}" -gt "${APP_MONOSERVE_COUNT}" ]; then
+#		APP_MONOSERVE_COUNT=${KERNER_CPU};
 #	fi	
 # fi
 
@@ -226,14 +226,14 @@ service nginx restart
 if [ ${ONLYOFFICE_SERVICES_INTERNAL_HOST} ]; then
 	ONLYOFFICE_SERVICES_EXTERNAL=true;
 
-	sed '/endpoint/s/http:\/\/localhost:9865\/teamlabJabber/http:\/\/'${ONLYOFFICE_SERVICES_INTERNAL_HOST}':9865\/teamlabJabber/' -i ${ONLYOFFICE_ROOT_DIR}/Web.config
-	sed '/endpoint/s/http:\/\/localhost:9866\/teamlabSearcher/http:\/\/'${ONLYOFFICE_SERVICES_INTERNAL_HOST}':9866\/teamlabSearcher/' -i ${ONLYOFFICE_ROOT_DIR}/Web.config
-	sed '/endpoint/s/http:\/\/localhost:9871\/teamlabNotify/http:\/\/'${ONLYOFFICE_SERVICES_INTERNAL_HOST}':9871\/teamlabNotify/' -i ${ONLYOFFICE_ROOT_DIR}/Web.config
-	sed '/endpoint/s/http:\/\/localhost:9882\/teamlabBackup/http:\/\/'${ONLYOFFICE_SERVICES_INTERNAL_HOST}':9882\/teamlabBackup/' -i ${ONLYOFFICE_ROOT_DIR}/Web.config
+	sed '/endpoint/s/http:\/\/localhost:9865\/teamlabJabber/http:\/\/'${ONLYOFFICE_SERVICES_INTERNAL_HOST}':9865\/teamlabJabber/' -i ${APP_ROOT_DIR}/Web.config
+	sed '/endpoint/s/http:\/\/localhost:9866\/teamlabSearcher/http:\/\/'${ONLYOFFICE_SERVICES_INTERNAL_HOST}':9866\/teamlabSearcher/' -i ${APP_ROOT_DIR}/Web.config
+	sed '/endpoint/s/http:\/\/localhost:9871\/teamlabNotify/http:\/\/'${ONLYOFFICE_SERVICES_INTERNAL_HOST}':9871\/teamlabNotify/' -i ${APP_ROOT_DIR}/Web.config
+	sed '/endpoint/s/http:\/\/localhost:9882\/teamlabBackup/http:\/\/'${ONLYOFFICE_SERVICES_INTERNAL_HOST}':9882\/teamlabBackup/' -i ${APP_ROOT_DIR}/Web.config
 
-        sed '/BoshPath/s!\(value\s*=\s*\"\)[^\"]*\"!\1http:\/\/'${ONLYOFFICE_SERVICES_INTERNAL_HOST}':5280\/http-poll\/\"!' -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
+        sed '/BoshPath/s!\(value\s*=\s*\"\)[^\"]*\"!\1http:\/\/'${ONLYOFFICE_SERVICES_INTERNAL_HOST}':5280\/http-poll\/\"!' -i  ${APP_ROOT_DIR}/web.appsettings.config
 
-	sed '/<endpoint/s!\"netTcpBinding\"!\"basicHttpBinding\"!' -i ${ONLYOFFICE_ROOT_DIR}/Web.config;
+	sed '/<endpoint/s!\"netTcpBinding\"!\"basicHttpBinding\"!' -i ${APP_ROOT_DIR}/Web.config;
 
 	if [ ${LOG_DEBUG} ]; then
 		log_debug "Change connections for ${1} then ${2}";
@@ -353,11 +353,11 @@ REDIS_SERVER_CONNECT_TIMEOUT=${REDIS_SERVER_CONNECT_TIMEOUT:-"5000"};
 REDIS_SERVER_EXTERNAL=false;
 
 if [ ${REDIS_SERVER_HOST} ]; then
-        sed 's/<add\s*host="localhost"\s*cachePort="6379"\s*\/>/<add host="'${REDIS_SERVER_HOST}'" cachePort="'${REDIS_SERVER_CACHEPORT}'" \/>/' -i ${ONLYOFFICE_ROOT_DIR}/Web.config
-        sed 's/<redisCacheClient\s*ssl="false"\s*connectTimeout="5000"\s*database="0"\s*password="">/<redisCacheClient ssl="'${REDIS_SERVER_SSL}'" connectTimeout="'${REDIS_SERVER_CONNECT_TIMEOUT}'" database="'${REDIS_SERVER_DATABASE}'" password="'${REDIS_SERVER_PASSWORD}'">/' -i ${ONLYOFFICE_ROOT_DIR}/Web.config
+        sed 's/<add\s*host="localhost"\s*cachePort="6379"\s*\/>/<add host="'${REDIS_SERVER_HOST}'" cachePort="'${REDIS_SERVER_CACHEPORT}'" \/>/' -i ${APP_ROOT_DIR}/Web.config
+        sed 's/<redisCacheClient\s*ssl="false"\s*connectTimeout="5000"\s*database="0"\s*password="">/<redisCacheClient ssl="'${REDIS_SERVER_SSL}'" connectTimeout="'${REDIS_SERVER_CONNECT_TIMEOUT}'" database="'${REDIS_SERVER_DATABASE}'" password="'${REDIS_SERVER_PASSWORD}'">/' -i ${APP_ROOT_DIR}/Web.config
 
-        sed 's/<add\s*host="localhost"\s*cachePort="6379"\s*\/>/<add host="'${REDIS_SERVER_HOST}'" cachePort="'${REDIS_SERVER_CACHEPORT}'" \/>/' -i ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config;
-        sed 's/<redisCacheClient\s*ssl="false"\s*connectTimeout="5000"\s*database="0"\s*password="">/<redisCacheClient ssl="'${REDIS_SERVER_SSL}'" connectTimeout="'${REDIS_SERVER_CONNECT_TIMEOUT}'" database="'${REDIS_SERVER_DATABASE}'" password="'${REDIS_SERVER_PASSWORD}'">/' -i ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config;
+        sed 's/<add\s*host="localhost"\s*cachePort="6379"\s*\/>/<add host="'${REDIS_SERVER_HOST}'" cachePort="'${REDIS_SERVER_CACHEPORT}'" \/>/' -i ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config;
+        sed 's/<redisCacheClient\s*ssl="false"\s*connectTimeout="5000"\s*database="0"\s*password="">/<redisCacheClient ssl="'${REDIS_SERVER_SSL}'" connectTimeout="'${REDIS_SERVER_CONNECT_TIMEOUT}'" database="'${REDIS_SERVER_DATABASE}'" password="'${REDIS_SERVER_PASSWORD}'">/' -i ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config;
 
         REDIS_SERVER_EXTERNAL=true;
 fi
@@ -492,27 +492,27 @@ if [ ${DB_CHARACTER_SET_NAME} != "utf8" ]; then
 fi
 
 # change mysql config files
-change_connections "default" "${ONLYOFFICE_ROOT_DIR}/web.connections.config";
-change_connections "teamlabsite" "${ONLYOFFICE_ROOT_DIR}/web.connections.config";
-change_connections "default" "${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config";
-change_connections "default" "${ONLYOFFICE_SERVICES_DIR}/MailAggregator/ASC.Mail.Aggregator.CollectionService.exe.config";
-change_connections "default" "${ONLYOFFICE_SERVICES_DIR}/MailAggregator/ASC.Mail.EmlDownloader.exe.config";
-change_connections "default" "${ONLYOFFICE_SERVICES_DIR}/MailWatchdog/ASC.Mail.Watchdog.Service.exe.config";
-change_connections "default" "${ONLYOFFICE_SERVICES_DIR}/MailCleaner/ASC.Mail.StorageCleaner.exe.config";
-change_connections "default" "${ONLYOFFICE_APISYSTEM_DIR}/Web.config";
+change_connections "default" "${APP_ROOT_DIR}/web.connections.config";
+change_connections "teamlabsite" "${APP_ROOT_DIR}/web.connections.config";
+change_connections "default" "${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config";
+change_connections "default" "${APP_SERVICES_DIR}/MailAggregator/ASC.Mail.Aggregator.CollectionService.exe.config";
+change_connections "default" "${APP_SERVICES_DIR}/MailAggregator/ASC.Mail.EmlDownloader.exe.config";
+change_connections "default" "${APP_SERVICES_DIR}/MailWatchdog/ASC.Mail.Watchdog.Service.exe.config";
+change_connections "default" "${APP_SERVICES_DIR}/MailCleaner/ASC.Mail.StorageCleaner.exe.config";
+change_connections "default" "${APP_APISYSTEM_DIR}/Web.config";
 
-sed "s!\"host\":.*,!\"host\":\"${MYSQL_SERVER_HOST}\",!" -i ${ONLYOFFICE_SERVICES_DIR}/ASC.UrlShortener/config/config.json
-sed "s!\"user\":.*,!\"user\":\"${MYSQL_SERVER_USER}\",!" -i ${ONLYOFFICE_SERVICES_DIR}/ASC.UrlShortener/config/config.json
-sed "s!\"password\":.*,!\"password\":\"${MYSQL_SERVER_PASS}\",!" -i ${ONLYOFFICE_SERVICES_DIR}/ASC.UrlShortener/config/config.json
-sed "s!\"database\":.*!\"database\":\"${MYSQL_SERVER_DB_NAME}\"!" -i ${ONLYOFFICE_SERVICES_DIR}/ASC.UrlShortener/config/config.json
+sed "s!\"host\":.*,!\"host\":\"${MYSQL_SERVER_HOST}\",!" -i ${APP_SERVICES_DIR}/ASC.UrlShortener/config/config.json
+sed "s!\"user\":.*,!\"user\":\"${MYSQL_SERVER_USER}\",!" -i ${APP_SERVICES_DIR}/ASC.UrlShortener/config/config.json
+sed "s!\"password\":.*,!\"password\":\"${MYSQL_SERVER_PASS}\",!" -i ${APP_SERVICES_DIR}/ASC.UrlShortener/config/config.json
+sed "s!\"database\":.*!\"database\":\"${MYSQL_SERVER_DB_NAME}\"!" -i ${APP_SERVICES_DIR}/ASC.UrlShortener/config/config.json
 
 if [ "${DB_TABLES_COUNT}" -eq "0" ]; then
-      	mysql_batch_exec ${ONLYOFFICE_SQL_DIR}/onlyoffice.sql
-       	mysql_batch_exec ${ONLYOFFICE_SQL_DIR}/onlyoffice.data.sql
-       	mysql_batch_exec ${ONLYOFFICE_SQL_DIR}/onlyoffice.resources.sql
+      	mysql_batch_exec ${APP_SQL_DIR}/onlyoffice.sql
+       	mysql_batch_exec ${APP_SQL_DIR}/onlyoffice.data.sql
+       	mysql_batch_exec ${APP_SQL_DIR}/onlyoffice.resources.sql
 else
 	# update mysql db
-	for i in $(ls ${ONLYOFFICE_SQL_DIR}/onlyoffice.upgrade*); do
+	for i in $(ls ${APP_SQL_DIR}/onlyoffice.upgrade*); do
         	mysql_batch_exec ${i};
 	done
 fi
@@ -562,16 +562,16 @@ if [ -f "${SSL_CERTIFICATE_PATH}" -a -f "${SSL_KEY_PATH}" ]; then
 	fi
 
 	if [ "${ONLYOFFICE_HTTPS_HSTS_ENABLED}" == "true" ]; then
-		sed 's/{{ONLYOFFICE_HTTPS_HSTS_MAXAGE}}/'"${ONLYOFFICE_HTTPS_HSTS_MAXAGE}"'/' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
+		sed 's/{{APP_HTTPS_HSTS_MAXAGE}}/'"${APP_HTTPS_HSTS_MAXAGE}"'/' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
 	else
-		sed '/{{ONLYOFFICE_HTTPS_HSTS_MAXAGE}}/d' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
+		sed '/{{APP_HTTPS_HSTS_MAXAGE}}/d' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
 	fi
 
-	sed '/certificate"/s!\(value\s*=\s*\"\).*\"!\1'${SSL_CERTIFICATE_PATH_PFX}'\"!' -i ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config
-	sed '/certificatePassword/s/\(value\s*=\s*\"\).*\"/\1'${SSL_CERTIFICATE_PATH_PFX_PWD}'\"/' -i ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config
-	sed '/startTls/s/\(value\s*=\s*\"\).*\"/\1optional\"/' -i ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config;
+	sed '/certificate"/s!\(value\s*=\s*\"\).*\"!\1'${SSL_CERTIFICATE_PATH_PFX}'\"!' -i ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config
+	sed '/certificatePassword/s/\(value\s*=\s*\"\).*\"/\1'${SSL_CERTIFICATE_PATH_PFX_PWD}'\"/' -i ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config
+	sed '/startTls/s/\(value\s*=\s*\"\).*\"/\1optional\"/' -i ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config;
 
-	sed '/mail\.default-api-scheme/s/\(value\s*=\s*\"\).*\"/\1https\"/' -i ${ONLYOFFICE_SERVICES_DIR}/MailAggregator/ASC.Mail.Aggregator.CollectionService.exe.config;
+	sed '/mail\.default-api-scheme/s/\(value\s*=\s*\"\).*\"/\1https\"/' -i ${APP_SERVICES_DIR}/MailAggregator/ASC.Mail.Aggregator.CollectionService.exe.config;
 
 else
 	cp ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-common.conf.template ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice;
@@ -592,8 +592,8 @@ if [ ${ONLYOFFICE_SERVICES_INTERNAL_HOST} ]; then
 fi
 
 if [ "${DOCUMENT_SERVER_JWT_ENABLED}" == "true" ]; then
-	sed '/files\.docservice\.secret/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_JWT_SECRET}'\"!' -i ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
-	sed '/files\.docservice\.secret.header/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_JWT_HEADER}'\"!' -i ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
+	sed '/files\.docservice\.secret/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_JWT_SECRET}'\"!' -i ${APP_ROOT_DIR}/web.appsettings.config
+	sed '/files\.docservice\.secret.header/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_JWT_HEADER}'\"!' -i ${APP_ROOT_DIR}/web.appsettings.config
 fi
 
 if [ "${DOCUMENT_SERVER_ENABLED}" == "true" ]; then
@@ -603,12 +603,12 @@ if [ "${DOCUMENT_SERVER_ENABLED}" == "true" ]; then
     sed 's,{{DOCUMENT_SERVER_HOST_ADDR}},'"${DOCUMENT_SERVER_PROTOCOL}:\/\/${DOCUMENT_SERVER_HOST}"',' -i ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-proxy-to-documentserver.conf;
 
     # change web.appsettings link to editor
-    sed '/files\.docservice\.url\.internal/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_PROTOCOL}':\/\/'${DOCUMENT_SERVER_HOST}'\/\"!' -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
-    sed '/files\.docservice\.url\.public/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_API_URL}'\/\"!' -i ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
-    sed '/files\.docservice\.url\.public/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_API_URL}'\/\"!' -i ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config
+    sed '/files\.docservice\.url\.internal/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_PROTOCOL}':\/\/'${DOCUMENT_SERVER_HOST}'\/\"!' -i  ${APP_ROOT_DIR}/web.appsettings.config
+    sed '/files\.docservice\.url\.public/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_API_URL}'\/\"!' -i ${APP_ROOT_DIR}/web.appsettings.config
+    sed '/files\.docservice\.url\.public/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_API_URL}'\/\"!' -i ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config
 
     if [ -n "${DOCKER_ONLYOFFICE_SUBNET}" ] && [ -n "${SERVER_HOST}" ]; then
-        sed '/files\.docservice\.url\.portal/s!\(value\s*=\s*\"\)[^\"]*\"!\1http:\/\/'${SERVER_HOST}'\"!' -i ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
+        sed '/files\.docservice\.url\.portal/s!\(value\s*=\s*\"\)[^\"]*\"!\1http:\/\/'${SERVER_HOST}'\"!' -i ${APP_ROOT_DIR}/web.appsettings.config
     fi
 
 fi
@@ -637,7 +637,7 @@ if [ "${MAIL_SERVER_ENABLED}" == "true" ]; then
     done
 
     # change web.appsettings
-    sed -r '/web\.hide-settings/s/,AdministrationPage//' -i ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
+    sed -r '/web\.hide-settings/s/,AdministrationPage//' -i ${APP_ROOT_DIR}/web.appsettings.config
 
     MYSQL_MAIL_SERVER_ID=$(mysql_scalar_exec "select id from mail_server_server where mx_record='${MAIL_SERVER_HOSTNAME}' limit 1");
 
@@ -736,61 +736,61 @@ if [ "${CONTROL_PANEL_ENABLED}" == "true" ]; then
 	sed 's,{{SERVICE_SSO_AUTH_HOST_ADDR}},'"${SERVICE_SSO_AUTH_HOST_ADDR}"',' -i ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-proxy-to-controlpanel.conf;
 
 	# change web.appsettings link to controlpanel
-	sed '/web\.controlpanel\.url/s/\(value\s*=\s*\"\)[^\"]*\"/\1\/controlpanel\/\"/' -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config;
-	sed '/web\.controlpanel\.url/s/\(value\s*=\s*\"\)[^\"]*\"/\1\/controlpanel\/\"/' -i ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config;
+	sed '/web\.controlpanel\.url/s/\(value\s*=\s*\"\)[^\"]*\"/\1\/controlpanel\/\"/' -i  ${APP_ROOT_DIR}/web.appsettings.config;
+	sed '/web\.controlpanel\.url/s/\(value\s*=\s*\"\)[^\"]*\"/\1\/controlpanel\/\"/' -i ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config;
 
 fi
 
-if [ "${ONLYOFFICE_MODE}" == "SERVER" ]; then
+if [ "${APP_MODE}" == "SERVER" ]; then
 
 
-for serverID in $(seq 1 ${ONLYOFFICE_MONOSERVE_COUNT});
+for serverID in $(seq 1 ${APP_MONOSERVE_COUNT});
 do
 	 if [ $serverID == 1 ]; then
-                sed '/web.warmup.count/s/value=\"\S*\"/value=\"'${ONLYOFFICE_MONOSERVE_COUNT}'\"/g' -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
-                sed '/web.warmup.domain/s/value=\"\S*\"/value=\"localhost\/warmup\"/g' -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
-                sed "/core.machinekey/s!value=\".*\"!value=\"${ONLYOFFICE_CORE_MACHINEKEY}\"!g" -i  ${ONLYOFFICE_ROOT_DIR}/web.appsettings.config
-		sed "/core.machinekey/s!value=\".*\"!value=\"${ONLYOFFICE_CORE_MACHINEKEY}\"!g" -i  ${ONLYOFFICE_APISYSTEM_DIR}/Web.config
-                sed "/core.machinekey/s!value=\".*\"!value=\"${ONLYOFFICE_CORE_MACHINEKEY}\"!g" -i  ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config
-		sed "/core\.machinekey/s!\"core\.machinekey\".*!\"core\.machinekey\":\"${ONLYOFFICE_CORE_MACHINEKEY}\",!" -i ${ONLYOFFICE_SERVICES_DIR}/ASC.Socket.IO/config/config.json
-		sed "s!machine_key\s*=.*!machine_key = ${ONLYOFFICE_CORE_MACHINEKEY}!g" -i  ${ONLYOFFICE_SERVICES_DIR}/TeamLabSvc/radicale.config
-		sed "s!\"core\.machinekey\":.*,!\"core\.machinekey\":\"${ONLYOFFICE_CORE_MACHINEKEY}\",!g" -i ${ONLYOFFICE_SERVICES_DIR}/ASC.UrlShortener/config/config.json
-                sed "/core.machinekey/s!value=\".*\"!value=\"${ONLYOFFICE_CORE_MACHINEKEY}\"!g" -i  ${ONLYOFFICE_SERVICES_DIR}/MailAggregator/ASC.Mail.EmlDownloader.exe.config
-                sed "/core.machinekey/s!value=\".*\"!value=\"${ONLYOFFICE_CORE_MACHINEKEY}\"!g" -i  ${ONLYOFFICE_SERVICES_DIR}/MailAggregator/ASC.Mail.Aggregator.CollectionService.exe.config
-		sed "/core.machinekey/s!value=\".*\"!value=\"${ONLYOFFICE_CORE_MACHINEKEY}\"!g" -i  ${ONLYOFFICE_SERVICES_DIR}/MailCleaner/ASC.Mail.StorageCleaner.exe.config
+                sed '/web.warmup.count/s/value=\"\S*\"/value=\"'${APP_MONOSERVE_COUNT}'\"/g' -i  ${APP_ROOT_DIR}/web.appsettings.config
+                sed '/web.warmup.domain/s/value=\"\S*\"/value=\"localhost\/warmup\"/g' -i  ${APP_ROOT_DIR}/web.appsettings.config
+                sed "/core.machinekey/s!value=\".*\"!value=\"${APP_CORE_MACHINEKEY}\"!g" -i  ${APP_ROOT_DIR}/web.appsettings.config
+		sed "/core.machinekey/s!value=\".*\"!value=\"${APP_CORE_MACHINEKEY}\"!g" -i  ${APP_APISYSTEM_DIR}/Web.config
+                sed "/core.machinekey/s!value=\".*\"!value=\"${APP_CORE_MACHINEKEY}\"!g" -i  ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config
+		sed "/core\.machinekey/s!\"core\.machinekey\".*!\"core\.machinekey\":\"${APP_CORE_MACHINEKEY}\",!" -i ${APP_SERVICES_DIR}/ASC.Socket.IO/config/config.json
+		sed "s!machine_key\s*=.*!machine_key = ${APP_CORE_MACHINEKEY}!g" -i  ${APP_SERVICES_DIR}/TeamLabSvc/radicale.config
+		sed "s!\"core\.machinekey\":.*,!\"core\.machinekey\":\"${APP_CORE_MACHINEKEY}\",!g" -i ${APP_SERVICES_DIR}/ASC.UrlShortener/config/config.json
+                sed "/core.machinekey/s!value=\".*\"!value=\"${APP_CORE_MACHINEKEY}\"!g" -i  ${APP_SERVICES_DIR}/MailAggregator/ASC.Mail.EmlDownloader.exe.config
+                sed "/core.machinekey/s!value=\".*\"!value=\"${APP_CORE_MACHINEKEY}\"!g" -i  ${APP_SERVICES_DIR}/MailAggregator/ASC.Mail.Aggregator.CollectionService.exe.config
+		sed "/core.machinekey/s!value=\".*\"!value=\"${APP_CORE_MACHINEKEY}\"!g" -i  ${APP_SERVICES_DIR}/MailCleaner/ASC.Mail.StorageCleaner.exe.config
 
                 continue;
         fi
 
-	rm -rfd ${ONLYOFFICE_ROOT_DIR}$serverID;
+	rm -rfd ${APP_ROOT_DIR}$serverID;
 
-    if [ -d "${ONLYOFFICE_ROOT_DIR}$serverID" ]; then
-        rm -rfd ${ONLYOFFICE_ROOT_DIR}$serverID;
+    if [ -d "${APP_ROOT_DIR}$serverID" ]; then
+        rm -rfd ${APP_ROOT_DIR}$serverID;
     fi
 
-	cp -R ${ONLYOFFICE_ROOT_DIR} ${ONLYOFFICE_ROOT_DIR}$serverID;
-	chown -R onlyoffice:onlyoffice ${ONLYOFFICE_ROOT_DIR}$serverID;
+	cp -R ${APP_ROOT_DIR} ${APP_ROOT_DIR}$serverID;
+	chown -R onlyoffice:onlyoffice ${APP_ROOT_DIR}$serverID;
 
-	sed '/web.warmup.count/s/value=\"\S*\"/value=\"'${ONLYOFFICE_MONOSERVE_COUNT}'\"/g' -i  ${ONLYOFFICE_ROOT_DIR}$serverID/web.appsettings.config
-	sed '/web.warmup.domain/s/value=\"\S*\"/value=\"localhost\/warmup'${serverID}'\"/g' -i  ${ONLYOFFICE_ROOT_DIR}$serverID/web.appsettings.config
+	sed '/web.warmup.count/s/value=\"\S*\"/value=\"'${APP_MONOSERVE_COUNT}'\"/g' -i  ${APP_ROOT_DIR}$serverID/web.appsettings.config
+	sed '/web.warmup.domain/s/value=\"\S*\"/value=\"localhost\/warmup'${serverID}'\"/g' -i  ${APP_ROOT_DIR}$serverID/web.appsettings.config
 
-        sed '/conversionPattern\s*value=\"%folder{LogDirectory}/s!web!web'${serverID}'!g' -i ${ONLYOFFICE_ROOT_DIR}$serverID/web.log4net.config;
+        sed '/conversionPattern\s*value=\"%folder{LogDirectory}/s!web!web'${serverID}'!g' -i ${APP_ROOT_DIR}$serverID/web.log4net.config;
 
 
-	cp ${ONLYOFFICE_MONOSERVER_PATH} ${ONLYOFFICE_MONOSERVER_PATH}$serverID;
+	cp ${APP_MONOSERVER_PATH} ${APP_MONOSERVER_PATH}$serverID;
 
-	sed 's/monoserve/monoserve'${serverID}'/g' -i ${ONLYOFFICE_MONOSERVER_PATH}$serverID;
-	sed 's/onlyoffice\.socket/onlyoffice'${serverID}'\.socket/g' -i ${ONLYOFFICE_MONOSERVER_PATH}$serverID;
-	sed 's/\/etc\/hyperfastcgi\/onlyoffice/\/etc\/hyperfastcgi\/onlyoffice'${serverID}'/g' -i ${ONLYOFFICE_MONOSERVER_PATH}$serverID;
+	sed 's/monoserve/monoserve'${serverID}'/g' -i ${APP_MONOSERVER_PATH}$serverID;
+	sed 's/onlyoffice\.socket/onlyoffice'${serverID}'\.socket/g' -i ${APP_MONOSERVER_PATH}$serverID;
+	sed 's/\/etc\/hyperfastcgi\/onlyoffice/\/etc\/hyperfastcgi\/onlyoffice'${serverID}'/g' -i ${APP_MONOSERVER_PATH}$serverID;
 
-	cp ${ONLYOFFICE_HYPERFASTCGI_PATH} ${ONLYOFFICE_HYPERFASTCGI_PATH}$serverID;
+	cp ${APP_HYPERFASTCGI_PATH} ${APP_HYPERFASTCGI_PATH}$serverID;
 
-	sed 's,'${ONLYOFFICE_ROOT_DIR}','${ONLYOFFICE_ROOT_DIR}''${serverID}',g' -i ${ONLYOFFICE_HYPERFASTCGI_PATH}$serverID;
-	sed 's/onlyoffice\.socket/onlyoffice'${serverID}'\.socket/g' -i ${ONLYOFFICE_HYPERFASTCGI_PATH}$serverID;
+	sed 's,'${APP_ROOT_DIR}','${APP_ROOT_DIR}''${serverID}',g' -i ${APP_HYPERFASTCGI_PATH}$serverID;
+	sed 's/onlyoffice\.socket/onlyoffice'${serverID}'\.socket/g' -i ${APP_HYPERFASTCGI_PATH}$serverID;
 
-	cp ${ONLYOFFICE_GOD_DIR}/monoserve.god ${ONLYOFFICE_GOD_DIR}/monoserve$serverID.god;
-	sed 's/onlyoffice\.socket/onlyoffice'${serverID}'\.socket/g' -i ${ONLYOFFICE_GOD_DIR}/monoserve$serverID.god;
-	sed 's/monoserve/monoserve'${serverID}'/g' -i ${ONLYOFFICE_GOD_DIR}/monoserve$serverID.god;
+	cp ${APP_GOD_DIR}/monoserve.god ${APP_GOD_DIR}/monoserve$serverID.god;
+	sed 's/onlyoffice\.socket/onlyoffice'${serverID}'\.socket/g' -i ${APP_GOD_DIR}/monoserve$serverID.god;
+	sed 's/monoserve/monoserve'${serverID}'/g' -i ${APP_GOD_DIR}/monoserve$serverID.god;
 
 	sed '/onlyoffice'${serverID}'.socket/d' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice;
 	sed '/onlyoffice'${serverID}'.socket/d' -i ${NGINX_CONF_DIR}/onlyoffice;
@@ -800,22 +800,22 @@ do
         sed '/fastcgi_backend\s*{/ a '"${grepLine}"'' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice;
         sed '/fastcgi_backend\s*{/ a '"${grepLine}"'' -i ${NGINX_CONF_DIR}/onlyoffice;
 
-	sed '/monoserve'${serverID}'/d' -i ${ONLYOFFICE_CRON_PATH};
-	sed '/warmup'${serverID}'/d' -i ${ONLYOFFICE_CRON_PATH};
+	sed '/monoserve'${serverID}'/d' -i ${APP_CRON_PATH};
+	sed '/warmup'${serverID}'/d' -i ${APP_CRON_PATH};
 
-        grepLine="$(sed -n 's/monoserve\s*restart/monoserve'${serverID}' restart/p' ${ONLYOFFICE_CRON_PATH} | tr -d '\t' | tr -d '\n')";
+        grepLine="$(sed -n 's/monoserve\s*restart/monoserve'${serverID}' restart/p' ${APP_CRON_PATH} | tr -d '\t' | tr -d '\n')";
 
-        sed '$a\'"${grepLine}"'' -i ${ONLYOFFICE_CRON_PATH};
+        sed '$a\'"${grepLine}"'' -i ${APP_CRON_PATH};
 
-        grepLine="$(sed -n 's/warmup1/warmup'${serverID}'/p' ${ONLYOFFICE_CRON_PATH} | tr -d '\t' | tr -d '\n')";
+        grepLine="$(sed -n 's/warmup1/warmup'${serverID}'/p' ${APP_CRON_PATH} | tr -d '\t' | tr -d '\n')";
 
-        sed '$a\'"${grepLine}"'' -i ${ONLYOFFICE_CRON_PATH};
+        sed '$a\'"${grepLine}"'' -i ${APP_CRON_PATH};
 done
 
 
 fi
 
-sed 's/{{ONLYOFFICE_NIGNX_KEEPLIVE}}/'$((32*${ONLYOFFICE_MONOSERVE_COUNT}))'/g' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice;
+sed 's/{{APP_NIGNX_KEEPLIVE}}/'$((32*${APP_MONOSERVE_COUNT}))'/g' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice;
 
 bash -c 'echo "onlyoffice ALL=(ALL) NOPASSWD: /usr/sbin/service" | (EDITOR="tee -a" visudo)'
 
@@ -841,8 +841,8 @@ ping_onlyoffice() {
 }
 
 if [ "${REDIS_SERVER_EXTERNAL}" == "true" ]; then
-	rm -f "${ONLYOFFICE_GOD_DIR}"/redis.god;
-	sed '/redis-cli/d' -i ${ONLYOFFICE_CRON_PATH}
+	rm -f "${APP_GOD_DIR}"/redis.god;
+	sed '/redis-cli/d' -i ${APP_CRON_PATH}
 
 	service redis-server stop
 else
@@ -851,21 +851,21 @@ else
 fi
 
 if [ "${MYSQL_SERVER_EXTERNAL}" == "true" ]; then
-	rm -f "${ONLYOFFICE_GOD_DIR}"/mysql.god;
+	rm -f "${APP_GOD_DIR}"/mysql.god;
 fi
 
 
-if [ "${ONLYOFFICE_MODE}" == "SERVICES" ]; then
+if [ "${APP_MODE}" == "SERVICES" ]; then
 	service nginx stop
 
-	rm -f "${ONLYOFFICE_GOD_DIR}"/nginx.god;
-	rm -f "${ONLYOFFICE_GOD_DIR}"/monoserveApiSystem.god;
+	rm -f "${APP_GOD_DIR}"/nginx.god;
+	rm -f "${APP_GOD_DIR}"/monoserveApiSystem.god;
 
 	service monoserveApiSystem stop
 
 	rm -f /etc/init.d/monoserveApiSystem
 
-	for serverID in $(seq 1 ${ONLYOFFICE_MONOSERVE_COUNT});
+	for serverID in $(seq 1 ${APP_MONOSERVE_COUNT});
 	do
 		index=$serverID;
 
@@ -873,7 +873,7 @@ if [ "${ONLYOFFICE_MODE}" == "SERVICES" ]; then
 			index="";
 		fi
 
-	rm -f "${ONLYOFFICE_GOD_DIR}"/monoserve$index.god;
+	rm -f "${APP_GOD_DIR}"/monoserve$index.god;
 
         service monoserve$index stop
 
@@ -881,8 +881,8 @@ if [ "${ONLYOFFICE_MODE}" == "SERVICES" ]; then
 
 	done
 
-	sed '/monoserve/d' -i ${ONLYOFFICE_CRON_PATH}
-	sed '/warmup/d' -i ${ONLYOFFICE_CRON_PATH}
+	sed '/monoserve/d' -i ${APP_CRON_PATH}
+	sed '/warmup/d' -i ${APP_CRON_PATH}
 
 else
 	if [ ${LOG_DEBUG} ]; then
@@ -890,23 +890,23 @@ else
 	fi
 
 	chown -R onlyoffice:onlyoffice /var/log/onlyoffice
-	chown -R onlyoffice:onlyoffice ${ONLYOFFICE_DIR}/DocumentServerData
+	chown -R onlyoffice:onlyoffice ${APP_DIR}/DocumentServerData
 
-        if [ "$(ls -alhd ${ONLYOFFICE_DATA_DIR} | awk '{ print $3 }')" != "onlyoffice" ]; then
-              chown -R onlyoffice:onlyoffice ${ONLYOFFICE_DATA_DIR}
+        if [ "$(ls -alhd ${APP_DATA_DIR} | awk '{ print $3 }')" != "onlyoffice" ]; then
+              chown -R onlyoffice:onlyoffice ${APP_DATA_DIR}
         fi
 
 	mkdir -p "$LOG_DIR/Index"
-	mkdir -p "$ONLYOFFICE_DATA_DIR/Index"
+	mkdir -p "$APP_DATA_DIR/Index"
 
-        if [ "$(ls -alhd $ONLYOFFICE_DATA_DIR/Index | awk '{ print $3 }')" != "elasticsearch" ]; then
-		chown -R elasticsearch:elasticsearch "$ONLYOFFICE_DATA_DIR/Index"
+        if [ "$(ls -alhd $APP_DATA_DIR/Index | awk '{ print $3 }')" != "elasticsearch" ]; then
+		chown -R elasticsearch:elasticsearch "$APP_DATA_DIR/Index"
         fi
 
 	chown -R elasticsearch:elasticsearch "$LOG_DIR/Index"
 
 
-	for serverID in $(seq 1 ${ONLYOFFICE_MONOSERVE_COUNT});
+	for serverID in $(seq 1 ${APP_MONOSERVE_COUNT});
 	do
 		index=$serverID;
 
@@ -923,10 +923,10 @@ else
 fi
 
 if [ "${ONLYOFFICE_SERVICES_EXTERNAL}" == "true" ]; then
-	rm -f "${ONLYOFFICE_GOD_DIR}"/onlyoffice.god;
-	rm -f "${ONLYOFFICE_GOD_DIR}"/elasticsearch.god;
-	rm -f "${ONLYOFFICE_GOD_DIR}"/redis.god;
-	rm -f "${ONLYOFFICE_GOD_DIR}"/mail.god;
+	rm -f "${APP_GOD_DIR}"/onlyoffice.god;
+	rm -f "${APP_GOD_DIR}"/elasticsearch.god;
+	rm -f "${APP_GOD_DIR}"/redis.god;
+	rm -f "${APP_GOD_DIR}"/mail.god;
 
 
 	service onlyofficeRadicale stop
@@ -960,7 +960,7 @@ if [ "${ONLYOFFICE_SERVICES_EXTERNAL}" == "true" ]; then
 	rm -f /etc/init.d/onlyofficeStorageMigrate
 	rm -f /etc/init.d/onlyofficeUrlShortener
 
-	sed '/onlyoffice/d' -i ${ONLYOFFICE_CRON_PATH}
+	sed '/onlyoffice/d' -i ${APP_CRON_PATH}
 
 else
 
@@ -982,7 +982,7 @@ fi
 
 service god restart
 
-if [ "${ONLYOFFICE_MODE}" == "SERVER" ]; then
+if [ "${APP_MODE}" == "SERVER" ]; then
 
 #        wait
 
