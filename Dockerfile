@@ -34,7 +34,7 @@ RUN apt-get -y update && \
     apt-key add nginx_signing.key && \
     echo "deb http://nginx.org/packages/mainline/ubuntu/ bionic nginx" >> /etc/apt/sources.list.d/nginx.list && \
     echo "deb-src http://nginx.org/packages/mainline/ubuntu/ bionic nginx" >> /etc/apt/sources.list.d/nginx.list && \
-    apt-get install -yq default-jre && \
+    apt-get install -yq openjdk-8-jre-headless && \
     wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | apt-key add - && \
     apt-get install -yq apt-transport-https && \
     echo "deb https://artifacts.elastic.co/packages/6.x/apt stable main" | tee -a /etc/apt/sources.list.d/elastic-6.x.list && \
