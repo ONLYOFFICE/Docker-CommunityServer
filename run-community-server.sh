@@ -367,6 +367,8 @@ fi
 
 if [ -e /etc/redis/redis.conf ]; then
  sed -i "s/bind .*/bind 127.0.0.1/g" /etc/redis/redis.conf
+ redis-cli config set save ""
+ redis-cli config rewrite
 fi
 
 
