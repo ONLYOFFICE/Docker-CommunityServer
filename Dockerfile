@@ -8,7 +8,6 @@ ARG DEBIAN_FRONTEND=noninteractive
 
 LABEL onlyoffice.community.release-date="${RELEASE_DATE}" \
       onlyoffice.community.version="${VERSION}" \
-      onlyoffice.community.release-date.sign="${RELEASE_DATE_SIGN}" \
       maintainer="Ascensio System SIA <support@onlyoffice.com>"
 
 ENV LANG=en_US.UTF-8 \

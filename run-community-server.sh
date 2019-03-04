@@ -33,12 +33,45 @@ NGINX_WORKER_CONNECTIONS=${NGINX_WORKER_CONNECTIONS:-$(ulimit -n)};
 SERVICE_SSO_AUTH_HOST_ADDR=${SERVICE_SSO_AUTH_HOST_ADDR:-${CONTROL_PANEL_PORT_80_TCP_ADDR}};
 DEFAULT_APP_CORE_MACHINEKEY="$(sudo sed -n '/"core.machinekey"/s!.*value\s*=\s*"\([^"]*\)".*!\1!p' ${APP_ROOT_DIR}/web.appsettings.config)";
 
+CreateAuthToken() {
+        local pkey="$1";
+        local machinekey=$(echo -n "$2");
+        local a=1
+        local LIMIT=10
+        
+        while [ "$a" -le $LIMIT ]
+        do
+          local now=$(date +"%Y%m%d%H%M%S");
+          local authkey=$(echo -n -e "${now}\n${pkey}" | openssl dgst -sha1 -binary -mac HMAC -macopt key:"$machinekey" | sed -e 's/^.* //');
+          authkey=$(echo -n "${authkey}" | base64);
+
+          local result="ASC ${pkey}:${now}:${authkey}";
+          a=$(($a + 1));
+
+          if [ -z "$(echo \"$result\" | grep ==)" ]; then
+                echo "$result"
+                exit 0;
+          fi
+
+          sleep 1s;
+        done
+        
+        exit 1;
+}
+
 if [ ! -e "${APP_PRIVATE_DATA_DIR}/machinekey" ]; then
    mkdir -p ${APP_PRIVATE_DATA_DIR};
 
    APP_CORE_MACHINEKEY=${ONLYOFFICE_CORE_MACHINEKEY:-${APP_CORE_MACHINEKEY:-${DEFAULT_APP_CORE_MACHINEKEY}}};
 
    echo "${APP_CORE_MACHINEKEY}" > ${APP_PRIVATE_DATA_DIR}/machinekey
+
+   RELEASE_DATE="$(sudo sed -n '/"version.release-date"/s!.*value\s*=\s*"\([^"]*\)".*!\1!p' ${APP_ROOT_DIR}/web.appsettings.config)";
+
+   RELEASE_DATE_SIGN="$(CreateAuthToken "${RELEASE_DATE}" "${APP_CORE_MACHINEKEY}" )";
+
+   sed -i '/version.release-date.sign/s!value="[^"]*"!value=\"'"$RELEASE_DATE_SIGN"'\"!g' ${APP_ROOT_DIR}/web.appsettings.config
+
 else
    APP_CORE_MACHINEKEY=$(head -n 1 ${APP_PRIVATE_DATA_DIR}/machinekey)
 fi
