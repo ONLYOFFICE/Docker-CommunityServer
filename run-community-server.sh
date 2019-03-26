@@ -28,7 +28,7 @@ DOCKER_CONTAINER_NAME="onlyoffice-community-server";
 DOCKER_ENABLED=${DOCKER_ENABLED:-true};
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 NGINX_CONF_DIR="/etc/nginx/sites-enabled"
-NGINX_WORKER_PROCESSES=${NGINX_WORKER_PROCESSES:-$(grep processor /proc/cpuinfo | wc -l)};
+CPU_PROCESSOR_COUNT=${CPU_PROCESSOR_COUNT:-$(grep processor /proc/cpuinfo | wc -l)};
 NGINX_WORKER_CONNECTIONS=${NGINX_WORKER_CONNECTIONS:-$(ulimit -n)};
 SERVICE_SSO_AUTH_HOST_ADDR=${SERVICE_SSO_AUTH_HOST_ADDR:-${CONTROL_PANEL_PORT_80_TCP_ADDR}};
 DEFAULT_APP_CORE_MACHINEKEY="$(sudo sed -n '/"core.machinekey"/s!.*value\s*=\s*"\([^"]*\)".*!\1!p' ${APP_ROOT_DIR}/web.appsettings.config)";
@@ -249,7 +249,7 @@ fi
 
 cp ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-nginx.conf.template ${NGINX_ROOT_DIR}/nginx.conf
 
-sed 's/^worker_processes.*/'"worker_processes ${NGINX_WORKER_PROCESSES};"'/' -i ${NGINX_ROOT_DIR}/nginx.conf
+sed 's/^worker_processes.*/'"worker_processes ${CPU_PROCESSOR_COUNT};"'/' -i ${NGINX_ROOT_DIR}/nginx.conf
 sed 's/worker_connections.*/'"worker_connections ${NGINX_WORKER_CONNECTIONS};"'/' -i ${NGINX_ROOT_DIR}/nginx.conf
 
 
@@ -258,6 +258,19 @@ rm -f ${NGINX_ROOT_DIR}/conf.d/*.conf
 
 service rsyslog restart || true
 service nginx restart
+
+if ! grep -q "thread_pool.index.size" /etc/elasticsearch/elasticsearch.yml; then
+	echo "thread_pool.index.size: $CPU_PROCESSOR_COUNT" >> /etc/elasticsearch/elasticsearch.yml
+else
+	sed -i "s/thread_pool.index.size.*/thread_pool.index.size: $CPU_PROCESSOR_COUNT/" /etc/elasticsearch/elasticsearch.yml
+fi
+
+if ! grep -q "thread_pool.write.size" /etc/elasticsearch/elasticsearch.yml; then
+	echo "thread_pool.write.size: $CPU_PROCESSOR_COUNT" >> /etc/elasticsearch/elasticsearch.yml
+else
+	sed -i "s/thread_pool.write.size.*/thread_pool.write.size: $CPU_PROCESSOR_COUNT/" /etc/elasticsearch/elasticsearch.yml
+fi
+
 
 if [ ${APP_SERVICES_INTERNAL_HOST} ]; then
 	APP_SERVICES_EXTERNAL=true;
