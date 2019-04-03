@@ -41,12 +41,13 @@ RUN apt-get -y update && \
     apt-get install -yq elasticsearch=6.5.0 && \
     add-apt-repository -y ppa:certbot/certbot && \
     add-apt-repository -y ppa:chris-lea/redis-server && \
+    add-apt-repository -y ppa:jonathonf/ffmpeg-4 && \
     curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash - && \
     apt-get install -y nodejs && \
     apt-get -y update && \
     apt-get install -yq nginx mono-complete ca-certificates-mono && \
     echo "#!/bin/sh\nexit 0" > /usr/sbin/policy-rc.d && \
-    apt-get install -yq dumb-init python-certbot-nginx htop nano dnsutils redis-server python3-pip multiarch-support iproute2 && \
+    apt-get install -yq dumb-init python-certbot-nginx htop nano dnsutils redis-server python3-pip multiarch-support iproute2 ffmpeg && \
     apt-get install -yq mono-webserver-hyperfastcgi=0.4-7 && \    
     apt-get install -yq onlyoffice-communityserver && \
     rm -rf /var/lib/apt/lists/*
