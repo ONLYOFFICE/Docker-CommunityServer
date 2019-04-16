@@ -252,8 +252,17 @@ cp ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-nginx.conf.template ${N
 sed 's/^worker_processes.*/'"worker_processes ${CPU_PROCESSOR_COUNT};"'/' -i ${NGINX_ROOT_DIR}/nginx.conf
 sed 's/worker_connections.*/'"worker_connections ${NGINX_WORKER_CONNECTIONS};"'/' -i ${NGINX_ROOT_DIR}/nginx.conf
 
-
 cp ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-common-init.conf.template ${NGINX_CONF_DIR}/onlyoffice
+
+if [ -f "${SSL_CERTIFICATE_PATH}" -a -f "${SSL_KEY_PATH}" ]; then
+        sed 's,{{SSL_CERTIFICATE_PATH}},'"${SSL_CERTIFICATE_PATH}"',' -i ${NGINX_CONF_DIR}/onlyoffice
+        sed 's,{{SSL_KEY_PATH}},'"${SSL_KEY_PATH}"',' -i ${NGINX_CONF_DIR}/onlyoffice
+else
+	sed '/{{SSL_CERTIFICATE_PATH}}/d' -i ${NGINX_CONF_DIR}/onlyoffice
+	sed '/{{SSL_KEY_PATH}}/d' -i ${NGINX_CONF_DIR}/onlyoffice
+	sed '/listen\s*443/d' -i ${NGINX_CONF_DIR}/onlyoffice
+fi
+
 rm -f ${NGINX_ROOT_DIR}/conf.d/*.conf
 
 service rsyslog restart || true
