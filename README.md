@@ -371,7 +371,19 @@ wget http://download.onlyoffice.com/install/opensource-install.sh
 bash opensource-install.sh -md yourdomain.com
 ```
 
-Or, use [docker-compose](https://docs.docker.com/compose/install "docker-compose"). For the mail server correct work you need to clone the current repository, open the [docker-compose.yml file](https://github.com/ONLYOFFICE/Docker-CommunityServer/blob/master/docker-compose.yml "docker-compose.yml file") and replace the `${MAIL_SERVER_HOSTNAME}` variable with your own hostname for the **Mail Server**. After that, assuming you have docker-compose installed, execute the following command:
+Or, use [docker-compose](https://docs.docker.com/compose/install "docker-compose"). First you need to clone this [GitHub repository](https://github.com/ONLYOFFICE/Docker-CommunityServer/):
+
+```bash
+git clone https://github.com/ONLYOFFICE/Docker-CommunityServer
+```
+
+After that switch to the repository folder:
+
+```bash
+cd Docker-CommunityServer
+```
+
+For the mail server correct work open the [docker-compose.yml file](https://github.com/ONLYOFFICE/Docker-CommunityServer/blob/master/docker-compose.yml "docker-compose.yml file") and replace the `${MAIL_SERVER_HOSTNAME}` variable with your own hostname for the **Mail Server**. After that, assuming you have docker-compose installed, execute the following command:
 
 ```bash
 cd link-to-your-modified-docker-compose
@@ -425,13 +437,72 @@ You can now create your own modules and connect them to ONLYOFFICE Community Ser
 
 ## Project Information
 
-Official website: [http://www.onlyoffice.org](http://onlyoffice.org "http://www.onlyoffice.org")
+Official website: [https://www.onlyoffice.com](https://www.onlyoffice.com?utm_source=github&utm_medium=cpc&utm_campaign=GitHubDockerCS "https://www.onlyoffice.com?utm_source=github&utm_medium=cpc&utm_campaign=GitHubDockerCS")
 
 Code repository: [https://github.com/ONLYOFFICE/CommunityServer](https://github.com/ONLYOFFICE/CommunityServer "https://github.com/ONLYOFFICE/CommunityServer")
 
 License: [GNU GPL v3.0](https://www.gnu.org/copyleft/gpl.html "GNU GPL v3.0")
 
-SaaS version: [http://www.onlyoffice.com](http://www.onlyoffice.com "http://www.onlyoffice.com")
+SaaS version: [https://www.onlyoffice.com/cloud-office.aspx](https://www.onlyoffice.com/cloud-office.aspx?utm_source=github&utm_medium=cpc&utm_campaign=GitHubDockerCS "https://www.onlyoffice.com/cloud-office.aspx?utm_source=github&utm_medium=cpc&utm_campaign=GitHubDockerCS")
+
+Enterprise version: [https://www.onlyoffice.com/enterprise-edition-free.aspx](https://www.onlyoffice.com/enterprise-edition-free.aspx?utm_source=github&utm_medium=cpc&utm_campaign=GitHubDockerCS)
+
+## ONLYOFFICE Community Edition
+
+ONLYOFFICE Community Server is a part of ONLYOFFICE Community Edition that comprises also Document Server and Mail Server.
+
+## ONLYOFFICE Enterprise Edition
+
+ONLYOFFICE Enterprise Edition is a scalable commercial build of the office suite comprising Community Server, Document Server and Mail Server.
+
+### Compare Community Edition and Enterprise Edition
+
+The table below will help you make the right choice.
+
+| Pricing and licensing | Community Edition | Enterprise Edition Start |
+| --------------------- | ----------------- | ------------------------ |
+| | [GET IT NOW](http://www.onlyoffice.com/download.aspx?utm_source=github&utm_medium=cpc&utm_campaign=GitHubDockerCS) | [START FREE TRIAL](https://www.onlyoffice.com/enterprise-edition-free.aspx?utm_source=github&utm_medium=cpc&utm_campaign=GitHubDockerCS) |
+| Cost | FREE | [Go to the pricing page](https://www.onlyoffice.com/enterprise-edition.aspx?utm_source=github&utm_medium=cpc&utm_campaign=GitHubDockerCS) |
+| Simultaneous connections | up to 20 maximum | As in chosen pricing plan |
+| Number of users | up to 20 recommended | As in chosen pricing plan |
+| License | GNU AGPL v.3 | [Proprietary](https://help.onlyoffice.com/products/files/doceditor.aspx?fileid=4485697&doc=R29zSHZNRi9LYnRTb3JDditmVGpXQThVVXhMTWdja0xwemlYZXpiaDBYdz0_IjQ0ODU2OTci0) |
+| **Support** | **Community Edition** | **Enterprise Edition Start** |
+| Documentation | [Help center](https://helpcenter.onlyoffice.com/server/docker/opensource/index.aspx) | [Help center](https://helpcenter.onlyoffice.com/server/enterprise.aspx) |
+| Standard support | Forum or paid | One year support included |
+| Initial response time | 48 hours | 48 hours |
+| Premium support | [Buy now](https://www.onlyoffice.com/support.aspx?utm_source=github&utm_medium=cpc&utm_campaign=GitHubDockerCS) | [Buy now](https://www.onlyoffice.com/support.aspx?utm_source=github&utm_medium=cpc&utm_campaign=GitHubDockerCS) |
+| **System administration (Control Panel)** | **Community Edition** | **Enterprise Edition Start** |
+| White label | - | + |
+| Multitenancy | - | As in chosen pricing plan |
+| Data backup | - | + |
+| Data recovery | - | + |
+| Automatic updates | - | + |
+| Login history | - | + |
+| LDAP support (Active Directory) | - | + |
+| HTTPS, own domain | +(manual configuration) | + |
+| **Features** | **Community Edition** | **Enterprise Edition Start** |
+| Document editing | + | + |
+| Desktop applications | + | + |
+| Mobile applications | + | + |
+| Online document editors | + | + |
+| Co-editing, commenting | +(co-editing only) | + |
+| Document management | + | + |
+| Sharing, embedding | + | + |
+| Version control | + | + |
+| Reviewing | + | + |
+| Mail merge | + | + |
+| Third party service integration | + | + |
+| Project management | + | + |
+| Gantt chart | + | + |
+| Time management | + | + |
+| Reports | + | + |
+| CRM | + | + |
+| Invoicing system | + | + |
+| Mail server | + | + |
+| Mail aggregator | + | + |
+| Calendar | + | + |
+|  | [GET IT NOW](http://www.onlyoffice.com/download.aspx?utm_source=github&utm_medium=cpc&utm_campaign=GitHubDockerCS) | [START FREE TRIAL](https://www.onlyoffice.com/enterprise-edition-free.aspx?utm_source=github&utm_medium=cpc&utm_campaign=GitHubDockerCS) |
+
 
 Issues: [http://helpcenter.onlyoffice.com](http://helpcenter.onlyoffice.com/server/docker/community/troubleshooting.aspx "http://helpcenter.onlyoffice.com")
 
