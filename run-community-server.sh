@@ -42,7 +42,7 @@ CreateAuthToken() {
         while [ "$a" -le $LIMIT ]
         do
           local now=$(date +"%Y%m%d%H%M%S");
-          local authkey=$(echo -n -e "${now}\n${pkey}" | openssl dgst -sha1 -binary -mac HMAC -macopt key:"$machinekey" | sed -e 's/^.* //');
+          local authkey=$(echo -n -e "${now}\n${pkey}" | openssl dgst -sha1 -binary -mac HMAC -macopt key:"$machinekey");
           authkey=$(echo -n "${authkey}" | base64);
 
           local result="ASC ${pkey}:${now}:${authkey}";
@@ -63,18 +63,16 @@ if [ ! -e "${APP_PRIVATE_DATA_DIR}/machinekey" ]; then
    mkdir -p ${APP_PRIVATE_DATA_DIR};
 
    APP_CORE_MACHINEKEY=${ONLYOFFICE_CORE_MACHINEKEY:-${APP_CORE_MACHINEKEY:-${DEFAULT_APP_CORE_MACHINEKEY}}};
-
    echo "${APP_CORE_MACHINEKEY}" > ${APP_PRIVATE_DATA_DIR}/machinekey
-
-   RELEASE_DATE="$(sudo sed -n '/"version.release-date"/s!.*value\s*=\s*"\([^"]*\)".*!\1!p' ${APP_ROOT_DIR}/web.appsettings.config)";
-
-   RELEASE_DATE_SIGN="$(CreateAuthToken "${RELEASE_DATE}" "${APP_CORE_MACHINEKEY}" )";
-
-   sed -i '/version.release-date.sign/s!value="[^"]*"!value=\"'"$RELEASE_DATE_SIGN"'\"!g' ${APP_ROOT_DIR}/web.appsettings.config
-
 else
    APP_CORE_MACHINEKEY=$(head -n 1 ${APP_PRIVATE_DATA_DIR}/machinekey)
 fi
+
+RELEASE_DATE="$(sudo sed -n '/"version.release-date"/s!.*value\s*=\s*"\([^"]*\)".*!\1!p' ${APP_ROOT_DIR}/web.appsettings.config)";
+RELEASE_DATE_SIGN="$(CreateAuthToken "${RELEASE_DATE}" "${APP_CORE_MACHINEKEY}" )";
+
+sed -i '/version.release-date.sign/s!value="[^"]*"!value=\"'"$RELEASE_DATE_SIGN"'\"!g' ${APP_ROOT_DIR}/web.appsettings.config
+
 
 chmod -R 444 ${APP_PRIVATE_DATA_DIR}
 

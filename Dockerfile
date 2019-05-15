@@ -45,7 +45,7 @@ RUN apt-get -y update && \
     curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash - && \
     apt-get install -y nodejs && \
     apt-get -y update && \
-    apt-get install -yq nginx mono-complete ca-certificates-mono && \
+    apt-get install -yq nginx gdb mono-complete ca-certificates-mono && \
     echo "#!/bin/sh\nexit 0" > /usr/sbin/policy-rc.d && \
     apt-get install -yq dumb-init python-certbot-nginx htop nano dnsutils redis-server python3-pip multiarch-support iproute2 ffmpeg && \
     apt-get install -yq mono-webserver-hyperfastcgi=0.4-7 && \    
