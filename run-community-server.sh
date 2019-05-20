@@ -245,6 +245,11 @@ fi
 #	fi	
 # fi
 
+if [ ! -f /proc/net/if_inet6 ]; then
+	sed '/listen\s*\[::\]:80/d' -i ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-common-ssl.conf.template
+	sed '/listen\s*\[::\]:443/d' -i ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-common-ssl.conf.template
+fi
+
 cp ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-nginx.conf.template ${NGINX_ROOT_DIR}/nginx.conf
 
 sed 's/^worker_processes.*/'"worker_processes ${CPU_PROCESSOR_COUNT};"'/' -i ${NGINX_ROOT_DIR}/nginx.conf
