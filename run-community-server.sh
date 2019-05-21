@@ -32,6 +32,8 @@ CPU_PROCESSOR_COUNT=${CPU_PROCESSOR_COUNT:-$(grep processor /proc/cpuinfo | wc -
 NGINX_WORKER_CONNECTIONS=${NGINX_WORKER_CONNECTIONS:-$(ulimit -n)};
 SERVICE_SSO_AUTH_HOST_ADDR=${SERVICE_SSO_AUTH_HOST_ADDR:-${CONTROL_PANEL_PORT_80_TCP_ADDR}};
 DEFAULT_APP_CORE_MACHINEKEY="$(sudo sed -n '/"core.machinekey"/s!.*value\s*=\s*"\([^"]*\)".*!\1!p' ${APP_ROOT_DIR}/web.appsettings.config)";
+IS_UPDATE="false"
+
 
 CreateAuthToken() {
         local pkey="$1";
@@ -72,6 +74,14 @@ RELEASE_DATE="$(sudo sed -n '/"version.release-date"/s!.*value\s*=\s*"\([^"]*\)"
 RELEASE_DATE_SIGN="$(CreateAuthToken "${RELEASE_DATE}" "${APP_CORE_MACHINEKEY}" )";
 
 sed -i '/version.release-date.sign/s!value="[^"]*"!value=\"'"$RELEASE_DATE_SIGN"'\"!g' ${APP_ROOT_DIR}/web.appsettings.config
+
+
+PREV_RELEASE_DATE=$(head -n 1 ${APP_PRIVATE_DATA_DIR}/release_date)
+
+if [ "${RELEASE_DATE}" != "${PREV_RELEASE_DATE}" ]; then
+	echo ${RELEASE_DATE} > ${APP_PRIVATE_DATA_DIR}/release_date
+	IS_UPDATE="true";
+fi
 
 
 chmod -R 444 ${APP_PRIVATE_DATA_DIR}
@@ -573,7 +583,7 @@ if [ "${DB_TABLES_COUNT}" -eq "0" ]; then
       	mysql_batch_exec ${APP_SQL_DIR}/onlyoffice.sql
        	mysql_batch_exec ${APP_SQL_DIR}/onlyoffice.data.sql
        	mysql_batch_exec ${APP_SQL_DIR}/onlyoffice.resources.sql
-else
+elif [ "${IS_UPDATE}" == "true" ]; then
 	# update mysql db
 	for i in $(ls ${APP_SQL_DIR}/onlyoffice.upgrade*); do
         	mysql_batch_exec ${i};
