@@ -424,21 +424,20 @@ REDIS_SERVER_CONNECT_TIMEOUT=${REDIS_SERVER_CONNECT_TIMEOUT:-"5000"};
 REDIS_SERVER_EXTERNAL=false;
 
 if [ ${REDIS_SERVER_HOST} ]; then
-        sed 's/<add\s*host="localhost"\s*cachePort="6379"\s*\/>/<add host="'${REDIS_SERVER_HOST}'" cachePort="'${REDIS_SERVER_CACHEPORT}'" \/>/' -i ${APP_ROOT_DIR}/Web.config
-        sed 's/<redisCacheClient\s*ssl="false"\s*connectTimeout="5000"\s*database="0"\s*password="">/<redisCacheClient ssl="'${REDIS_SERVER_SSL}'" connectTimeout="'${REDIS_SERVER_CONNECT_TIMEOUT}'" database="'${REDIS_SERVER_DATABASE}'" password="'${REDIS_SERVER_PASSWORD}'">/' -i ${APP_ROOT_DIR}/Web.config
+        sed 's/<add\s*host=".*"\s*cachePort="[0-9]*"\s*\/>/<add host="'${REDIS_SERVER_HOST}'" cachePort="'${REDIS_SERVER_CACHEPORT}'" \/>/' -i ${APP_ROOT_DIR}/Web.config
+        sed -E 's/<redisCacheClient\s*ssl="(false|true)"\s*connectTimeout="[0-9]*"\s*database="[0-9]*"\s*password=".*">/<redisCacheClient ssl="'${REDIS_SERVER_SSL}'" connectTimeout="'${REDIS_SERVER_CONNECT_TIMEOUT}'" database="'${REDIS_SERVER_DATABASE}'" password="'${REDIS_SERVER_PASSWORD}'">/' -i ${APP_ROOT_DIR}/Web.config
 
-        sed 's/<add\s*host="localhost"\s*cachePort="6379"\s*\/>/<add host="'${REDIS_SERVER_HOST}'" cachePort="'${REDIS_SERVER_CACHEPORT}'" \/>/' -i ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config;
-        sed 's/<redisCacheClient\s*ssl="false"\s*connectTimeout="5000"\s*database="0"\s*password="">/<redisCacheClient ssl="'${REDIS_SERVER_SSL}'" connectTimeout="'${REDIS_SERVER_CONNECT_TIMEOUT}'" database="'${REDIS_SERVER_DATABASE}'" password="'${REDIS_SERVER_PASSWORD}'">/' -i ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config;
+        sed 's/<add\s*host=".*"\s*cachePort="[0-9]*"\s*\/>/<add host="'${REDIS_SERVER_HOST}'" cachePort="'${REDIS_SERVER_CACHEPORT}'" \/>/' -i ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config
+        sed -E 's/<redisCacheClient\s*ssl="(false|true)"\s*connectTimeout="[0-9]*"\s*database="[0-9]*"\s*password=".*">/<redisCacheClient ssl="'${REDIS_SERVER_SSL}'" connectTimeout="'${REDIS_SERVER_CONNECT_TIMEOUT}'" database="'${REDIS_SERVER_DATABASE}'" password="'${REDIS_SERVER_PASSWORD}'">/' -i ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config
 
         REDIS_SERVER_EXTERNAL=true;
 fi
 
-if [ -e /etc/redis/redis.conf ]; then
- sed -i "s/bind .*/bind 127.0.0.1/g" /etc/redis/redis.conf
- redis-cli config set save ""
- redis-cli config rewrite
+if [ "${REDIS_SERVER_EXTERNAL}" == "false" ]; then
+	if [ -e /etc/redis/redis.conf ]; then
+ 	 sed -i "s/bind .*/bind 127.0.0.1/g" /etc/redis/redis.conf
+	fi
 fi
-
 
 mysql_scalar_exec(){
 	local queryResult="";
@@ -920,6 +919,8 @@ if [ "${REDIS_SERVER_EXTERNAL}" == "true" ]; then
 	service redis-server stop
 else
 	service redis-server start
+	redis-cli config set save ""
+	redis-cli config rewrite
 	redis-cli flushall
 fi
 
