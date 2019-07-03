@@ -47,7 +47,7 @@ RUN apt-get -y update && \
     apt-get -y update && \
     apt-get install -yq nginx gdb mono-complete ca-certificates-mono && \
     echo "#!/bin/sh\nexit 0" > /usr/sbin/policy-rc.d && \
-    apt-get install -yq dumb-init python-certbot-nginx htop nano dnsutils redis-server python3-pip multiarch-support iproute2 ffmpeg && \
+    apt-get install -yq dumb-init python-certbot-nginx htop nano dnsutils redis-server python3-pip multiarch-support iproute2 ffmpeg jq && \
     apt-get install -yq mono-webserver-hyperfastcgi=0.4-7 && \    
     apt-get install -yq onlyoffice-communityserver && \
     rm -rf /var/lib/apt/lists/*

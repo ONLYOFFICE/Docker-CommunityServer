@@ -430,6 +430,13 @@ if [ ${REDIS_SERVER_HOST} ]; then
         sed 's/<add\s*host=".*"\s*cachePort="[0-9]*"\s*\/>/<add host="'${REDIS_SERVER_HOST}'" cachePort="'${REDIS_SERVER_CACHEPORT}'" \/>/' -i ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config
         sed -E 's/<redisCacheClient\s*ssl="(false|true)"\s*connectTimeout="[0-9]*"\s*database="[0-9]*"\s*password=".*">/<redisCacheClient ssl="'${REDIS_SERVER_SSL}'" connectTimeout="'${REDIS_SERVER_CONNECT_TIMEOUT}'" database="'${REDIS_SERVER_DATABASE}'" password="'${REDIS_SERVER_PASSWORD}'">/' -i ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config
 
+
+
+	APP_SERVICES_SOCKET_IO_PATH=${APP_SERVICES_DIR}/ASC.Socket.IO/config/config.json;
+
+	jq '.redis |= . + {"host":"'${REDIS_SERVER_HOST}'","port":'${REDIS_SERVER_CACHEPORT}',"db":'${REDIS_SERVER_DATABASE}',"pass":"'${REDIS_SERVER_PASSWORD}'"}'\
+	 ${APP_SERVICES_SOCKET_IO_PATH} > ${APP_SERVICES_SOCKET_IO_PATH}.tmp && mv ${APP_SERVICES_SOCKET_IO_PATH}.tmp ${APP_SERVICES_SOCKET_IO_PATH}
+
         REDIS_SERVER_EXTERNAL=true;
 fi
 
