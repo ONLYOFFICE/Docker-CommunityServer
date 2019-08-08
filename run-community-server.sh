@@ -427,8 +427,8 @@ if [ ${REDIS_SERVER_HOST} ]; then
         sed 's/<add\s*host=".*"\s*cachePort="[0-9]*"\s*\/>/<add host="'${REDIS_SERVER_HOST}'" cachePort="'${REDIS_SERVER_CACHEPORT}'" \/>/' -i ${APP_ROOT_DIR}/Web.config
         sed -E 's/<redisCacheClient\s*ssl="(false|true)"\s*connectTimeout="[0-9]*"\s*database="[0-9]*"\s*password=".*">/<redisCacheClient ssl="'${REDIS_SERVER_SSL}'" connectTimeout="'${REDIS_SERVER_CONNECT_TIMEOUT}'" database="'${REDIS_SERVER_DATABASE}'" password="'${REDIS_SERVER_PASSWORD}'">/' -i ${APP_ROOT_DIR}/Web.config
 
-        sed 's/<add\s*host=".*"\s*cachePort="[0-9]*"\s*\/>/<add host="'${REDIS_SERVER_HOST}'" cachePort="'${REDIS_SERVER_CACHEPORT}'" \/>/' -i ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config
-        sed -E 's/<redisCacheClient\s*ssl="(false|true)"\s*connectTimeout="[0-9]*"\s*database="[0-9]*"\s*password=".*">/<redisCacheClient ssl="'${REDIS_SERVER_SSL}'" connectTimeout="'${REDIS_SERVER_CONNECT_TIMEOUT}'" database="'${REDIS_SERVER_DATABASE}'" password="'${REDIS_SERVER_PASSWORD}'">/' -i ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config
+        sed 's/<add\s*host=".*"\s*cachePort="[0-9]*"\s*\/>/<add host="'${REDIS_SERVER_HOST}'" cachePort="'${REDIS_SERVER_CACHEPORT}'" \/>/' -i ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config
+        sed -E 's/<redisCacheClient\s*ssl="(false|true)"\s*connectTimeout="[0-9]*"\s*database="[0-9]*"\s*password=".*">/<redisCacheClient ssl="'${REDIS_SERVER_SSL}'" connectTimeout="'${REDIS_SERVER_CONNECT_TIMEOUT}'" database="'${REDIS_SERVER_DATABASE}'" password="'${REDIS_SERVER_PASSWORD}'">/' -i ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config
 
 
 
@@ -573,7 +573,7 @@ fi
 # change mysql config files
 change_connections "default" "${APP_ROOT_DIR}/web.connections.config";
 change_connections "teamlabsite" "${APP_ROOT_DIR}/web.connections.config";
-change_connections "default" "${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config";
+change_connections "default" "${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config";
 change_connections "default" "${APP_SERVICES_DIR}/MailAggregator/ASC.Mail.Aggregator.CollectionService.exe.config";
 change_connections "default" "${APP_SERVICES_DIR}/MailAggregator/ASC.Mail.EmlDownloader.exe.config";
 change_connections "default" "${APP_SERVICES_DIR}/MailWatchdog/ASC.Mail.Watchdog.Service.exe.config";
@@ -646,9 +646,9 @@ if [ -f "${SSL_CERTIFICATE_PATH}" -a -f "${SSL_KEY_PATH}" ]; then
 		sed '/{{APP_HTTPS_HSTS_MAXAGE}}/d' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
 	fi
 
-	sed '/certificate"/s!\(value\s*=\s*\"\).*\"!\1'${SSL_CERTIFICATE_PATH_PFX}'\"!' -i ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config
-	sed '/certificatePassword/s/\(value\s*=\s*\"\).*\"/\1'${SSL_CERTIFICATE_PATH_PFX_PWD}'\"/' -i ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config
-	sed '/startTls/s/\(value\s*=\s*\"\).*\"/\1optional\"/' -i ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config;
+	sed '/certificate"/s!\(value\s*=\s*\"\).*\"!\1'${SSL_CERTIFICATE_PATH_PFX}'\"!' -i ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config
+	sed '/certificatePassword/s/\(value\s*=\s*\"\).*\"/\1'${SSL_CERTIFICATE_PATH_PFX_PWD}'\"/' -i ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config
+	sed '/startTls/s/\(value\s*=\s*\"\).*\"/\1optional\"/' -i ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config;
 
 	sed '/mail\.default-api-scheme/s/\(value\s*=\s*\"\).*\"/\1https\"/' -i ${APP_SERVICES_DIR}/MailAggregator/ASC.Mail.Aggregator.CollectionService.exe.config;
 
@@ -684,7 +684,7 @@ if [ "${DOCUMENT_SERVER_ENABLED}" == "true" ]; then
     # change web.appsettings link to editor
     sed '/files\.docservice\.url\.internal/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_PROTOCOL}':\/\/'${DOCUMENT_SERVER_HOST}'\/\"!' -i  ${APP_ROOT_DIR}/web.appsettings.config
     sed '/files\.docservice\.url\.public/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_API_URL}'\/\"!' -i ${APP_ROOT_DIR}/web.appsettings.config
-    sed '/files\.docservice\.url\.public/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_API_URL}'\/\"!' -i ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config
+    sed '/files\.docservice\.url\.public/s!\(value\s*=\s*\"\)[^\"]*\"!\1'${DOCUMENT_SERVER_API_URL}'\/\"!' -i ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config
 
     if [ -n "${DOCKER_APP_SUBNET}" ] && [ -n "${SERVER_HOST}" ]; then
         sed '/files\.docservice\.url\.portal/s!\(value\s*=\s*\"\)[^\"]*\"!\1http:\/\/'${SERVER_HOST}'\"!' -i ${APP_ROOT_DIR}/web.appsettings.config
@@ -816,7 +816,7 @@ if [ "${CONTROL_PANEL_ENABLED}" == "true" ]; then
 
 	# change web.appsettings link to controlpanel
 	sed '/web\.controlpanel\.url/s/\(value\s*=\s*\"\)[^\"]*\"/\1\/controlpanel\/\"/' -i  ${APP_ROOT_DIR}/web.appsettings.config;
-	sed '/web\.controlpanel\.url/s/\(value\s*=\s*\"\)[^\"]*\"/\1\/controlpanel\/\"/' -i ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config;
+	sed '/web\.controlpanel\.url/s/\(value\s*=\s*\"\)[^\"]*\"/\1\/controlpanel\/\"/' -i ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config;
 
 fi
 
@@ -830,7 +830,7 @@ do
                 sed '/web.warmup.domain/s/value=\"\S*\"/value=\"localhost\/warmup\"/g' -i  ${APP_ROOT_DIR}/web.appsettings.config
                 sed "/core.machinekey/s!value=\".*\"!value=\"${APP_CORE_MACHINEKEY}\"!g" -i  ${APP_ROOT_DIR}/web.appsettings.config
 		sed "/core.machinekey/s!value=\".*\"!value=\"${APP_CORE_MACHINEKEY}\"!g" -i  ${APP_APISYSTEM_DIR}/Web.config
-                sed "/core.machinekey/s!value=\".*\"!value=\"${APP_CORE_MACHINEKEY}\"!g" -i  ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.Config
+                sed "/core.machinekey/s!value=\".*\"!value=\"${APP_CORE_MACHINEKEY}\"!g" -i  ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config
 		sed "/core\.machinekey/s!\"core\.machinekey\".*!\"core\.machinekey\":\"${APP_CORE_MACHINEKEY}\",!" -i ${APP_SERVICES_DIR}/ASC.Socket.IO/config/config.json
 		sed "s!machine_key\s*=.*!machine_key = ${APP_CORE_MACHINEKEY}!g" -i  ${APP_SERVICES_DIR}/TeamLabSvc/radicale.config
 		sed "s!\"core\.machinekey\":.*,!\"core\.machinekey\":\"${APP_CORE_MACHINEKEY}\",!g" -i ${APP_SERVICES_DIR}/ASC.UrlShortener/config/config.json
