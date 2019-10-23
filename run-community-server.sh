@@ -734,7 +734,7 @@ if [ "${MAIL_SERVER_ENABLED}" == "true" ]; then
 		SENDER_IP=$(hostname -i);
 	elif [[ "$(dig +short myip.opendns.com @resolver1.opendns.com)" =~ $VALID_IP_ADDRESS_REGEX ]]; then
 		SENDER_IP=$(dig +short myip.opendns.com @resolver1.opendns.com);
-        	log_debug "External ip $EXTERNAL_IP is valid";
+        	log_debug "External ip $SENDER_IP is valid";
 	else
 		SENDER_IP=$(hostname -i);
 	fi
