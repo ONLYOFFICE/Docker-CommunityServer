@@ -609,7 +609,7 @@ if [ -f "${SSL_CERTIFICATE_PATH}" -a -f "${SSL_KEY_PATH}" ]; then
 
 	# if dhparam path is valid, add to the config, otherwise remove the option
 	if [ ! -f ${SSL_DHPARAM_PATH} ]; then
-		 sudo openssl dhparam -out dhparam.pem 4096
+		 sudo openssl dhparam -out dhparam.pem 2048
 		 mv dhparam.pem ${SSL_DHPARAM_PATH};
 	fi
 
