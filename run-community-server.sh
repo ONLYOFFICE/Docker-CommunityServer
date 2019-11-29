@@ -524,12 +524,14 @@ if [ "${MYSQL_SERVER_EXTERNAL}" == "false" ]; then
 
 	if [ -n "$MYSQL_SERVER_ROOT_PASSWORD" ] && mysqladmin --silent ping -u root | grep -q "mysqld is alive" ; then
 mysql <<EOF
-SET Password=PASSWORD("$MYSQL_SERVER_ROOT_PASSWORD");
+ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY "$MYSQL_SERVER_ROOT_PASSWORD";
 DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
 DELETE FROM mysql.user WHERE User='';
 DELETE FROM mysql.db WHERE Db='test' OR Db='test_%';
 FLUSH PRIVILEGES;
 EOF
+
+
 
 		if [ "$MYSQL_SERVER_USER" != "root" ]; then
 mysql "-p${MYSQL_SERVER_ROOT_PASSWORD}" <<EOF
