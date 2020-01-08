@@ -86,7 +86,7 @@ fi
 
 chmod -R 444 ${APP_PRIVATE_DATA_DIR}
 
-if cat /proc/1/cgroup | grep -qE "docker|lxc|kubepods"; then
+if cat /proc/1/cgroup | grep -qE "docker|lxc|kubepods|libpod"; then
         DOCKER_ENABLED=true;
 else
 	DOCKER_ENABLED=false;
