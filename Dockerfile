@@ -8,7 +8,8 @@ ARG DEBIAN_FRONTEND=noninteractive
 
 LABEL onlyoffice.community.release-date="${RELEASE_DATE}" \
       onlyoffice.community.version="${VERSION}" \
-      maintainer="Ascensio System SIA <support@onlyoffice.com>"
+      maintainer="Ascensio System SIA <support@onlyoffice.com>" \
+      securitytxt="https://www.onlyoffice.com/.well-known/security.txt"
 
 ENV LANG=en_US.UTF-8 \
     LANGUAGE=en_US:en \
@@ -51,9 +52,10 @@ RUN apt-get -y update && \
     apt-get install -yq onlyoffice-communityserver && \
     rm -rf /var/lib/apt/lists/*
 
-ADD config /app/onlyoffice/config/
-ADD assets /app/onlyoffice/assets/
-ADD run-community-server.sh /app/onlyoffice/run-community-server.sh
+COPY config /app/onlyoffice/config/
+COPY assets /app/onlyoffice/assets/
+COPY run-community-server.sh /app/onlyoffice/run-community-server.sh
+
 RUN chmod -R 755 /app/onlyoffice/*.sh
 
 VOLUME ["/var/log/onlyoffice", "/var/www/onlyoffice/Data", "/var/lib/mysql"]
