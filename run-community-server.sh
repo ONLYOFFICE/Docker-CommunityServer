@@ -160,29 +160,29 @@ check_ip_is_internal(){
 	local IPRE='\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)';
 	local IP=($(echo "$1" | sed -ne 's:^'"$IPRE"'/.*$:\1 \2 \3 \4:p'));
 	local MASK=($(echo "$1" | sed -ne 's:^[^/]*/'"$IPRE"'$:\1 \2 \3 \4:p'))
-	
+
 	if [ ${#MASK[@]} -ne 4 ]; then
-  		local BITCNT=($(echo "$1" | sed -ne 's:^[^/]*/\([0-9]\+\)$:\1:p'))
-  		BITCNT=$(( ((2**${BITCNT})-1) << (32-${BITCNT}) ))
-  		for (( I=0; I<4; I++ )); do
-	    		MASK[$I]=$(( ($BITCNT >> (8 * (3 - $I))) & 255 ))
-  		done
+		local BITCNT=($(echo "$1" | sed -ne 's:^[^/]*/\([0-9]\+\)$:\1:p'))
+		BITCNT=$(( ((2**${BITCNT})-1) << (32-${BITCNT}) ))
+		for (( I=0; I<4; I++ )); do
+				MASK[$I]=$(( ($BITCNT >> (8 * (3 - $I))) & 255 ))
+		done
 	fi
-	
+
 	local NETWORK=()
 
 	for (( I=0; I<4; I++ )); do
-	  	NETWORK[$I]=$(( ${IP[$I]} & ${MASK[$I]} ))
+		NETWORK[$I]=$(( ${IP[$I]} & ${MASK[$I]} ))
 	done
-	
-	
+
+
 	local INIP=($(echo "$2" | sed -ne 's:^'"$IPRE"'$:\1 \2 \3 \4:p'))
-	
+
 	for (( I=0; I<4; I++ )); do
-	   	[[ $(( ${INIP[$I]} & ${MASK[$I]} )) -ne ${NETWORK[$I]} ]] && exit 0;
+		[[ $(( ${INIP[$I]} & ${MASK[$I]} )) -ne ${NETWORK[$I]} ]] && return 1; #false
 	done
-	
-	echo "true"
+
+	return 0; #true
 }
 
 normalize_subnet(){
