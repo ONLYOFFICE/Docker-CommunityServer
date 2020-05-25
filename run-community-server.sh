@@ -446,6 +446,24 @@ if [ "${REDIS_SERVER_EXTERNAL}" == "false" ]; then
 	fi
 fi
 
+ELASTICSEARCH_SERVER_HOST=${ELASTICSEARCH_SERVER_ADDR:-${ELASTICSEARCH_SERVER_HOST}};
+ELASTICSEARCH_SERVER_HTTPPORT=${ELASTICSEARCH_SERVER_HTTP_PORT:-${ELASTICSEARCH_SERVER_HTTPPORT:-"9200"}};
+
+if [ ${ELASTICSEARCH_SERVER_HOST} ]; then
+    sed -i '/<section name="redisCacheClient" type="StackExchange.Redis.Extensions.LegacyConfiguration.RedisCachingSectionHandler, StackExchange.Redis.Extensions.LegacyConfiguration" \/>/a <section name="elastic" type="ASC.ElasticSearch.Config.ElasticSection, ASC.ElasticSearch" \/>' /var/www/onlyoffice/WebStudio/Web.config
+    sed -i 's/<section name="elastic" type="ASC.ElasticSearch.Config.ElasticSection, ASC.ElasticSearch" \/>/    <section name="elastic" type="ASC.ElasticSearch.Config.ElasticSection, ASC.ElasticSearch" \/>/' /var/www/onlyoffice/WebStudio/Web.config
+    sed -i '/<section name="redisCacheClient" type="StackExchange.Redis.Extensions.LegacyConfiguration.RedisCachingSectionHandler, StackExchange.Redis.Extensions.LegacyConfiguration" \/>/a <section name="elastic" type="ASC.ElasticSearch.Config.ElasticSection, ASC.ElasticSearch" \/>' /var/www/onlyoffice/Services/TeamLabSvc/TeamLabSvc.exe.config
+    sed -i 's/<section name="elastic" type="ASC.ElasticSearch.Config.ElasticSection, ASC.ElasticSearch" \/>/    <section name="elastic" type="ASC.ElasticSearch.Config.ElasticSection, ASC.ElasticSearch" \/>/' /var/www/onlyoffice/Services/TeamLabSvc/TeamLabSvc.exe.config
+
+    if [ ${ELASTICSEARCH_SERVER_HTTPPORT} ]; then
+        sed -i '/<\/configSections>/a <elastic scheme="http" host="'${ELASTICSEARCH_SERVER_HOST}'" port="'${ELASTICSEARCH_SERVER_HTTPPORT}'" \/>' /var/www/onlyoffice/WebStudio/Web.config
+        sed -i 's/<elastic scheme="http" host="'${ELASTICSEARCH_SERVER_HOST}'" port="'${ELASTICSEARCH_SERVER_HTTPPORT}'" \/>/  <elastic scheme="http" host="'${ELASTICSEARCH_SERVER_HOST}'" port="'${ELASTICSEARCH_SERVER_HTTPPORT}'" \/>/' /var/www/onlyoffice/WebStudio/Web.config
+
+        sed -i '/<\/configSections>/a <elastic scheme="http" host="'${ELASTICSEARCH_SERVER_HOST}'" port="'${ELASTICSEARCH_SERVER_HTTPPORT}'" \/>' /var/www/onlyoffice/Services/TeamLabSvc/TeamLabSvc.exe.config
+        sed -i 's/<elastic scheme="http" host="'${ELASTICSEARCH_SERVER_HOST}'" port="'${ELASTICSEARCH_SERVER_HTTPPORT}'" \/>/  <elastic scheme="http" host="'${ELASTICSEARCH_SERVER_HOST}'" port="'${ELASTICSEARCH_SERVER_HTTPPORT}'" \/>/' /var/www/onlyoffice/Services/TeamLabSvc/TeamLabSvc.exe.config
+    fi
+fi
+
 mysql_scalar_exec(){
 	local queryResult="";
 
@@ -1085,6 +1103,11 @@ fi
 
 PID=$(ps auxf | grep cron | grep -v grep | awk '{print $2}')
 
+if [ ${ELASTICSEARCH_SERVER_HOST} ]; then
+  service elasticsearch stop
+  service onlyofficeIndex restart
+  service monoserve restart
+fi
 
 if [ -n "$PID" ]; then
   kill -9 $PID
