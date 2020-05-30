@@ -23,7 +23,7 @@ RUN apt-get -y update && \
     addgroup --system --gid 104 elasticsearch && \
     adduser -uid 103 --quiet --home /nonexistent --system --gid 104 elasticsearch && \
     echo "${SOURCE_REPO_URL}" >> /etc/apt/sources.list && \
-    echo "deb https://download.mono-project.com/repo/ubuntu stable-bionic/snapshots/6.0 main" | tee /etc/apt/sources.list.d/mono-official.list && \
+    echo "deb https://download.mono-project.com/repo/ubuntu stable-bionic/snapshots/6.8 main" | tee /etc/apt/sources.list.d/mono-official.list && \
     echo "deb http://download.onlyoffice.com/repo/mono/ubuntu bionic main" | tee /etc/apt/sources.list.d/mono-onlyoffice.list && \    
     apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys CB2DE8E5 && \
     apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF && \
