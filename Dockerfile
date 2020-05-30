@@ -42,7 +42,7 @@ RUN apt-get -y update && \
     apt-get install -yq elasticsearch=6.5.0 && \
     add-apt-repository -y ppa:certbot/certbot && \
     add-apt-repository -y ppa:chris-lea/redis-server && \
-    curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash - && \
+    curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash - && \
     apt-get install -y nodejs && \
     apt-get -y update && \
     apt-get install -yq nginx gdb mono-complete ca-certificates-mono && \
