@@ -16,8 +16,9 @@ ENV LANG=en_US.UTF-8 \
     LC_ALL=en_US.UTF-8
 
 RUN apt-get -y update && \
-    apt-get -yq install gnupg2 ca-certificates && \
-    apt-get install -yq sudo locales && \
+    apt-get -yq install locales software-properties-common curl wget sudo && \
+    locale-gen en_US.UTF-8 && \
+    echo "#!/bin/sh\nexit 0" > /usr/sbin/policy-rc.d && \
     addgroup --system --gid 107 onlyoffice && \
     adduser -uid 104 --quiet --home /var/www/onlyoffice --system --gid 107 onlyoffice && \
     addgroup --system --gid 104 elasticsearch && \
@@ -27,29 +28,40 @@ RUN apt-get -y update && \
     echo "deb http://download.onlyoffice.com/repo/mono/ubuntu bionic main" | tee /etc/apt/sources.list.d/mono-onlyoffice.list && \    
     apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys CB2DE8E5 && \
     apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF && \
-    locale-gen en_US.UTF-8 && \
-    apt-get -y update && \
-    apt-get install -yq software-properties-common wget curl cron rsyslog && \
     wget http://nginx.org/keys/nginx_signing.key && \
     apt-key add nginx_signing.key && \
     echo "deb http://nginx.org/packages/mainline/ubuntu/ bionic nginx" >> /etc/apt/sources.list.d/nginx.list && \
-    echo "deb-src http://nginx.org/packages/mainline/ubuntu/ bionic nginx" >> /etc/apt/sources.list.d/nginx.list && \
-    apt-get install -yq openjdk-8-jre-headless && \
     wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | apt-key add - && \
-    apt-get install -yq apt-transport-https && \
-    echo "deb https://artifacts.elastic.co/packages/6.x/apt stable main" | tee -a /etc/apt/sources.list.d/elastic-6.x.list && \
-    apt-get update && \
-    apt-get install -yq elasticsearch=6.5.0 && \
+    echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" | tee -a /etc/apt/sources.list.d/elastic-7.x.list && \
     add-apt-repository -y ppa:certbot/certbot && \
     add-apt-repository -y ppa:chris-lea/redis-server && \
-    curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash - && \
-    apt-get install -y nodejs && \
-    apt-get -y update && \
-    apt-get install -yq nginx gdb mono-complete ca-certificates-mono && \
-    echo "#!/bin/sh\nexit 0" > /usr/sbin/policy-rc.d && \
-    apt-get install -yq dumb-init python-certbot-nginx htop nano dnsutils redis-server python3-pip multiarch-support iproute2 ffmpeg jq && \
-    apt-get install -yq mono-webserver-hyperfastcgi=0.4-7 && \    
-    apt-get install -yq onlyoffice-communityserver && \
+    curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash - && \
+    apt-get install -yq gnupg2 \
+                        ca-certificates \
+                        software-properties-common \
+                        cron \
+                        rsyslog \
+                        nodejs \
+                        nginx \
+                        gdb \
+                        mono-complete \
+                        ca-certificates-mono \
+                        dumb-init \
+                        python-certbot-nginx \
+                        htop \
+                        nano \
+                        dnsutils \
+                        redis-server \
+                        python3-pip \
+                        multiarch-support \
+                        iproute2 \
+                        ffmpeg \
+                        jq \
+                        openjdk-8-jre-headless \
+                        apt-transport-https \
+                        elasticsearch=7.4.0 \
+                        mono-webserver-hyperfastcgi=0.4-7 \    
+                        onlyoffice-communityserver && \
     rm -rf /var/lib/apt/lists/*
 
 COPY config /app/onlyoffice/config/
