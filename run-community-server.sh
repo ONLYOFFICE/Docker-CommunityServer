@@ -15,11 +15,10 @@ APP_SERVICES_DIR="${APP_DIR}/Services"
 APP_SQL_DIR="${APP_DIR}/Sql"
 APP_ROOT_DIR="${APP_DIR}/WebStudio"
 APP_APISYSTEM_DIR="/var/www/onlyoffice/ApiSystem"
-APP_MONOSERVER_PATH="/etc/init.d/monoserve";
+APP_MONOSERVER_PATH="/lib/systemd/system/monoserve.service";
 APP_HYPERFASTCGI_PATH="/etc/hyperfastcgi/onlyoffice";
 APP_MONOSERVE_COUNT=1;
 APP_MODE=${APP_MODE:-"SERVER"};
-APP_GOD_DIR="/etc/god/conf.d"
 APP_CRON_DIR="/etc/cron.d"
 APP_CRON_PATH="/etc/cron.d/onlyoffice"
 DOCKER_APP_SUBNET=$(ip -o -f inet addr show | awk '/scope global/ {print $4}' | head -1);
@@ -33,7 +32,6 @@ NGINX_WORKER_CONNECTIONS=${NGINX_WORKER_CONNECTIONS:-$(ulimit -n)};
 SERVICE_SSO_AUTH_HOST_ADDR=${SERVICE_SSO_AUTH_HOST_ADDR:-${CONTROL_PANEL_PORT_80_TCP_ADDR}};
 DEFAULT_APP_CORE_MACHINEKEY="$(sudo sed -n '/"core.machinekey"/s!.*value\s*=\s*"\([^"]*\)".*!\1!p' ${APP_ROOT_DIR}/web.appsettings.config)";
 IS_UPDATE="false"
-
 
 CreateAuthToken() {
         local pkey="$1";
@@ -278,7 +276,6 @@ fi
 
 rm -f ${NGINX_ROOT_DIR}/conf.d/*.conf
 
-service rsyslog restart || true
 service nginx restart
 
 if ! grep -q "thread_pool.index.size" /etc/elasticsearch/elasticsearch.yml; then
@@ -531,6 +528,7 @@ if [ "${MYSQL_SERVER_EXTERNAL}" == "false" ]; then
 
 	myisamchk -q -r /var/lib/mysql/mysql/proc || true
 
+        systemctl enable mysql.service
 	service mysql start
 
 	if [ ! -f /var/lib/mysql/mysql_upgrade_info ]; then
@@ -573,6 +571,7 @@ EOF
 
 else
 	service mysql stop
+        systemctl disable mysql.service
 fi
 
 mysql_check_connection;
@@ -896,9 +895,6 @@ do
 	sed 's,'${APP_ROOT_DIR}','${APP_ROOT_DIR}''${serverID}',g' -i ${APP_HYPERFASTCGI_PATH}$serverID;
 	sed 's/onlyoffice\.socket/onlyoffice'${serverID}'\.socket/g' -i ${APP_HYPERFASTCGI_PATH}$serverID;
 
-	cp ${APP_GOD_DIR}/monoserve.god ${APP_GOD_DIR}/monoserve$serverID.god;
-	sed 's/onlyoffice\.socket/onlyoffice'${serverID}'\.socket/g' -i ${APP_GOD_DIR}/monoserve$serverID.god;
-	sed 's/monoserve/monoserve'${serverID}'/g' -i ${APP_GOD_DIR}/monoserve$serverID.god;
 
 	sed '/onlyoffice'${serverID}'.socket/d' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice;
 	sed '/onlyoffice'${serverID}'.socket/d' -i ${NGINX_CONF_DIR}/onlyoffice;
@@ -949,31 +945,26 @@ ping_onlyoffice() {
 }
 
 if [ "${REDIS_SERVER_EXTERNAL}" == "true" ]; then
-	rm -f "${APP_GOD_DIR}"/redis.god;
 	sed '/redis-cli/d' -i ${APP_CRON_PATH}
 
 	service redis-server stop
+        systemctl disable redis-server.service
 else
+        systemctl enable redis-server.service
 	service redis-server start
+
 	redis-cli config set save ""
 	redis-cli config rewrite
 	redis-cli flushall
-fi
 
-if [ "${MYSQL_SERVER_EXTERNAL}" == "true" ]; then
-	rm -f "${APP_GOD_DIR}"/mysql.god;
+	service redis-server stop
 fi
-
 
 if [ "${APP_MODE}" == "SERVICES" ]; then
-	service nginx stop
+        systemctl disable nginx.service
+        systemctl disable monoserveApiSystem.service
 
-	rm -f "${APP_GOD_DIR}"/nginx.god;
-	rm -f "${APP_GOD_DIR}"/monoserveApiSystem.god;
-
-	service monoserveApiSystem stop
-
-	rm -f /etc/init.d/monoserveApiSystem
+	rm -f /lib/systemd/system.d/monoserveApiSystem.service
 
 	for serverID in $(seq 1 ${APP_MONOSERVE_COUNT});
 	do
@@ -982,8 +973,6 @@ if [ "${APP_MODE}" == "SERVICES" ]; then
 		if [ $index == 1 ]; then
 			index="";
 		fi
-
-	rm -f "${APP_GOD_DIR}"/monoserve$index.god;
 
         service monoserve$index stop
 
@@ -995,10 +984,6 @@ if [ "${APP_MODE}" == "SERVICES" ]; then
 	sed '/warmup/d' -i ${APP_CRON_PATH}
 
 else
-	if [ ${LOG_DEBUG} ]; then
-		echo "fix docker bug volume mapping for onlyoffice";
-	fi
-
 	chown -R onlyoffice:onlyoffice /var/log/onlyoffice
 	chown -R onlyoffice:onlyoffice ${APP_DIR}/DocumentServerData
 
@@ -1014,111 +999,93 @@ else
         fi
 
 	chown -R elasticsearch:elasticsearch "$LOG_DIR/Index"
-
-
-	for serverID in $(seq 1 ${APP_MONOSERVE_COUNT});
-	do
-		index=$serverID;
-
-		if [ $index == 1 ]; then
-			index="";
-		fi
-
-		service monoserve$index restart
-
-#                (ping_onlyoffice "http://localhost/warmup${index}/auth.aspx") &
-	done
-
-	service monoserveApiSystem restart
 fi
+
+
+service onlyofficeRadicale stop
+service onlyofficeSocketIO stop
+service onlyofficeThumb stop
+service onlyofficeFeed stop
+service onlyofficeIndex stop
+service onlyofficeJabber stop
+service onlyofficeMailAggregator stop
+service onlyofficeMailWatchdog stop
+service onlyofficeMailCleaner stop
+service onlyofficeNotify stop
+service onlyofficeBackup stop
+service onlyofficeStorageMigrate stop
+service onlyofficeUrlShortener stop
+
+service elasticsearch stop
+service redis-server stop
+service mysql stop
+service nginx stop
 
 if [ "${APP_SERVICES_EXTERNAL}" == "true" ]; then
-	rm -f "${APP_GOD_DIR}"/onlyoffice.god;
-	rm -f "${APP_GOD_DIR}"/elasticsearch.god;
-	rm -f "${APP_GOD_DIR}"/redis.god;
-	rm -f "${APP_GOD_DIR}"/mail.god;
+        systemctl disable onlyofficeRadicale.service
+        systemctl disable onlyofficeSocketIO.service
+        systemctl disable onlyofficeThumb.service
+        systemctl disable onlyofficeFeed.service
+        systemctl disable onlyofficeIndex.service
+        systemctl disable onlyofficeJabber.service
+        systemctl disable onlyofficeMailAggregator.service
+        systemctl disable onlyofficeMailWatchdog.service
+        systemctl disable onlyofficeMailCleaner.service
+        systemctl disable onlyofficeNotify.service
+        systemctl disable onlyofficeBackup.service
+        systemctl disable onlyofficeStorageMigrate.service
+        systemctl disable onlyofficeUrlShortener.service
 
-
-	service onlyofficeRadicale stop
-	service onlyofficeSocketIO stop
-        service onlyofficeThumb stop
-	service onlyofficeFeed stop
-	service onlyofficeIndex stop
-	service onlyofficeJabber stop
-	service onlyofficeMailAggregator stop
-	service onlyofficeMailWatchdog stop
-	service onlyofficeMailCleaner stop
-	service onlyofficeNotify stop
-	service onlyofficeBackup stop
-	service onlyofficeStorageMigrate stop
-	service onlyofficeUrlShortener stop
-	service elasticsearch stop
-
-
-	rm -f /etc/init.d/elasticsearch
-	rm -f /etc/init.d/onlyofficeRadicale
-	rm -f /etc/init.d/onlyofficeSocketIO
-	rm -f /etc/init.d/onlyofficeThumb
-	rm -f /etc/init.d/onlyofficeFeed
-	rm -f /etc/init.d/onlyofficeIndex
-	rm -f /etc/init.d/onlyofficeJabber
-	rm -f /etc/init.d/onlyofficeMailAggregator
-	rm -f /etc/init.d/onlyofficeMailWatchdog
-	rm -f /etc/init.d/onlyofficeMailCleaner
-	rm -f /etc/init.d/onlyofficeNotify
-	rm -f /etc/init.d/onlyofficeBackup
-	rm -f /etc/init.d/onlyofficeStorageMigrate
-	rm -f /etc/init.d/onlyofficeUrlShortener
+	rm -f /lib/systemd/system/onlyofficeRadicale.service
+	rm -f /lib/systemd/system/onlyofficeSocketIO.service
+	rm -f /lib/systemd/system/onlyofficeThumb.service
+	rm -f /lib/systemd/system/onlyofficeFeed.service
+	rm -f /lib/systemd/system/onlyofficeIndex.service
+	rm -f /lib/systemd/system/onlyofficeJabber.service
+	rm -f /lib/systemd/system/onlyofficeMailAggregator.service
+	rm -f /lib/systemd/system/onlyofficeMailWatchdog.service
+	rm -f /lib/systemd/system/onlyofficeMailCleaner.service
+	rm -f /lib/systemd/system/onlyofficeNotify.service
+	rm -f /lib/systemd/system/onlyofficeBackup.service
+	rm -f /lib/systemd/system/onlyofficeStorageMigrate.sevice
+	rm -f /lib/systemd/system/onlyofficeUrlShortener.service
 
 	sed '/onlyoffice/d' -i ${APP_CRON_PATH}
-
 else
-
-	service onlyofficeRadicale restart
-	service onlyofficeSocketIO restart
-	service onlyofficeThumb restart
-	service onlyofficeFeed restart
-	service onlyofficeIndex restart
-	service onlyofficeJabber restart
-	service onlyofficeMailAggregator restart
-	service onlyofficeMailWatchdog restart
-	service onlyofficeMailCleaner restart
-	service onlyofficeNotify restart
-	service onlyofficeBackup restart
-	service onlyofficeStorageMigrate restart
-	service onlyofficeUrlShortener restart
-	service elasticsearch restart
+        systemctl enable onlyofficeRadicale.service
+        systemctl enable onlyofficeSocketIO.service
+        systemctl enable onlyofficeThumb.service
+        systemctl enable onlyofficeFeed.service
+        systemctl enable onlyofficeIndex.service
+        systemctl enable onlyofficeJabber.service
+        systemctl enable onlyofficeMailAggregator.service
+        systemctl enable onlyofficeMailWatchdog.service
+        systemctl enable onlyofficeMailCleaner.service
+        systemctl enable onlyofficeNotify.service
+        systemctl enable onlyofficeBackup.service
+        systemctl enable onlyofficeStorageMigrate.service
+        systemctl enable onlyofficeUrlShortener.service
 fi
 
-service god restart
-
 if [ "${APP_MODE}" == "SERVER" ]; then
-
-#        wait
-
         mv ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice ${NGINX_CONF_DIR}/onlyoffice
-
-        service nginx reload
-
-        log_debug "reload nginx config";
-        log_debug "FINISH";
-
+        service nginx stop
+        systemctl enable nginx.service
 fi
 
 PID=$(ps auxf | grep cron | grep -v grep | awk '{print $2}')
 
 if [ ${ELASTICSEARCH_SERVER_HOST} ]; then
   service elasticsearch stop
-  service onlyofficeIndex restart
-  service monoserve restart
+  systemctl disable elasticsearch.service
+else
+  systemctl enable elasticsearch.service
 fi
 
 if [ -n "$PID" ]; then
   kill -9 $PID
 fi
 
-cron
-
 if [ "${DOCKER_ENABLED}" == "true" ]; then
-   exec tail -f /dev/null
+   exec /lib/systemd/systemd
 fi
