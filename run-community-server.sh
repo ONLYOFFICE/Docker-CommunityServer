@@ -27,7 +27,7 @@ DOCKER_CONTAINER_NAME="onlyoffice-community-server";
 DOCKER_ENABLED=${DOCKER_ENABLED:-true};
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 NGINX_CONF_DIR="/etc/nginx/sites-enabled"
-CPU_PROCESSOR_COUNT=${CPU_PROCESSOR_COUNT:-$(grep processor /proc/cpuinfo | wc -l)};
+CPU_PROCESSOR_COUNT=${CPU_PROCESSOR_COUNT:-$(cat /proc/cpuinfo | grep -i processor | awk '{print $1}' | grep -i processor | wc -l)};
 NGINX_WORKER_CONNECTIONS=${NGINX_WORKER_CONNECTIONS:-$(ulimit -n)};
 SERVICE_SSO_AUTH_HOST_ADDR=${SERVICE_SSO_AUTH_HOST_ADDR:-${CONTROL_PANEL_PORT_80_TCP_ADDR}};
 DEFAULT_APP_CORE_MACHINEKEY="$(sudo sed -n '/"core.machinekey"/s!.*value\s*=\s*"\([^"]*\)".*!\1!p' ${APP_ROOT_DIR}/web.appsettings.config)";
@@ -278,11 +278,11 @@ rm -f ${NGINX_ROOT_DIR}/conf.d/*.conf
 
 service nginx restart
 
-if ! grep -q "thread_pool.index.size" /etc/elasticsearch/elasticsearch.yml; then
-	echo "thread_pool.index.size: $CPU_PROCESSOR_COUNT" >> /etc/elasticsearch/elasticsearch.yml
-else
-	sed -i "s/thread_pool.index.size.*/thread_pool.index.size: $CPU_PROCESSOR_COUNT/" /etc/elasticsearch/elasticsearch.yml
-fi
+#if ! grep -q "thread_pool.index.size" /etc/elasticsearch/elasticsearch.yml; then
+#	echo "thread_pool.index.size: $CPU_PROCESSOR_COUNT" >> /etc/elasticsearch/elasticsearch.yml
+#else
+#	sed -i "s/thread_pool.index.size.*/thread_pool.index.size: $CPU_PROCESSOR_COUNT/" /etc/elasticsearch/elasticsearch.yml
+#fi
 
 if ! grep -q "thread_pool.write.size" /etc/elasticsearch/elasticsearch.yml; then
 	echo "thread_pool.write.size: $CPU_PROCESSOR_COUNT" >> /etc/elasticsearch/elasticsearch.yml
@@ -290,6 +290,22 @@ else
 	sed -i "s/thread_pool.write.size.*/thread_pool.write.size: $CPU_PROCESSOR_COUNT/" /etc/elasticsearch/elasticsearch.yml
 fi
 
+TOTAL_MEMORY=$(free -m | grep -oP '\d+' | head -n 1);
+MEMORY_REQUIREMENTS=12228; #RAM ~4*3Gb
+
+if [ ${TOTAL_MEMORY} -gt ${MEMORY_REQUIREMENTS} ]; then
+	if ! grep -q "-Xms1g" /etc/elasticsearch/jvm.options; then
+		echo "-Xms4g" >> /etc/elasticsearch/jvm.options
+	else
+		sed -i "s/-Xms1g/-Xms4g/" /etc/elasticsearch/jvm.options
+	fi
+
+	if ! grep -q "-Xmx1g" /etc/elasticsearch/jvm.options; then
+		echo "-Xmx4g" >> /etc/elasticsearch/jvm.options
+	else
+		sed -i "s/-Xmx1g/-Xmx4g/" /etc/elasticsearch/jvm.options
+	fi
+fi
 
 if [ ${APP_SERVICES_INTERNAL_HOST} ]; then
 	APP_SERVICES_EXTERNAL=true;
