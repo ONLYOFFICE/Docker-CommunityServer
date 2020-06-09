@@ -144,7 +144,7 @@ CONTROL_PANEL_ENABLED=false
 MAIL_SERVER_ENABLED=false
 
 MYSQL_SERVER_ROOT_PASSWORD=${MYSQL_SERVER_ROOT_PASSWORD:-""}
-MYSQL_SERVER_HOST=${MYSQL_SERVER_HOST:-"localhost"}
+MYSQL_SERVER_HOST=${MYSQL_SERVER_HOST:-"127.0.0.1"}
 MYSQL_SERVER_PORT=${MYSQL_SERVER_PORT:-"3306"}
 MYSQL_SERVER_DB_NAME=${MYSQL_SERVER_DB_NAME:-"onlyoffice"}
 MYSQL_SERVER_USER=${MYSQL_SERVER_USER:-"root"}
@@ -990,16 +990,29 @@ if [ "${APP_MODE}" == "SERVICES" ]; then
 			index="";
 		fi
 
-        service monoserve$index stop
+                systemctl stop monoserve$index
+                systemctl disable monoserve$index.service
 
-	rm -f /etc/init.d/monoserve$index
-
+        	rm -f /lib/systemd/system/monoserve$index.service
 	done
 
 	sed '/monoserve/d' -i ${APP_CRON_PATH}
 	sed '/warmup/d' -i ${APP_CRON_PATH}
 
 else
+        systemctl enable monoserveApiSystem.service
+
+	for serverID in $(seq 1 ${APP_MONOSERVE_COUNT});
+	do
+		index=$serverID;
+
+		if [ $index == 1 ]; then
+			index="";
+		fi
+
+                systemctl enable monoserve$index.service
+	done
+
 	chown -R onlyoffice:onlyoffice /var/log/onlyoffice
 	chown -R onlyoffice:onlyoffice ${APP_DIR}/DocumentServerData
 
@@ -1017,25 +1030,37 @@ else
 	chown -R elasticsearch:elasticsearch "$LOG_DIR/Index"
 fi
 
+systemctl onlyofficeRadicale stop
+systemctl onlyofficeSocketIO stop
+systemctl onlyofficeThumb stop
+systemctl onlyofficeFeed stop
+systemctl onlyofficeIndex stop
+systemctl onlyofficeJabber stop
+systemctl onlyofficeMailAggregator stop
+systemctl onlyofficeMailWatchdog stop
+systemctl onlyofficeMailCleaner stop
+systemctl onlyofficeNotify stop
+systemctl onlyofficeBackup stop
+systemctl onlyofficeStorageMigrate stop
+systemctl onlyofficeUrlShortener stop
 
-service onlyofficeRadicale stop
-service onlyofficeSocketIO stop
-service onlyofficeThumb stop
-service onlyofficeFeed stop
-service onlyofficeIndex stop
-service onlyofficeJabber stop
-service onlyofficeMailAggregator stop
-service onlyofficeMailWatchdog stop
-service onlyofficeMailCleaner stop
-service onlyofficeNotify stop
-service onlyofficeBackup stop
-service onlyofficeStorageMigrate stop
-service onlyofficeUrlShortener stop
+systemctl elasticsearch stop
+systemctl redis-server stop
+systemctl mysql stop
+systemctl nginx stop
 
-service elasticsearch stop
-service redis-server stop
-service mysql stop
-service nginx stop
+systemctl enable monoserveApiSystem.service
+
+for serverID in $(seq 1 ${APP_MONOSERVE_COUNT});
+do
+	index=$serverID;
+
+	if [ $index == 1 ]; then
+		index="";
+	fi
+
+        systemctl enable monoserve$index.service
+done
 
 if [ "${APP_SERVICES_EXTERNAL}" == "true" ]; then
         systemctl disable onlyofficeRadicale.service
