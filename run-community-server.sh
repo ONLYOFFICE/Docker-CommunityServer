@@ -1042,6 +1042,7 @@ systemctl onlyofficeMailCleaner stop
 systemctl onlyofficeNotify stop
 systemctl onlyofficeBackup stop
 systemctl onlyofficeStorageMigrate stop
+systemctl onlyofficeStorageEncryption stop
 systemctl onlyofficeUrlShortener stop
 
 systemctl elasticsearch stop
@@ -1075,6 +1076,8 @@ if [ "${APP_SERVICES_EXTERNAL}" == "true" ]; then
         systemctl disable onlyofficeNotify.service
         systemctl disable onlyofficeBackup.service
         systemctl disable onlyofficeStorageMigrate.service
+        systemctl disable onlyofficeStorageEncryption.service
+
         systemctl disable onlyofficeUrlShortener.service
 
 	rm -f /lib/systemd/system/onlyofficeRadicale.service
@@ -1089,6 +1092,7 @@ if [ "${APP_SERVICES_EXTERNAL}" == "true" ]; then
 	rm -f /lib/systemd/system/onlyofficeNotify.service
 	rm -f /lib/systemd/system/onlyofficeBackup.service
 	rm -f /lib/systemd/system/onlyofficeStorageMigrate.sevice
+	rm -f /lib/systemd/system/onlyofficeStorageEncryption.sevice
 	rm -f /lib/systemd/system/onlyofficeUrlShortener.service
 
 	sed '/onlyoffice/d' -i ${APP_CRON_PATH}
@@ -1105,6 +1109,7 @@ else
         systemctl enable onlyofficeNotify.service
         systemctl enable onlyofficeBackup.service
         systemctl enable onlyofficeStorageMigrate.service
+        systemctl enable onlyofficeStorageEncryption.service
         systemctl enable onlyofficeUrlShortener.service
 fi
 
