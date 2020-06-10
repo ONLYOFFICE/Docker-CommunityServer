@@ -10,6 +10,7 @@ echo "##########################################################"
 SERVER_HOST=${SERVER_HOST:-""};
 APP_DIR="/var/www/onlyoffice"
 APP_DATA_DIR="${APP_DIR}/Data"
+APP_INDEX_DIR="${APP_DIR}/Index/v7.4.0"
 APP_PRIVATE_DATA_DIR="${APP_DATA_DIR}/.private"
 APP_SERVICES_DIR="${APP_DIR}/Services"
 APP_SQL_DIR="${APP_DIR}/Sql"
@@ -443,8 +444,6 @@ if [ ${REDIS_SERVER_HOST} ]; then
         sed 's/<add\s*host=".*"\s*cachePort="[0-9]*"\s*\/>/<add host="'${REDIS_SERVER_HOST}'" cachePort="'${REDIS_SERVER_CACHEPORT}'" \/>/' -i ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config
         sed -E 's/<redisCacheClient\s*ssl="(false|true)"\s*connectTimeout="[0-9]*"\s*database="[0-9]*"\s*password=".*">/<redisCacheClient ssl="'${REDIS_SERVER_SSL}'" connectTimeout="'${REDIS_SERVER_CONNECT_TIMEOUT}'" database="'${REDIS_SERVER_DATABASE}'" password="'${REDIS_SERVER_PASSWORD}'">/' -i ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config
 
-
-
 	APP_SERVICES_SOCKET_IO_PATH=${APP_SERVICES_DIR}/ASC.Socket.IO/config/config.json;
 
 	jq '.redis |= . + {"host":"'${REDIS_SERVER_HOST}'","port":'${REDIS_SERVER_CACHEPORT}',"db":'${REDIS_SERVER_DATABASE}',"pass":"'${REDIS_SERVER_PASSWORD}'"}'\
@@ -462,21 +461,21 @@ fi
 ELASTICSEARCH_SERVER_HOST=${ELASTICSEARCH_SERVER_ADDR:-${ELASTICSEARCH_SERVER_HOST}};
 ELASTICSEARCH_SERVER_HTTPPORT=${ELASTICSEARCH_SERVER_HTTP_PORT:-${ELASTICSEARCH_SERVER_HTTPPORT:-"9200"}};
 
-if grep -q '<section name="elastic" type="ASC.ElasticSearch.Config.ElasticSection, ASC.ElasticSearch" />' /var/www/onlyoffice/WebStudio/Web.config; then
+if grep -q '<section name="elastic" type="ASC.ElasticSearch.Config.ElasticSection, ASC.ElasticSearch" />' ${APP_ROOT_DIR}/Web.config; then
     echo "This entry is already there"
 else
   if [ ${ELASTICSEARCH_SERVER_HOST} ]; then
-    sed -i '/<section name="redisCacheClient" type="StackExchange.Redis.Extensions.LegacyConfiguration.RedisCachingSectionHandler, StackExchange.Redis.Extensions.LegacyConfiguration" \/>/a <section name="elastic" type="ASC.ElasticSearch.Config.ElasticSection, ASC.ElasticSearch" \/>' /var/www/onlyoffice/WebStudio/Web.config
-    sed -i 's/<section name="elastic" type="ASC.ElasticSearch.Config.ElasticSection, ASC.ElasticSearch" \/>/    <section name="elastic" type="ASC.ElasticSearch.Config.ElasticSection, ASC.ElasticSearch" \/>/' /var/www/onlyoffice/WebStudio/Web.config
-    sed -i '/<section name="redisCacheClient" type="StackExchange.Redis.Extensions.LegacyConfiguration.RedisCachingSectionHandler, StackExchange.Redis.Extensions.LegacyConfiguration" \/>/a <section name="elastic" type="ASC.ElasticSearch.Config.ElasticSection, ASC.ElasticSearch" \/>' /var/www/onlyoffice/Services/TeamLabSvc/TeamLabSvc.exe.config
-    sed -i 's/<section name="elastic" type="ASC.ElasticSearch.Config.ElasticSection, ASC.ElasticSearch" \/>/    <section name="elastic" type="ASC.ElasticSearch.Config.ElasticSection, ASC.ElasticSearch" \/>/' /var/www/onlyoffice/Services/TeamLabSvc/TeamLabSvc.exe.config
+    sed -i '/<section name="redisCacheClient" type="StackExchange.Redis.Extensions.LegacyConfiguration.RedisCachingSectionHandler, StackExchange.Redis.Extensions.LegacyConfiguration" \/>/a <section name="elastic" type="ASC.ElasticSearch.Config.ElasticSection, ASC.ElasticSearch" \/>' ${APP_ROOT_DIR}/Web.config
+    sed -i 's/<section name="elastic" type="ASC.ElasticSearch.Config.ElasticSection, ASC.ElasticSearch" \/>/    <section name="elastic" type="ASC.ElasticSearch.Config.ElasticSection, ASC.ElasticSearch" \/>/' ${APP_ROOT_DIR}/Web.config
+    sed -i '/<section name="redisCacheClient" type="StackExchange.Redis.Extensions.LegacyConfiguration.RedisCachingSectionHandler, StackExchange.Redis.Extensions.LegacyConfiguration" \/>/a <section name="elastic" type="ASC.ElasticSearch.Config.ElasticSection, ASC.ElasticSearch" \/>' ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config
+    sed -i 's/<section name="elastic" type="ASC.ElasticSearch.Config.ElasticSection, ASC.ElasticSearch" \/>/    <section name="elastic" type="ASC.ElasticSearch.Config.ElasticSection, ASC.ElasticSearch" \/>/' ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config
 
     if [ ${ELASTICSEARCH_SERVER_HTTPPORT} ]; then
-        sed -i '/<\/configSections>/a <elastic scheme="http" host="'${ELASTICSEARCH_SERVER_HOST}'" port="'${ELASTICSEARCH_SERVER_HTTPPORT}'" \/>' /var/www/onlyoffice/WebStudio/Web.config
-        sed -i 's/<elastic scheme="http" host="'${ELASTICSEARCH_SERVER_HOST}'" port="'${ELASTICSEARCH_SERVER_HTTPPORT}'" \/>/  <elastic scheme="http" host="'${ELASTICSEARCH_SERVER_HOST}'" port="'${ELASTICSEARCH_SERVER_HTTPPORT}'" \/>/' /var/www/onlyoffice/WebStudio/Web.config
+        sed -i '/<\/configSections>/a <elastic scheme="http" host="'${ELASTICSEARCH_SERVER_HOST}'" port="'${ELASTICSEARCH_SERVER_HTTPPORT}'" \/>' ${APP_ROOT_DIR}/Web.config
+        sed -i 's/<elastic scheme="http" host="'${ELASTICSEARCH_SERVER_HOST}'" port="'${ELASTICSEARCH_SERVER_HTTPPORT}'" \/>/  <elastic scheme="http" host="'${ELASTICSEARCH_SERVER_HOST}'" port="'${ELASTICSEARCH_SERVER_HTTPPORT}'" \/>/' ${APP_ROOT_DIR}/Web.config
 
-        sed -i '/<\/configSections>/a <elastic scheme="http" host="'${ELASTICSEARCH_SERVER_HOST}'" port="'${ELASTICSEARCH_SERVER_HTTPPORT}'" \/>' /var/www/onlyoffice/Services/TeamLabSvc/TeamLabSvc.exe.config
-        sed -i 's/<elastic scheme="http" host="'${ELASTICSEARCH_SERVER_HOST}'" port="'${ELASTICSEARCH_SERVER_HTTPPORT}'" \/>/  <elastic scheme="http" host="'${ELASTICSEARCH_SERVER_HOST}'" port="'${ELASTICSEARCH_SERVER_HTTPPORT}'" \/>/' /var/www/onlyoffice/Services/TeamLabSvc/TeamLabSvc.exe.config
+        sed -i '/<\/configSections>/a <elastic scheme="http" host="'${ELASTICSEARCH_SERVER_HOST}'" port="'${ELASTICSEARCH_SERVER_HTTPPORT}'" \/>' ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config
+        sed -i 's/<elastic scheme="http" host="'${ELASTICSEARCH_SERVER_HOST}'" port="'${ELASTICSEARCH_SERVER_HTTPPORT}'" \/>/  <elastic scheme="http" host="'${ELASTICSEARCH_SERVER_HOST}'" port="'${ELASTICSEARCH_SERVER_HTTPPORT}'" \/>/' ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config
     fi
   fi
 fi
@@ -1020,11 +1019,15 @@ else
               chown -R onlyoffice:onlyoffice ${APP_DATA_DIR}
         fi
 
-	mkdir -p "$LOG_DIR/Index"
-	mkdir -p "$APP_DATA_DIR/Index"
+        if [ ! -d "$APP_INDEX_DIR" ]; then
+		mysql_scalar_exec "TRUNCATE webstudio_index";
+	fi
 
-        if [ "$(ls -alhd $APP_DATA_DIR/Index | awk '{ print $3 }')" != "elasticsearch" ]; then
-		chown -R elasticsearch:elasticsearch "$APP_DATA_DIR/Index"
+	mkdir -p "$LOG_DIR/Index"
+	mkdir -p "$APP_INDEX_DIR"
+
+        if [ "$(ls -alhd $APP_INDEX_DIR | awk '{ print $3 }')" != "elasticsearch" ]; then
+		chown -R elasticsearch:elasticsearch "$APP_INDEX_DIR"
         fi
 
 	chown -R elasticsearch:elasticsearch "$LOG_DIR/Index"
