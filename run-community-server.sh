@@ -10,7 +10,7 @@ echo "##########################################################"
 SERVER_HOST=${SERVER_HOST:-""};
 APP_DIR="/var/www/onlyoffice"
 APP_DATA_DIR="${APP_DIR}/Data"
-APP_INDEX_DIR="${APP_DIR}/Index/v7.4.0"
+APP_INDEX_DIR="${APP_DATA_DIR}/Index/v7.4.0"
 APP_PRIVATE_DATA_DIR="${APP_DATA_DIR}/.private"
 APP_SERVICES_DIR="${APP_DIR}/Services"
 APP_SQL_DIR="${APP_DIR}/Sql"
@@ -357,7 +357,7 @@ if [ "${DOCUMENT_SERVER_ENABLED}" == "true" ] && [ $DOCKER_APP_SUBNET ] && [ -z 
 fi
 
 
-if [ ${MYSQL_SERVER_HOST} != "localhost" ]; then
+if [ ${MYSQL_SERVER_HOST} != "localhost" ] && [ ${MYSQL_SERVER_HOST} != "127.0.0.1" ]; then
 	MYSQL_SERVER_EXTERNAL=true;
 fi
 
