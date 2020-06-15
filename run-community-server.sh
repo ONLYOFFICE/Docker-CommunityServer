@@ -964,6 +964,9 @@ if [ "${MYSQL_SERVER_EXTERNAL}" == "true" ]; then
 	rm -f "${APP_GOD_DIR}"/mysql.god;
 fi
 
+if [ ${ELASTICSEARCH_SERVER_HOST} ]; then
+        rm -f "${APP_GOD_DIR}"/elasticsearch.god;
+fi
 
 if [ "${APP_MODE}" == "SERVICES" ]; then
 	service nginx stop
@@ -1087,7 +1090,11 @@ else
 	service onlyofficeBackup restart
 	service onlyofficeStorageMigrate restart
 	service onlyofficeUrlShortener restart
-	service elasticsearch restart
+        if [ ${ELASTICSEARCH_SERVER_HOST} ]; then
+           service elasticsearch stop
+	else
+           service elasticsearch restart
+        fi
 fi
 
 service god restart
@@ -1108,7 +1115,6 @@ fi
 PID=$(ps auxf | grep cron | grep -v grep | awk '{print $2}')
 
 if [ ${ELASTICSEARCH_SERVER_HOST} ]; then
-  service elasticsearch stop
   service onlyofficeIndex restart
   service monoserve restart
 fi
