@@ -1033,26 +1033,28 @@ else
 	chown -R elasticsearch:elasticsearch "$LOG_DIR/Index"
 fi
 
-systemctl onlyofficeRadicale stop
-systemctl onlyofficeSocketIO stop
-systemctl onlyofficeThumb stop
-systemctl onlyofficeFeed stop
-systemctl onlyofficeIndex stop
-systemctl onlyofficeJabber stop
-systemctl onlyofficeMailAggregator stop
-systemctl onlyofficeMailWatchdog stop
-systemctl onlyofficeMailCleaner stop
-systemctl onlyofficeNotify stop
-systemctl onlyofficeBackup stop
-systemctl onlyofficeStorageMigrate stop
-systemctl onlyofficeStorageEncryption stop
-systemctl onlyofficeUrlShortener stop
+systemctl stop onlyofficeRadicale
+systemctl stop onlyofficeTelegram
+systemctl stop onlyofficeSocketIO
+systemctl stop onlyofficeThumb
+systemctl stop onlyofficeFeed
+systemctl stop onlyofficeIndex
+systemctl stop onlyofficeJabber
+systemctl stop onlyofficeMailAggregator
+systemctl stop onlyofficeMailWatchdog
+systemctl stop onlyofficeMailCleaner
+systemctl stop onlyofficeNotify
+systemctl stop onlyofficeBackup
+systemctl stop onlyofficeStorageMigrate
+systemctl stop onlyofficeStorageEncryption
+systemctl stop onlyofficeUrlShortener
 
-systemctl elasticsearch stop
-systemctl redis-server stop
-systemctl mysql stop
-systemctl nginx stop
+systemctl stop elasticsearch
+systemctl stop redis-server
+systemctl stop mysql
+systemctl stop nginx
 
+systemctl stop monoserveApiSystem.service
 systemctl enable monoserveApiSystem.service
 
 for serverID in $(seq 1 ${APP_MONOSERVE_COUNT});
@@ -1063,11 +1065,14 @@ do
 		index="";
 	fi
 
+
+        systemctl stop monoserve$index.service
         systemctl enable monoserve$index.service
 done
 
 if [ "${APP_SERVICES_EXTERNAL}" == "true" ]; then
         systemctl disable onlyofficeRadicale.service
+        systemctl disable onlyofficeTelegram.service
         systemctl disable onlyofficeSocketIO.service
         systemctl disable onlyofficeThumb.service
         systemctl disable onlyofficeFeed.service
@@ -1084,6 +1089,7 @@ if [ "${APP_SERVICES_EXTERNAL}" == "true" ]; then
         systemctl disable onlyofficeUrlShortener.service
 
 	rm -f /lib/systemd/system/onlyofficeRadicale.service
+	rm -f /lib/systemd/system/onlyofficeTelegram.service
 	rm -f /lib/systemd/system/onlyofficeSocketIO.service
 	rm -f /lib/systemd/system/onlyofficeThumb.service
 	rm -f /lib/systemd/system/onlyofficeFeed.service
@@ -1101,6 +1107,7 @@ if [ "${APP_SERVICES_EXTERNAL}" == "true" ]; then
 	sed '/onlyoffice/d' -i ${APP_CRON_PATH}
 else
         systemctl enable onlyofficeRadicale.service
+        systemctl enable onlyofficeTelegram.service
         systemctl enable onlyofficeSocketIO.service
         systemctl enable onlyofficeThumb.service
         systemctl enable onlyofficeFeed.service
