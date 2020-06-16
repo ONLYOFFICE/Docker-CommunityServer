@@ -22,9 +22,11 @@ APP_MONOSERVE_COUNT=1;
 APP_MODE=${APP_MODE:-"SERVER"};
 APP_CRON_DIR="/etc/cron.d"
 APP_CRON_PATH="/etc/cron.d/onlyoffice"
+LICENSE_FILE_PATH="/var/www/onlyoffice/DocumentServerData/license.lic"
 DOCKER_APP_SUBNET=$(ip -o -f inet addr show | awk '/scope global/ {print $4}' | head -1);
 DOCKER_CONTAINER_IP=$(ip addr show eth0 | awk '/inet / {gsub(/\/.*/,"",$2); print $2}' | head -1);
 DOCKER_CONTAINER_NAME="onlyoffice-community-server";
+DOCKER_DOCUMENT_SERVER_CONTAINER_NAME="onlyoffice-document-server";
 DOCKER_ENABLED=${DOCKER_ENABLED:-true};
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 NGINX_CONF_DIR="/etc/nginx/sites-enabled"
@@ -33,6 +35,7 @@ NGINX_WORKER_CONNECTIONS=${NGINX_WORKER_CONNECTIONS:-$(ulimit -n)};
 SERVICE_SSO_AUTH_HOST_ADDR=${SERVICE_SSO_AUTH_HOST_ADDR:-${CONTROL_PANEL_PORT_80_TCP_ADDR}};
 DEFAULT_APP_CORE_MACHINEKEY="$(sudo sed -n '/"core.machinekey"/s!.*value\s*=\s*"\([^"]*\)".*!\1!p' ${APP_ROOT_DIR}/web.appsettings.config)";
 IS_UPDATE="false"
+OPENSOURCE=${OPENSOURCE:-true};
 
 CreateAuthToken() {
         local pkey="$1";
@@ -89,6 +92,14 @@ if cat /proc/1/cgroup | grep -qE "docker|lxc|kubepods|libpod"; then
         DOCKER_ENABLED=true;
 else
 	DOCKER_ENABLED=false;
+fi
+
+if [ "${DOCKER_ENABLED}" == "true" ]; then
+	DOCKER_DOCUMENT_SERVER_PACKAGE_TYPE=$(curl -s http://$DOCKER_DOCUMENT_SERVER_CONTAINER_NAME:8000/info/info.json | jq '.licenseInfo.packageType');
+
+	if [ -n "$DOCKER_DOCUMENT_SERVER_PACKAGE_TYPE" ] && [ "$DOCKER_DOCUMENT_SERVER_PACKAGE_TYPE" -gt 0 ]; then
+		  OPENSOURCE="false";
+	fi
 fi
 
 if [ ! -d "$NGINX_CONF_DIR" ]; then
@@ -861,6 +872,10 @@ if [ "${CONTROL_PANEL_ENABLED}" == "true" ]; then
 	sed '/web\.controlpanel\.url/s/\(value\s*=\s*\"\)[^\"]*\"/\1\/controlpanel\/\"/' -i  ${APP_ROOT_DIR}/web.appsettings.config;
 	sed '/web\.controlpanel\.url/s/\(value\s*=\s*\"\)[^\"]*\"/\1\/controlpanel\/\"/' -i ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config;
 
+        if [ "$OPENSOURCE" == "false" ]; then
+              sed '/license\.file\.path/s/\(value\s*=\s*\"\)[^\"]*\"/\1${LICENSE.FILE.PATH}\"/' -i  ${APP_ROOT_DIR}/web.appsettings.config;
+              sed '/license\.file\.path/s/\(value\s*=\s*\"\)[^\"]*\"/\1${LICENSE.FILE.PATH}\"/' -i  ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config;
+        fi
 fi
 
 if [ "${APP_MODE}" == "SERVER" ]; then
