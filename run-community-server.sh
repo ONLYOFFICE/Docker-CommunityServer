@@ -296,11 +296,11 @@ service nginx restart
 #	sed -i "s/thread_pool.index.size.*/thread_pool.index.size: $CPU_PROCESSOR_COUNT/" /etc/elasticsearch/elasticsearch.yml
 #fi
 
-if ! grep -q "thread_pool.write.size" /etc/elasticsearch/elasticsearch.yml; then
-	echo "thread_pool.write.size: $CPU_PROCESSOR_COUNT" >> /etc/elasticsearch/elasticsearch.yml
-else
-	sed -i "s/thread_pool.write.size.*/thread_pool.write.size: $CPU_PROCESSOR_COUNT/" /etc/elasticsearch/elasticsearch.yml
-fi
+#if ! grep -q "thread_pool.write.size" /etc/elasticsearch/elasticsearch.yml; then
+#	echo "thread_pool.write.size: $CPU_PROCESSOR_COUNT" >> /etc/elasticsearch/elasticsearch.yml
+#else
+#	sed -i "s/thread_pool.write.size.*/thread_pool.write.size: $CPU_PROCESSOR_COUNT/" /etc/elasticsearch/elasticsearch.yml
+#fi
 
 TOTAL_MEMORY=$(free -m | grep -oP '\d+' | head -n 1);
 MEMORY_REQUIREMENTS=12228; #RAM ~4*3Gb
