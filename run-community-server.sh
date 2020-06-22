@@ -874,8 +874,8 @@ if [ "${CONTROL_PANEL_ENABLED}" == "true" ]; then
 	sed '/web\.controlpanel\.url/s/\(value\s*=\s*\"\)[^\"]*\"/\1\/controlpanel\/\"/' -i ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config;
 
         if [ "$OPENSOURCE" == "false" ]; then
-              sed '/license\.file\.path/s/\(value\s*=\s*\"\)[^\"]*\"/\1${LICENSE.FILE.PATH}\"/' -i  ${APP_ROOT_DIR}/web.appsettings.config;
-              sed '/license\.file\.path/s/\(value\s*=\s*\"\)[^\"]*\"/\1${LICENSE.FILE.PATH}\"/' -i  ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config;
+               sed "/license\.file\.path/s!value=\".*\"!value=\"${LICENSE_FILE_PATH}\"!g" -i ${APP_ROOT_DIR}/web.appsettings.config;
+               sed "/license\.file\.path/s!value=\".*\"!value=\"${LICENSE_FILE_PATH}\"!g" -i ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config;
         fi
 fi
 
