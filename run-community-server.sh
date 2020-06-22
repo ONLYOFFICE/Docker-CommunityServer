@@ -94,18 +94,6 @@ else
 	DOCKER_ENABLED=false;
 fi
 
-if [ "${DOCKER_ENABLED}" == "true" ]; then
-        while ! bash ${SYSCONF_TOOLS_DIR}/wait-for-it.sh $DOCKER_DOCUMENT_SERVER_CONTAINER_NAME:8000 --quiet -s -- echo "Document Server is up"; do
-                sleep 1
-        done
-
-	DOCKER_DOCUMENT_SERVER_PACKAGE_TYPE=$(curl -s http://$DOCKER_DOCUMENT_SERVER_CONTAINER_NAME:8000/info/info.json | jq '.licenseInfo.packageType');
-
-	if [ -n "$DOCKER_DOCUMENT_SERVER_PACKAGE_TYPE" ] && [ "$DOCKER_DOCUMENT_SERVER_PACKAGE_TYPE" -gt 0 ]; then
-		  OPENSOURCE="false";
-	fi
-fi
-
 if [ ! -d "$NGINX_CONF_DIR" ]; then
    mkdir -p $NGINX_CONF_DIR;
 fi
@@ -151,7 +139,6 @@ DOCUMENT_SERVER_JWT_ENABLED=${DOCUMENT_SERVER_JWT_ENABLED:-false};
 DOCUMENT_SERVER_JWT_SECRET=${DOCUMENT_SERVER_JWT_SECRET:-""};
 DOCUMENT_SERVER_JWT_HEADER=${DOCUMENT_SERVER_JWT_HEADER:-""};
 DOCUMENT_SERVER_HOST=${DOCUMENT_SERVER_HOST:-""};
-DOCUMENT_SERVER_HOST_PROXY=${DOCUMENT_SERVER_HOST};
 DOCUMENT_SERVER_PROTOCOL=${DOCUMENT_SERVER_PROTOCOL:-"http"};
 DOCUMENT_SERVER_API_URL="";
 DOCUMENT_SERVER_HOST_IP="";
@@ -353,7 +340,6 @@ if [ ${DOCUMENT_SERVER_HOST} ]; then
 elif [ ${DOCUMENT_SERVER_PORT_80_TCP_ADDR} ]; then
 	DOCUMENT_SERVER_ENABLED=true;
 	DOCUMENT_SERVER_HOST=${DOCUMENT_SERVER_PORT_80_TCP_ADDR};
-	DOCUMENT_SERVER_HOST_PROXY="localhost\/ds-vpath";
 	DOCUMENT_SERVER_API_URL="\/ds-vpath";
 fi
 
@@ -371,6 +357,17 @@ if [ "${DOCUMENT_SERVER_ENABLED}" == "true" ] && [ $DOCKER_APP_SUBNET ] && [ -z 
 	fi
 fi
 
+if [ "${DOCKER_ENABLED}" == "true" ] && [ "${DOCUMENT_SERVER_HOST}" == "${DOCKER_DOCUMENT_SERVER_CONTAINER_NAME}" ]; then
+        while ! bash ${SYSCONF_TOOLS_DIR}/wait-for-it.sh $DOCKER_DOCUMENT_SERVER_CONTAINER_NAME:8000 --quiet -s -- echo "Document Server is up"; do
+                sleep 1
+        done
+
+	DOCKER_DOCUMENT_SERVER_PACKAGE_TYPE=$(curl -s http://$DOCKER_DOCUMENT_SERVER_CONTAINER_NAME:8000/info/info.json | jq '.licenseInfo.packageType');
+
+	if [ -n "$DOCKER_DOCUMENT_SERVER_PACKAGE_TYPE" ] && [ "$DOCKER_DOCUMENT_SERVER_PACKAGE_TYPE" -gt 0 ]; then
+		  OPENSOURCE="false";
+	fi
+fi
 
 if [ ${MYSQL_SERVER_HOST} != "localhost" ] && [ ${MYSQL_SERVER_HOST} != "127.0.0.1" ]; then
 	MYSQL_SERVER_EXTERNAL=true;
