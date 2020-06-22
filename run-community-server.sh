@@ -95,6 +95,10 @@ else
 fi
 
 if [ "${DOCKER_ENABLED}" == "true" ]; then
+        while ! bash ${SYSCONF_TOOLS_DIR}/wait-for-it.sh $DOCKER_DOCUMENT_SERVER_CONTAINER_NAME:8000 --quiet -s -- echo "Document Server is up"; do
+                sleep 1
+        done
+
 	DOCKER_DOCUMENT_SERVER_PACKAGE_TYPE=$(curl -s http://$DOCKER_DOCUMENT_SERVER_CONTAINER_NAME:8000/info/info.json | jq '.licenseInfo.packageType');
 
 	if [ -n "$DOCKER_DOCUMENT_SERVER_PACKAGE_TYPE" ] && [ "$DOCKER_DOCUMENT_SERVER_PACKAGE_TYPE" -gt 0 ]; then
