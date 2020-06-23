@@ -18,6 +18,7 @@ ENV LANG=en_US.UTF-8 \
 
 RUN apt-get -y update && \
     apt-get -y upgrade && \
+    apt-get -y dist-upgrade && \
     addgroup --system --gid 107 ${PACKAGE_SYSNAME} && \
     adduser -uid 104 --quiet --home /var/www/${PACKAGE_SYSNAME} --system --gid 107 ${PACKAGE_SYSNAME} && \
     addgroup --system --gid 104 elasticsearch && \
