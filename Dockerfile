@@ -43,7 +43,7 @@ RUN apt-get -y update && \
     locale-gen en_US.UTF-8 && \
     echo "#!/bin/sh\nexit 0" > /usr/sbin/policy-rc.d && \
     echo "${SOURCE_REPO_URL}" >> /etc/apt/sources.list && \
-    echo "deb https://download.mono-project.com/repo/ubuntu stable-bionic/snapshots/6.10.0.104 main" | tee /etc/apt/sources.list.d/mono-official.list && \
+    echo "deb https://download.mono-project.com/repo/ubuntu stable-bionic/snapshots/6.8.0.123 main" | tee /etc/apt/sources.list.d/mono-official.list && \
     echo "deb https://d2nlctn12v279m.cloudfront.net/repo/mono/ubuntu bionic main" | tee /etc/apt/sources.list.d/mono-extra.list && \    
     apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys CB2DE8E5 && \
     apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF && \
