@@ -481,6 +481,8 @@ else
     sed -i 's/<section name="elastic" type="ASC.ElasticSearch.Config.ElasticSection, ASC.ElasticSearch" \/>/    <section name="elastic" type="ASC.ElasticSearch.Config.ElasticSection, ASC.ElasticSearch" \/>/' ${APP_ROOT_DIR}/Web.config
     sed -i '/<section name="redisCacheClient" type="StackExchange.Redis.Extensions.LegacyConfiguration.RedisCachingSectionHandler, StackExchange.Redis.Extensions.LegacyConfiguration" \/>/a <section name="elastic" type="ASC.ElasticSearch.Config.ElasticSection, ASC.ElasticSearch" \/>' ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config
     sed -i 's/<section name="elastic" type="ASC.ElasticSearch.Config.ElasticSection, ASC.ElasticSearch" \/>/    <section name="elastic" type="ASC.ElasticSearch.Config.ElasticSection, ASC.ElasticSearch" \/>/' ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config
+    sed -i '/<section name="autofac" type="ASC.Common.DependencyInjection.AutofacConfigurationSection, ASC.Common" \/>/a <section name="elastic" type="ASC.ElasticSearch.Config.ElasticSection, ASC.ElasticSearch" \/>' ${APP_SERVICES_DIR}/MailAggregator/ASC.Mail.Aggregator.CollectionService.exe.config
+    sed -i 's/<section name="elastic" type="ASC.ElasticSearch.Config.ElasticSection, ASC.ElasticSearch" \/>/    <section name="elastic" type="ASC.ElasticSearch.Config.ElasticSection, ASC.ElasticSearch" \/>/' ${APP_SERVICES_DIR}/MailAggregator/ASC.Mail.Aggregator.CollectionService.exe.config
 
     if [ ${ELASTICSEARCH_SERVER_HTTPPORT} ]; then
         sed -i '/<\/configSections>/a <elastic scheme="http" host="'${ELASTICSEARCH_SERVER_HOST}'" port="'${ELASTICSEARCH_SERVER_HTTPPORT}'" \/>' ${APP_ROOT_DIR}/Web.config
@@ -488,6 +490,9 @@ else
 
         sed -i '/<\/configSections>/a <elastic scheme="http" host="'${ELASTICSEARCH_SERVER_HOST}'" port="'${ELASTICSEARCH_SERVER_HTTPPORT}'" \/>' ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config
         sed -i 's/<elastic scheme="http" host="'${ELASTICSEARCH_SERVER_HOST}'" port="'${ELASTICSEARCH_SERVER_HTTPPORT}'" \/>/  <elastic scheme="http" host="'${ELASTICSEARCH_SERVER_HOST}'" port="'${ELASTICSEARCH_SERVER_HTTPPORT}'" \/>/' ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config
+
+        sed -i '/<storage file/a <elastic scheme="http" host="'${ELASTICSEARCH_SERVER_HOST}'" port="'${ELASTICSEARCH_SERVER_HTTPPORT}'" \/>' ${APP_SERVICES_DIR}/MailAggregator/ASC.Mail.Aggregator.CollectionService.exe.config
+        sed -i 's/<elastic scheme="http" host="'${ELASTICSEARCH_SERVER_HOST}'" port="'${ELASTICSEARCH_SERVER_HTTPPORT}'" \/>/  <elastic scheme="http" host="'${ELASTICSEARCH_SERVER_HOST}'" port="'${ELASTICSEARCH_SERVER_HTTPPORT}'" \/>/' ${APP_SERVICES_DIR}/MailAggregator/ASC.Mail.Aggregator.CollectionService.exe.config
     fi
   fi
 fi
