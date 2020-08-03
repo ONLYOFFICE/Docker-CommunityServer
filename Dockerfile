@@ -78,8 +78,9 @@ RUN apt-get -y update && \
                         openjdk-8-jre-headless \
                         apt-transport-https \
                         elasticsearch=7.4.0 \
-                        mono-webserver-hyperfastcgi=0.4-7 \    
-                        ${PACKAGE_SYSNAME}-communityserver && \
+                        mono-webserver-hyperfastcgi=0.4-7 \
+                        ${PACKAGE_SYSNAME}-communityserver \
+                        ${PACKAGE_SYSNAME}-xmppserver && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
