@@ -629,6 +629,7 @@ fi
 change_connections "default" "${APP_ROOT_DIR}/web.connections.config";
 change_connections "teamlabsite" "${APP_ROOT_DIR}/web.connections.config";
 change_connections "default" "${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config";
+change_connections "default" "${APP_SERVICES_DIR}/Jabber/ASC.Xmpp.Server.Launcher.exe.config";
 change_connections "default" "${APP_SERVICES_DIR}/MailAggregator/ASC.Mail.Aggregator.CollectionService.exe.config";
 change_connections "default" "${APP_SERVICES_DIR}/MailAggregator/ASC.Mail.EmlDownloader.exe.config";
 change_connections "default" "${APP_SERVICES_DIR}/MailWatchdog/ASC.Mail.Watchdog.Service.exe.config";
