@@ -16,6 +16,7 @@ APP_SERVICES_DIR="${APP_DIR}/Services"
 APP_SQL_DIR="${APP_DIR}/Sql"
 APP_ROOT_DIR="${APP_DIR}/WebStudio"
 APP_APISYSTEM_DIR="/var/www/onlyoffice/ApiSystem"
+APP_GOD_DIR="/etc/god/conf.d"
 APP_MONOSERVER_PATH="/lib/systemd/system/monoserve.service";
 APP_HYPERFASTCGI_PATH="/etc/hyperfastcgi/onlyoffice";
 APP_MONOSERVE_COUNT=1;
@@ -932,6 +933,9 @@ do
 	sed 's,'${APP_ROOT_DIR}','${APP_ROOT_DIR}''${serverID}',g' -i ${APP_HYPERFASTCGI_PATH}$serverID;
 	sed 's/onlyoffice\.socket/onlyoffice'${serverID}'\.socket/g' -i ${APP_HYPERFASTCGI_PATH}$serverID;
 
+        cp ${APP_GOD_DIR}/monoserve.god ${APP_GOD_DIR}/monoserve$serverID.god;
+	sed 's/onlyoffice\.socket/onlyoffice'${serverID}'\.socket/g' -i ${APP_GOD_DIR}/monoserve$serverID.god;
+	sed 's/monoserve/monoserve'${serverID}'/g' -i ${APP_GOD_DIR}/monoserve$serverID.god;
 
 	sed '/onlyoffice'${serverID}'.socket/d' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice;
 	sed '/onlyoffice'${serverID}'.socket/d' -i ${NGINX_CONF_DIR}/onlyoffice;
@@ -1001,6 +1005,7 @@ if [ "${APP_MODE}" == "SERVICES" ]; then
         systemctl disable nginx.service
         systemctl disable monoserveApiSystem.service
 
+        rm -f "${APP_GOD_DIR}"/monoserveApiSystem.god;
 	rm -f /lib/systemd/system.d/monoserveApiSystem.service
 
 	for serverID in $(seq 1 ${APP_MONOSERVE_COUNT});
@@ -1011,6 +1016,7 @@ if [ "${APP_MODE}" == "SERVICES" ]; then
 			index="";
 		fi
 
+                rm -f "${APP_GOD_DIR}"/monoserve$index.god;
                 systemctl stop monoserve$index
                 systemctl disable monoserve$index.service
 
@@ -1071,6 +1077,10 @@ systemctl stop onlyofficeStorageMigrate
 systemctl stop onlyofficeStorageEncryption
 systemctl stop onlyofficeUrlShortener
 
+
+systemctl stop god
+systemctl enable god
+
 systemctl stop elasticsearch
 systemctl stop redis-server
 systemctl stop mysql
@@ -1093,6 +1103,9 @@ do
 done
 
 if [ "${APP_SERVICES_EXTERNAL}" == "true" ]; then
+        rm -f "${APP_GOD_DIR}"/onlyoffice.god;
+        rm -f "${APP_GOD_DIR}"/mail.god;
+
         systemctl disable onlyofficeRadicale.service
         systemctl disable onlyofficeTelegram.service
         systemctl disable onlyofficeSocketIO.service
