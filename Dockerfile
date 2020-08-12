@@ -60,6 +60,8 @@ RUN apt-get -y update && \
                         software-properties-common \
                         cron \
                         rsyslog \
+			ruby-dev \
+			ruby-god \
                         nodejs \
                         nginx \
                         gdb \
