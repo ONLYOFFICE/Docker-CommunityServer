@@ -9,6 +9,7 @@ ARG PACKAGE_SYSNAME="onlyoffice"
 
 LABEL ${PACKAGE_SYSNAME}.community.release-date="${RELEASE_DATE}" \
       ${PACKAGE_SYSNAME}.community.version="${VERSION}" \
+      description="Community Server is a free open-source collaborative system developed to manage documents, projects, customer relationship and emails, all in one place." \
       maintainer="Ascensio System SIA <support@${PACKAGE_SYSNAME}.com>" \
       securitytxt="https://www.${PACKAGE_SYSNAME}.com/.well-known/security.txt"
 
