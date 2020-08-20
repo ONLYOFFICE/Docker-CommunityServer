@@ -50,7 +50,7 @@ RUN apt-get -y update && \
     apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF && \
     wget http://nginx.org/keys/nginx_signing.key && \
     apt-key add nginx_signing.key && \
-    echo "deb http://nginx.org/packages/mainline/ubuntu/ bionic nginx" >> /etc/apt/sources.list.d/nginx.list && \
+    echo "deb http://nginx.org/packages/ubuntu/ bionic nginx" >> /etc/apt/sources.list.d/nginx.list && \
     wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | apt-key add - && \
     echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" | tee -a /etc/apt/sources.list.d/elastic-7.x.list && \
     add-apt-repository -y ppa:certbot/certbot && \
@@ -64,7 +64,7 @@ RUN apt-get -y update && \
 			ruby-dev \
 			ruby-god \
                         nodejs \
-                        nginx \
+                        nginx-extras \
                         gdb \
                         mono-complete \
                         ca-certificates-mono \
