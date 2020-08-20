@@ -64,7 +64,7 @@ RUN apt-get -y update && \
 			ruby-dev \
 			ruby-god \
                         nodejs \
-                        nginx-extras \
+                        nginx \
                         gdb \
                         mono-complete \
                         ca-certificates-mono \
