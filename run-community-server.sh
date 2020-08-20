@@ -664,6 +664,8 @@ if [ -f "${SSL_CERTIFICATE_PATH}" -a -f "${SSL_KEY_PATH}" ]; then
 	sed 's,{{SSL_CERTIFICATE_PATH}},'"${SSL_CERTIFICATE_PATH}"',' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
 	sed 's,{{SSL_KEY_PATH}},'"${SSL_KEY_PATH}"',' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
 
+        sed "s/TLSv1.2;/TLSv1.2 TLSv1.3;/" -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
+
 	# if dhparam path is valid, add to the config, otherwise remove the option
 	if [ ! -f ${SSL_DHPARAM_PATH} ]; then
 		 sudo openssl dhparam -out dhparam.pem 2048
@@ -695,12 +697,6 @@ if [ -f "${SSL_CERTIFICATE_PATH}" -a -f "${SSL_KEY_PATH}" ]; then
 		sed 's,{{CA_CERTIFICATES_PATH}},'"${CA_CERTIFICATES_PATH}"',' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
 	else
 		sed '/{{CA_CERTIFICATES_PATH}}/d' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
-	fi
-
-	if [ "${APP_HTTPS_HSTS_ENABLED}" == "true" ]; then
-		sed 's/{{APP_HTTPS_HSTS_MAXAGE}}/'"${APP_HTTPS_HSTS_MAXAGE}"'/' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
-	else
-		sed '/{{APP_HTTPS_HSTS_MAXAGE}}/d' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
 	fi
 
 	sed '/certificate"/s!\(value\s*=\s*\"\).*\"!\1'${SSL_CERTIFICATE_PATH_PFX}'\"!' -i ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config
