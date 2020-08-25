@@ -653,6 +653,7 @@ elif [ "${IS_UPDATE}" == "true" ]; then
 	done
 fi
 
+mysql_scalar_exec "DELETE FROM webstudio_settings WHERE id='5C699566-34B1-4714-AB52-0E82410CE4E5';"
 
 # setup HTTPS
 if [ -f "${SSL_CERTIFICATE_PATH}" -a -f "${SSL_KEY_PATH}" ]; then
