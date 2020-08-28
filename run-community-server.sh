@@ -1138,21 +1138,21 @@ if [ "${APP_SERVICES_EXTERNAL}" == "true" ]; then
 
 	sed '/onlyoffice/d' -i ${APP_CRON_PATH}
 else
-        systemctl enable onlyofficeRadicale.service --now
-        systemctl enable onlyofficeTelegram.service --now
-        systemctl enable onlyofficeSocketIO.service --now
-        systemctl enable onlyofficeThumb.service --now
-        systemctl enable onlyofficeFeed.service --now
-        systemctl enable onlyofficeIndex.service --now
-        systemctl enable onlyofficeJabber.service --now
-        systemctl enable onlyofficeMailAggregator.service --now
-        systemctl enable onlyofficeMailWatchdog.service --now
-        systemctl enable onlyofficeMailCleaner.service --now
-        systemctl enable onlyofficeNotify.service --now
-        systemctl enable onlyofficeBackup.service --now
-        systemctl enable onlyofficeStorageMigrate.service --now
-        systemctl enable onlyofficeStorageEncryption.service --now
-        systemctl enable onlyofficeUrlShortener.service --now
+        systemctl enable onlyofficeRadicale.service
+        systemctl enable onlyofficeTelegram.service
+        systemctl enable onlyofficeSocketIO.service
+        systemctl enable onlyofficeThumb.service
+        systemctl enable onlyofficeFeed.service
+        systemctl enable onlyofficeIndex.service
+        systemctl enable onlyofficeJabber.service
+        systemctl enable onlyofficeMailAggregator.service
+        systemctl enable onlyofficeMailWatchdog.service
+        systemctl enable onlyofficeMailCleaner.service
+        systemctl enable onlyofficeNotify.service
+        systemctl enable onlyofficeBackup.service
+        systemctl enable onlyofficeStorageMigrate.service
+        systemctl enable onlyofficeStorageEncryption.service
+        systemctl enable onlyofficeUrlShortener.service
 fi
 
 if [ "${APP_MODE}" == "SERVER" ]; then
