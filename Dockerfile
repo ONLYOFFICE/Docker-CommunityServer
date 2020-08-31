@@ -93,7 +93,7 @@ COPY run-community-server.sh /app/run-community-server.sh
 
 RUN chmod -R 755 /app/*.sh
 
-VOLUME ["/sys/fs/cgroup","/var/log/${PACKAGE_SYSNAME}", "/var/www/${PACKAGE_SYSNAME}/Data", "/var/lib/mysql"]
+VOLUME ["/sys/fs/cgroup","/var/log/${PACKAGE_SYSNAME}", "/var/www/${PACKAGE_SYSNAME}/Data", "/var/lib/mysql", "/etc/letsencrypt"]
 
 EXPOSE 80 443 5222 3306 9865 9888 9866 9871 9882 5280
 
