@@ -36,7 +36,7 @@ NGINX_WORKER_CONNECTIONS=${NGINX_WORKER_CONNECTIONS:-$(ulimit -n)};
 SERVICE_SSO_AUTH_HOST_ADDR=${SERVICE_SSO_AUTH_HOST_ADDR:-${CONTROL_PANEL_PORT_80_TCP_ADDR}};
 DEFAULT_APP_CORE_MACHINEKEY="$(sudo sed -n '/"core.machinekey"/s!.*value\s*=\s*"\([^"]*\)".*!\1!p' ${APP_ROOT_DIR}/web.appsettings.config)";
 IS_UPDATE="false"
-OPENSOURCE=${OPENSOURCE:-true};
+WORKSPACE_ENTERPRISE=${WORKSPACE_ENTERPRISE:-false};
 
 CreateAuthToken() {
         local pkey="$1";
@@ -366,7 +366,7 @@ if [ "${DOCKER_ENABLED}" == "true" ] && [ "${DOCUMENT_SERVER_HOST}" == "${DOCKER
 	DOCKER_DOCUMENT_SERVER_PACKAGE_TYPE=$(curl -s http://$DOCKER_DOCUMENT_SERVER_CONTAINER_NAME:8000/info/info.json | jq '.licenseInfo.packageType');
 
 	if [ -n "$DOCKER_DOCUMENT_SERVER_PACKAGE_TYPE" ] && [ "$DOCKER_DOCUMENT_SERVER_PACKAGE_TYPE" -gt 0 ]; then
-		  OPENSOURCE="false";
+		  WORKSPACE_ENTERPRISE="true";
 	fi
 fi
 
@@ -749,6 +749,25 @@ if [ "${DOCUMENT_SERVER_ENABLED}" == "true" ]; then
         sed '/files\.docservice\.url\.portal/s!\(value\s*=\s*\"\)[^\"]*\"!\1http:\/\/'${SERVER_HOST}'\"!' -i ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config
     fi
 
+    if [ "$WORKSPACE_ENTERPRISE" == "true" ]; then
+         sed "/license\.file\.path/s!value=\".*\"!value=\"${LICENSE_FILE_PATH}\"!g" -i ${APP_ROOT_DIR}/web.appsettings.config;
+         sed "/license\.file\.path/s!value=\".*\"!value=\"${LICENSE_FILE_PATH}\"!g" -i ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config;
+
+         if [ ! -f ${LICENSE_FILE_PATH} ]; then
+		
+mysql --silent --skip-column-names -h ${MYSQL_SERVER_HOST} -P ${MYSQL_SERVER_PORT} -u ${MYSQL_SERVER_USER} --password=${MYSQL_SERVER_PASS} -D ${MYSQL_SERVER_DB_NAME} <<EOF || true
+INSERT IGNORE INTO tenants_quota (tenant, name, max_file_size, max_total_size, active_users, features) \
+SELECT -1000, 'start_trial', 'max_file_size', 'max_total_size', 'active_users', CONCAT('features', ',trial')
+FROM tenants_quota
+WHERE tenant = -1;
+INSERT IGNORE INTO tenants_tariff (id, tenant, tariff, stamp) VALUES ('1000','-1', '-1000', NOW() + INTERVAL 30 DAY);
+EOF
+		
+	fi
+
+
+
+    fi
 fi
 
 if [ "${MAIL_SERVER_ENABLED}" == "true" ]; then
@@ -876,11 +895,6 @@ if [ "${CONTROL_PANEL_ENABLED}" == "true" ]; then
 	# change web.appsettings link to controlpanel
 	sed '/web\.controlpanel\.url/s/\(value\s*=\s*\"\)[^\"]*\"/\1\/controlpanel\/\"/' -i  ${APP_ROOT_DIR}/web.appsettings.config;
 	sed '/web\.controlpanel\.url/s/\(value\s*=\s*\"\)[^\"]*\"/\1\/controlpanel\/\"/' -i ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config;
-
-        if [ "$OPENSOURCE" == "false" ]; then
-               sed "/license\.file\.path/s!value=\".*\"!value=\"${LICENSE_FILE_PATH}\"!g" -i ${APP_ROOT_DIR}/web.appsettings.config;
-               sed "/license\.file\.path/s!value=\".*\"!value=\"${LICENSE_FILE_PATH}\"!g" -i ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config;
-        fi
 fi
 
 if [ "${APP_MODE}" == "SERVER" ]; then
