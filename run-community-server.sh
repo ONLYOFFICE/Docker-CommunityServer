@@ -754,15 +754,15 @@ if [ "${DOCUMENT_SERVER_ENABLED}" == "true" ]; then
          sed "/license\.file\.path/s!value=\".*\"!value=\"${LICENSE_FILE_PATH}\"!g" -i ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config;
 
          if [ ! -f ${LICENSE_FILE_PATH} ]; then
-		
+
 mysql --silent --skip-column-names -h ${MYSQL_SERVER_HOST} -P ${MYSQL_SERVER_PORT} -u ${MYSQL_SERVER_USER} --password=${MYSQL_SERVER_PASS} -D ${MYSQL_SERVER_DB_NAME} <<EOF || true
-INSERT IGNORE INTO tenants_quota (tenant, name, max_file_size, max_total_size, active_users, features) \
-SELECT -1000, 'start_trial', 'max_file_size', 'max_total_size', 'active_users', CONCAT('features', ',privacyroom,trial')
+INSERT IGNORE INTO tenants_quota (tenant, name, max_file_size, max_total_size, active_users, features)
+SELECT -1000, 'start_trial', max_file_size, max_total_size, active_users, CONCAT(features, ',privacyroom,trial')
 FROM tenants_quota
 WHERE tenant = -1;
 INSERT IGNORE INTO tenants_tariff (id, tenant, tariff, stamp) VALUES ('1000','-1', '-1000', NOW() + INTERVAL 30 DAY);
 EOF
-		
+
 	fi
 
 
