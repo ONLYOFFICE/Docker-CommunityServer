@@ -1131,7 +1131,6 @@ if [ "${APP_SERVICES_EXTERNAL}" == "true" ]; then
         systemctl disable onlyofficeBackup.service
         systemctl disable onlyofficeStorageMigrate.service
         systemctl disable onlyofficeStorageEncryption.service
-
         systemctl disable onlyofficeUrlShortener.service
 
 	rm -f /lib/systemd/system/onlyofficeRadicale.service
@@ -1191,3 +1190,5 @@ fi
 if [ "${DOCKER_ENABLED}" == "true" ]; then
    exec /lib/systemd/systemd
 fi
+
+systemctl start god
