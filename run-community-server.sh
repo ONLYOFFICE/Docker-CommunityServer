@@ -1187,8 +1187,6 @@ if [ -n "$PID" ]; then
   kill -9 $PID
 fi
 
-systemctl start god
-
 if [ "${DOCKER_ENABLED}" == "true" ]; then
    exec /lib/systemd/systemd
 fi
