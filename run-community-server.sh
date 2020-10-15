@@ -10,30 +10,33 @@ echo "##########################################################"
 SERVER_HOST=${SERVER_HOST:-""};
 APP_DIR="/var/www/onlyoffice"
 APP_DATA_DIR="${APP_DIR}/Data"
+APP_INDEX_DIR="${APP_DATA_DIR}/Index/v7.4.0"
 APP_PRIVATE_DATA_DIR="${APP_DATA_DIR}/.private"
 APP_SERVICES_DIR="${APP_DIR}/Services"
 APP_SQL_DIR="${APP_DIR}/Sql"
 APP_ROOT_DIR="${APP_DIR}/WebStudio"
 APP_APISYSTEM_DIR="/var/www/onlyoffice/ApiSystem"
-APP_MONOSERVER_PATH="/etc/init.d/monoserve";
+APP_GOD_DIR="/etc/god/conf.d"
+APP_MONOSERVER_PATH="/lib/systemd/system/monoserve.service";
 APP_HYPERFASTCGI_PATH="/etc/hyperfastcgi/onlyoffice";
 APP_MONOSERVE_COUNT=1;
 APP_MODE=${APP_MODE:-"SERVER"};
-APP_GOD_DIR="/etc/god/conf.d"
 APP_CRON_DIR="/etc/cron.d"
 APP_CRON_PATH="/etc/cron.d/onlyoffice"
+LICENSE_FILE_PATH="/var/www/onlyoffice/DocumentServerData/license.lic"
 DOCKER_APP_SUBNET=$(ip -o -f inet addr show | awk '/scope global/ {print $4}' | head -1);
 DOCKER_CONTAINER_IP=$(ip addr show eth0 | awk '/inet / {gsub(/\/.*/,"",$2); print $2}' | head -1);
 DOCKER_CONTAINER_NAME="onlyoffice-community-server";
+DOCKER_DOCUMENT_SERVER_CONTAINER_NAME="onlyoffice-document-server";
 DOCKER_ENABLED=${DOCKER_ENABLED:-true};
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 NGINX_CONF_DIR="/etc/nginx/sites-enabled"
-CPU_PROCESSOR_COUNT=${CPU_PROCESSOR_COUNT:-$(grep processor /proc/cpuinfo | wc -l)};
+CPU_PROCESSOR_COUNT=${CPU_PROCESSOR_COUNT:-$(cat /proc/cpuinfo | grep -i processor | awk '{print $1}' | grep -i processor | wc -l)};
 NGINX_WORKER_CONNECTIONS=${NGINX_WORKER_CONNECTIONS:-$(ulimit -n)};
 SERVICE_SSO_AUTH_HOST_ADDR=${SERVICE_SSO_AUTH_HOST_ADDR:-${CONTROL_PANEL_PORT_80_TCP_ADDR}};
 DEFAULT_APP_CORE_MACHINEKEY="$(sudo sed -n '/"core.machinekey"/s!.*value\s*=\s*"\([^"]*\)".*!\1!p' ${APP_ROOT_DIR}/web.appsettings.config)";
 IS_UPDATE="false"
-
+WORKSPACE_ENTERPRISE=${WORKSPACE_ENTERPRISE:-false};
 
 CreateAuthToken() {
         local pkey="$1";
@@ -137,7 +140,6 @@ DOCUMENT_SERVER_JWT_ENABLED=${DOCUMENT_SERVER_JWT_ENABLED:-false};
 DOCUMENT_SERVER_JWT_SECRET=${DOCUMENT_SERVER_JWT_SECRET:-""};
 DOCUMENT_SERVER_JWT_HEADER=${DOCUMENT_SERVER_JWT_HEADER:-""};
 DOCUMENT_SERVER_HOST=${DOCUMENT_SERVER_HOST:-""};
-DOCUMENT_SERVER_HOST_PROXY=${DOCUMENT_SERVER_HOST};
 DOCUMENT_SERVER_PROTOCOL=${DOCUMENT_SERVER_PROTOCOL:-"http"};
 DOCUMENT_SERVER_API_URL="";
 DOCUMENT_SERVER_HOST_IP="";
@@ -146,7 +148,7 @@ CONTROL_PANEL_ENABLED=false
 MAIL_SERVER_ENABLED=false
 
 MYSQL_SERVER_ROOT_PASSWORD=${MYSQL_SERVER_ROOT_PASSWORD:-""}
-MYSQL_SERVER_HOST=${MYSQL_SERVER_HOST:-"localhost"}
+MYSQL_SERVER_HOST=${MYSQL_SERVER_HOST:-"127.0.0.1"}
 MYSQL_SERVER_PORT=${MYSQL_SERVER_PORT:-"3306"}
 MYSQL_SERVER_DB_NAME=${MYSQL_SERVER_DB_NAME:-"onlyoffice"}
 MYSQL_SERVER_USER=${MYSQL_SERVER_USER:-"root"}
@@ -278,21 +280,36 @@ fi
 
 rm -f ${NGINX_ROOT_DIR}/conf.d/*.conf
 
-service rsyslog restart || true
 service nginx restart
 
-if ! grep -q "thread_pool.index.size" /etc/elasticsearch/elasticsearch.yml; then
-	echo "thread_pool.index.size: $CPU_PROCESSOR_COUNT" >> /etc/elasticsearch/elasticsearch.yml
-else
-	sed -i "s/thread_pool.index.size.*/thread_pool.index.size: $CPU_PROCESSOR_COUNT/" /etc/elasticsearch/elasticsearch.yml
-fi
+#if ! grep -q "thread_pool.index.size" /etc/elasticsearch/elasticsearch.yml; then
+#	echo "thread_pool.index.size: $CPU_PROCESSOR_COUNT" >> /etc/elasticsearch/elasticsearch.yml
+#else
+#	sed -i "s/thread_pool.index.size.*/thread_pool.index.size: $CPU_PROCESSOR_COUNT/" /etc/elasticsearch/elasticsearch.yml
+#fi
 
-if ! grep -q "thread_pool.write.size" /etc/elasticsearch/elasticsearch.yml; then
-	echo "thread_pool.write.size: $CPU_PROCESSOR_COUNT" >> /etc/elasticsearch/elasticsearch.yml
-else
-	sed -i "s/thread_pool.write.size.*/thread_pool.write.size: $CPU_PROCESSOR_COUNT/" /etc/elasticsearch/elasticsearch.yml
-fi
+#if ! grep -q "thread_pool.write.size" /etc/elasticsearch/elasticsearch.yml; then
+#	echo "thread_pool.write.size: $CPU_PROCESSOR_COUNT" >> /etc/elasticsearch/elasticsearch.yml
+#else
+#	sed -i "s/thread_pool.write.size.*/thread_pool.write.size: $CPU_PROCESSOR_COUNT/" /etc/elasticsearch/elasticsearch.yml
+#fi
 
+TOTAL_MEMORY=$(free -m | grep -oP '\d+' | head -n 1);
+MEMORY_REQUIREMENTS=12228; #RAM ~4*3Gb
+
+if [ ${TOTAL_MEMORY} -gt ${MEMORY_REQUIREMENTS} ]; then
+	if ! grep -q "-Xms1g" /etc/elasticsearch/jvm.options; then
+		echo "-Xms4g" >> /etc/elasticsearch/jvm.options
+	else
+		sed -i "s/-Xms1g/-Xms4g/" /etc/elasticsearch/jvm.options
+	fi
+
+	if ! grep -q "-Xmx1g" /etc/elasticsearch/jvm.options; then
+		echo "-Xmx4g" >> /etc/elasticsearch/jvm.options
+	else
+		sed -i "s/-Xmx1g/-Xmx4g/" /etc/elasticsearch/jvm.options
+	fi
+fi
 
 if [ ${APP_SERVICES_INTERNAL_HOST} ]; then
 	APP_SERVICES_EXTERNAL=true;
@@ -324,7 +341,6 @@ if [ ${DOCUMENT_SERVER_HOST} ]; then
 elif [ ${DOCUMENT_SERVER_PORT_80_TCP_ADDR} ]; then
 	DOCUMENT_SERVER_ENABLED=true;
 	DOCUMENT_SERVER_HOST=${DOCUMENT_SERVER_PORT_80_TCP_ADDR};
-	DOCUMENT_SERVER_HOST_PROXY="localhost\/ds-vpath";
 	DOCUMENT_SERVER_API_URL="\/ds-vpath";
 fi
 
@@ -342,8 +358,19 @@ if [ "${DOCUMENT_SERVER_ENABLED}" == "true" ] && [ $DOCKER_APP_SUBNET ] && [ -z 
 	fi
 fi
 
+if [ "${DOCKER_ENABLED}" == "true" ] && [ "${DOCUMENT_SERVER_HOST}" == "${DOCKER_DOCUMENT_SERVER_CONTAINER_NAME}" ]; then
+        while ! bash ${SYSCONF_TOOLS_DIR}/wait-for-it.sh $DOCKER_DOCUMENT_SERVER_CONTAINER_NAME:8000 --quiet -s -- echo "Document Server is up"; do
+                sleep 1
+        done
 
-if [ ${MYSQL_SERVER_HOST} != "localhost" ]; then
+	DOCKER_DOCUMENT_SERVER_PACKAGE_TYPE=$(curl -s http://$DOCKER_DOCUMENT_SERVER_CONTAINER_NAME:8000/info/info.json | jq '.licenseInfo.packageType');
+
+	if [ -n "$DOCKER_DOCUMENT_SERVER_PACKAGE_TYPE" ] && [ "$DOCKER_DOCUMENT_SERVER_PACKAGE_TYPE" -gt 0 ]; then
+		  WORKSPACE_ENTERPRISE="true";
+	fi
+fi
+
+if [ ${MYSQL_SERVER_HOST} != "localhost" ] && [ ${MYSQL_SERVER_HOST} != "127.0.0.1" ]; then
 	MYSQL_SERVER_EXTERNAL=true;
 fi
 
@@ -430,8 +457,6 @@ if [ ${REDIS_SERVER_HOST} ]; then
         sed 's/<add\s*host=".*"\s*cachePort="[0-9]*"\s*\/>/<add host="'${REDIS_SERVER_HOST}'" cachePort="'${REDIS_SERVER_CACHEPORT}'" \/>/' -i ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config
         sed -E 's/<redisCacheClient\s*ssl="(false|true)"\s*connectTimeout="[0-9]*"\s*database="[0-9]*"\s*password=".*">/<redisCacheClient ssl="'${REDIS_SERVER_SSL}'" connectTimeout="'${REDIS_SERVER_CONNECT_TIMEOUT}'" database="'${REDIS_SERVER_DATABASE}'" password="'${REDIS_SERVER_PASSWORD}'">/' -i ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config
 
-
-
 	APP_SERVICES_SOCKET_IO_PATH=${APP_SERVICES_DIR}/ASC.Socket.IO/config/config.json;
 
 	jq '.redis |= . + {"host":"'${REDIS_SERVER_HOST}'","port":'${REDIS_SERVER_CACHEPORT}',"db":'${REDIS_SERVER_DATABASE}',"pass":"'${REDIS_SERVER_PASSWORD}'"}'\
@@ -449,21 +474,26 @@ fi
 ELASTICSEARCH_SERVER_HOST=${ELASTICSEARCH_SERVER_ADDR:-${ELASTICSEARCH_SERVER_HOST}};
 ELASTICSEARCH_SERVER_HTTPPORT=${ELASTICSEARCH_SERVER_HTTP_PORT:-${ELASTICSEARCH_SERVER_HTTPPORT:-"9200"}};
 
-if grep -q '<section name="elastic" type="ASC.ElasticSearch.Config.ElasticSection, ASC.ElasticSearch" />' /var/www/onlyoffice/WebStudio/Web.config; then
+if grep -q '<section name="elastic" type="ASC.ElasticSearch.Config.ElasticSection, ASC.ElasticSearch" />' ${APP_ROOT_DIR}/Web.config; then
     echo "This entry is already there"
 else
   if [ ${ELASTICSEARCH_SERVER_HOST} ]; then
-    sed -i '/<section name="redisCacheClient" type="StackExchange.Redis.Extensions.LegacyConfiguration.RedisCachingSectionHandler, StackExchange.Redis.Extensions.LegacyConfiguration" \/>/a <section name="elastic" type="ASC.ElasticSearch.Config.ElasticSection, ASC.ElasticSearch" \/>' /var/www/onlyoffice/WebStudio/Web.config
-    sed -i 's/<section name="elastic" type="ASC.ElasticSearch.Config.ElasticSection, ASC.ElasticSearch" \/>/    <section name="elastic" type="ASC.ElasticSearch.Config.ElasticSection, ASC.ElasticSearch" \/>/' /var/www/onlyoffice/WebStudio/Web.config
-    sed -i '/<section name="redisCacheClient" type="StackExchange.Redis.Extensions.LegacyConfiguration.RedisCachingSectionHandler, StackExchange.Redis.Extensions.LegacyConfiguration" \/>/a <section name="elastic" type="ASC.ElasticSearch.Config.ElasticSection, ASC.ElasticSearch" \/>' /var/www/onlyoffice/Services/TeamLabSvc/TeamLabSvc.exe.config
-    sed -i 's/<section name="elastic" type="ASC.ElasticSearch.Config.ElasticSection, ASC.ElasticSearch" \/>/    <section name="elastic" type="ASC.ElasticSearch.Config.ElasticSection, ASC.ElasticSearch" \/>/' /var/www/onlyoffice/Services/TeamLabSvc/TeamLabSvc.exe.config
+    sed -i '/<section name="redisCacheClient" type="StackExchange.Redis.Extensions.LegacyConfiguration.RedisCachingSectionHandler, StackExchange.Redis.Extensions.LegacyConfiguration" \/>/a <section name="elastic" type="ASC.ElasticSearch.Config.ElasticSection, ASC.ElasticSearch" \/>' ${APP_ROOT_DIR}/Web.config
+    sed -i 's/<section name="elastic" type="ASC.ElasticSearch.Config.ElasticSection, ASC.ElasticSearch" \/>/    <section name="elastic" type="ASC.ElasticSearch.Config.ElasticSection, ASC.ElasticSearch" \/>/' ${APP_ROOT_DIR}/Web.config
+    sed -i '/<section name="redisCacheClient" type="StackExchange.Redis.Extensions.LegacyConfiguration.RedisCachingSectionHandler, StackExchange.Redis.Extensions.LegacyConfiguration" \/>/a <section name="elastic" type="ASC.ElasticSearch.Config.ElasticSection, ASC.ElasticSearch" \/>' ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config
+    sed -i 's/<section name="elastic" type="ASC.ElasticSearch.Config.ElasticSection, ASC.ElasticSearch" \/>/    <section name="elastic" type="ASC.ElasticSearch.Config.ElasticSection, ASC.ElasticSearch" \/>/' ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config
+    sed -i '/<section name="autofac" type="ASC.Common.DependencyInjection.AutofacConfigurationSection, ASC.Common" \/>/a <section name="elastic" type="ASC.ElasticSearch.Config.ElasticSection, ASC.ElasticSearch" \/>' ${APP_SERVICES_DIR}/MailAggregator/ASC.Mail.Aggregator.CollectionService.exe.config
+    sed -i 's/<section name="elastic" type="ASC.ElasticSearch.Config.ElasticSection, ASC.ElasticSearch" \/>/    <section name="elastic" type="ASC.ElasticSearch.Config.ElasticSection, ASC.ElasticSearch" \/>/' ${APP_SERVICES_DIR}/MailAggregator/ASC.Mail.Aggregator.CollectionService.exe.config
 
     if [ ${ELASTICSEARCH_SERVER_HTTPPORT} ]; then
-        sed -i '/<\/configSections>/a <elastic scheme="http" host="'${ELASTICSEARCH_SERVER_HOST}'" port="'${ELASTICSEARCH_SERVER_HTTPPORT}'" \/>' /var/www/onlyoffice/WebStudio/Web.config
-        sed -i 's/<elastic scheme="http" host="'${ELASTICSEARCH_SERVER_HOST}'" port="'${ELASTICSEARCH_SERVER_HTTPPORT}'" \/>/  <elastic scheme="http" host="'${ELASTICSEARCH_SERVER_HOST}'" port="'${ELASTICSEARCH_SERVER_HTTPPORT}'" \/>/' /var/www/onlyoffice/WebStudio/Web.config
+        sed -i '/<\/configSections>/a <elastic scheme="http" host="'${ELASTICSEARCH_SERVER_HOST}'" port="'${ELASTICSEARCH_SERVER_HTTPPORT}'" \/>' ${APP_ROOT_DIR}/Web.config
+        sed -i 's/<elastic scheme="http" host="'${ELASTICSEARCH_SERVER_HOST}'" port="'${ELASTICSEARCH_SERVER_HTTPPORT}'" \/>/  <elastic scheme="http" host="'${ELASTICSEARCH_SERVER_HOST}'" port="'${ELASTICSEARCH_SERVER_HTTPPORT}'" \/>/' ${APP_ROOT_DIR}/Web.config
 
-        sed -i '/<\/configSections>/a <elastic scheme="http" host="'${ELASTICSEARCH_SERVER_HOST}'" port="'${ELASTICSEARCH_SERVER_HTTPPORT}'" \/>' /var/www/onlyoffice/Services/TeamLabSvc/TeamLabSvc.exe.config
-        sed -i 's/<elastic scheme="http" host="'${ELASTICSEARCH_SERVER_HOST}'" port="'${ELASTICSEARCH_SERVER_HTTPPORT}'" \/>/  <elastic scheme="http" host="'${ELASTICSEARCH_SERVER_HOST}'" port="'${ELASTICSEARCH_SERVER_HTTPPORT}'" \/>/' /var/www/onlyoffice/Services/TeamLabSvc/TeamLabSvc.exe.config
+        sed -i '/<\/configSections>/a <elastic scheme="http" host="'${ELASTICSEARCH_SERVER_HOST}'" port="'${ELASTICSEARCH_SERVER_HTTPPORT}'" \/>' ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config
+        sed -i 's/<elastic scheme="http" host="'${ELASTICSEARCH_SERVER_HOST}'" port="'${ELASTICSEARCH_SERVER_HTTPPORT}'" \/>/  <elastic scheme="http" host="'${ELASTICSEARCH_SERVER_HOST}'" port="'${ELASTICSEARCH_SERVER_HTTPPORT}'" \/>/' ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config
+
+        sed -i '/<storage file/a <elastic scheme="http" host="'${ELASTICSEARCH_SERVER_HOST}'" port="'${ELASTICSEARCH_SERVER_HTTPPORT}'" \/>' ${APP_SERVICES_DIR}/MailAggregator/ASC.Mail.Aggregator.CollectionService.exe.config
+        sed -i 's/<elastic scheme="http" host="'${ELASTICSEARCH_SERVER_HOST}'" port="'${ELASTICSEARCH_SERVER_HTTPPORT}'" \/>/  <elastic scheme="http" host="'${ELASTICSEARCH_SERVER_HOST}'" port="'${ELASTICSEARCH_SERVER_HTTPPORT}'" \/>/' ${APP_SERVICES_DIR}/MailAggregator/ASC.Mail.Aggregator.CollectionService.exe.config
     fi
   fi
 fi
@@ -531,6 +561,7 @@ if [ "${MYSQL_SERVER_EXTERNAL}" == "false" ]; then
 
 	myisamchk -q -r /var/lib/mysql/mysql/proc || true
 
+        systemctl enable mysql.service
 	service mysql start
 
 	if [ ! -f /var/lib/mysql/mysql_upgrade_info ]; then
@@ -573,6 +604,7 @@ EOF
 
 else
 	service mysql stop
+        systemctl disable mysql.service
 fi
 
 mysql_check_connection;
@@ -598,6 +630,7 @@ fi
 change_connections "default" "${APP_ROOT_DIR}/web.connections.config";
 change_connections "teamlabsite" "${APP_ROOT_DIR}/web.connections.config";
 change_connections "default" "${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config";
+change_connections "default" "${APP_SERVICES_DIR}/Jabber/ASC.Xmpp.Server.Launcher.exe.config";
 change_connections "default" "${APP_SERVICES_DIR}/MailAggregator/ASC.Mail.Aggregator.CollectionService.exe.config";
 change_connections "default" "${APP_SERVICES_DIR}/MailAggregator/ASC.Mail.EmlDownloader.exe.config";
 change_connections "default" "${APP_SERVICES_DIR}/MailWatchdog/ASC.Mail.Watchdog.Service.exe.config";
@@ -620,6 +653,7 @@ elif [ "${IS_UPDATE}" == "true" ]; then
 	done
 fi
 
+mysql_scalar_exec "DELETE FROM webstudio_settings WHERE id='5C699566-34B1-4714-AB52-0E82410CE4E5';"
 
 # setup HTTPS
 if [ -f "${SSL_CERTIFICATE_PATH}" -a -f "${SSL_KEY_PATH}" ]; then
@@ -630,6 +664,8 @@ if [ -f "${SSL_CERTIFICATE_PATH}" -a -f "${SSL_KEY_PATH}" ]; then
 	# configure nginx
 	sed 's,{{SSL_CERTIFICATE_PATH}},'"${SSL_CERTIFICATE_PATH}"',' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
 	sed 's,{{SSL_KEY_PATH}},'"${SSL_KEY_PATH}"',' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
+
+        sed "s/TLSv1.2;/TLSv1.2 TLSv1.3;/" -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
 
 	# if dhparam path is valid, add to the config, otherwise remove the option
 	if [ ! -f ${SSL_DHPARAM_PATH} ]; then
@@ -662,12 +698,6 @@ if [ -f "${SSL_CERTIFICATE_PATH}" -a -f "${SSL_KEY_PATH}" ]; then
 		sed 's,{{CA_CERTIFICATES_PATH}},'"${CA_CERTIFICATES_PATH}"',' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
 	else
 		sed '/{{CA_CERTIFICATES_PATH}}/d' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
-	fi
-
-	if [ "${APP_HTTPS_HSTS_ENABLED}" == "true" ]; then
-		sed 's/{{APP_HTTPS_HSTS_MAXAGE}}/'"${APP_HTTPS_HSTS_MAXAGE}"'/' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
-	else
-		sed '/{{APP_HTTPS_HSTS_MAXAGE}}/d' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice
 	fi
 
 	sed '/certificate"/s!\(value\s*=\s*\"\).*\"!\1'${SSL_CERTIFICATE_PATH_PFX}'\"!' -i ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config
@@ -719,6 +749,25 @@ if [ "${DOCUMENT_SERVER_ENABLED}" == "true" ]; then
         sed '/files\.docservice\.url\.portal/s!\(value\s*=\s*\"\)[^\"]*\"!\1http:\/\/'${SERVER_HOST}'\"!' -i ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config
     fi
 
+    if [ "$WORKSPACE_ENTERPRISE" == "true" ]; then
+         sed "/license\.file\.path/s!value=\".*\"!value=\"${LICENSE_FILE_PATH}\"!g" -i ${APP_ROOT_DIR}/web.appsettings.config;
+         sed "/license\.file\.path/s!value=\".*\"!value=\"${LICENSE_FILE_PATH}\"!g" -i ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config;
+
+         if [ ! -f ${LICENSE_FILE_PATH} ]; then
+
+mysql --silent --skip-column-names -h ${MYSQL_SERVER_HOST} -P ${MYSQL_SERVER_PORT} -u ${MYSQL_SERVER_USER} --password=${MYSQL_SERVER_PASS} -D ${MYSQL_SERVER_DB_NAME} <<EOF || true
+INSERT IGNORE INTO tenants_quota (tenant, name, max_file_size, max_total_size, active_users, features)
+SELECT -1000, 'start_trial', max_file_size, max_total_size, active_users, CONCAT(features, ',trial')
+FROM tenants_quota
+WHERE tenant = -1;
+INSERT IGNORE INTO tenants_tariff (id, tenant, tariff, stamp) VALUES ('1000','-1', '-1000', NOW() + INTERVAL 30 DAY);
+EOF
+
+	fi
+
+
+
+    fi
 fi
 
 if [ "${MAIL_SERVER_ENABLED}" == "true" ]; then
@@ -846,7 +895,6 @@ if [ "${CONTROL_PANEL_ENABLED}" == "true" ]; then
 	# change web.appsettings link to controlpanel
 	sed '/web\.controlpanel\.url/s/\(value\s*=\s*\"\)[^\"]*\"/\1\/controlpanel\/\"/' -i  ${APP_ROOT_DIR}/web.appsettings.config;
 	sed '/web\.controlpanel\.url/s/\(value\s*=\s*\"\)[^\"]*\"/\1\/controlpanel\/\"/' -i ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config;
-
 fi
 
 if [ "${APP_MODE}" == "SERVER" ]; then
@@ -896,7 +944,7 @@ do
 	sed 's,'${APP_ROOT_DIR}','${APP_ROOT_DIR}''${serverID}',g' -i ${APP_HYPERFASTCGI_PATH}$serverID;
 	sed 's/onlyoffice\.socket/onlyoffice'${serverID}'\.socket/g' -i ${APP_HYPERFASTCGI_PATH}$serverID;
 
-	cp ${APP_GOD_DIR}/monoserve.god ${APP_GOD_DIR}/monoserve$serverID.god;
+        cp ${APP_GOD_DIR}/monoserve.god ${APP_GOD_DIR}/monoserve$serverID.god;
 	sed 's/onlyoffice\.socket/onlyoffice'${serverID}'\.socket/g' -i ${APP_GOD_DIR}/monoserve$serverID.god;
 	sed 's/monoserve/monoserve'${serverID}'/g' -i ${APP_GOD_DIR}/monoserve$serverID.god;
 
@@ -949,31 +997,27 @@ ping_onlyoffice() {
 }
 
 if [ "${REDIS_SERVER_EXTERNAL}" == "true" ]; then
-	rm -f "${APP_GOD_DIR}"/redis.god;
 	sed '/redis-cli/d' -i ${APP_CRON_PATH}
 
 	service redis-server stop
+        systemctl disable redis-server.service
 else
+        systemctl enable redis-server.service
 	service redis-server start
+
 	redis-cli config set save ""
 	redis-cli config rewrite
 	redis-cli flushall
-fi
 
-if [ "${MYSQL_SERVER_EXTERNAL}" == "true" ]; then
-	rm -f "${APP_GOD_DIR}"/mysql.god;
+	service redis-server stop
 fi
-
 
 if [ "${APP_MODE}" == "SERVICES" ]; then
-	service nginx stop
+        systemctl disable nginx.service
+        systemctl disable monoserveApiSystem.service
 
-	rm -f "${APP_GOD_DIR}"/nginx.god;
-	rm -f "${APP_GOD_DIR}"/monoserveApiSystem.god;
-
-	service monoserveApiSystem stop
-
-	rm -f /etc/init.d/monoserveApiSystem
+        rm -f "${APP_GOD_DIR}"/monoserveApiSystem.god;
+	rm -f /lib/systemd/system.d/monoserveApiSystem.service
 
 	for serverID in $(seq 1 ${APP_MONOSERVE_COUNT});
 	do
@@ -983,21 +1027,29 @@ if [ "${APP_MODE}" == "SERVICES" ]; then
 			index="";
 		fi
 
-	rm -f "${APP_GOD_DIR}"/monoserve$index.god;
+                rm -f "${APP_GOD_DIR}"/monoserve$index.god;
+                systemctl stop monoserve$index
+                systemctl disable monoserve$index.service
 
-        service monoserve$index stop
-
-	rm -f /etc/init.d/monoserve$index
-
+        	rm -f /lib/systemd/system/monoserve$index.service
 	done
 
 	sed '/monoserve/d' -i ${APP_CRON_PATH}
 	sed '/warmup/d' -i ${APP_CRON_PATH}
 
 else
-	if [ ${LOG_DEBUG} ]; then
-		echo "fix docker bug volume mapping for onlyoffice";
-	fi
+        systemctl enable monoserveApiSystem.service
+
+	for serverID in $(seq 1 ${APP_MONOSERVE_COUNT});
+	do
+		index=$serverID;
+
+		if [ $index == 1 ]; then
+			index="";
+		fi
+
+                systemctl enable monoserve$index.service
+	done
 
 	chown -R onlyoffice:onlyoffice /var/log/onlyoffice
 	chown -R onlyoffice:onlyoffice ${APP_DIR}/DocumentServerData
@@ -1006,119 +1058,142 @@ else
               chown -R onlyoffice:onlyoffice ${APP_DATA_DIR}
         fi
 
-	mkdir -p "$LOG_DIR/Index"
-	mkdir -p "$APP_DATA_DIR/Index"
+        if [ ! -d "$APP_INDEX_DIR" ]; then
+		mysql_scalar_exec "TRUNCATE webstudio_index";
+	fi
 
-        if [ "$(ls -alhd $APP_DATA_DIR/Index | awk '{ print $3 }')" != "elasticsearch" ]; then
-		chown -R elasticsearch:elasticsearch "$APP_DATA_DIR/Index"
+	mkdir -p "$LOG_DIR/Index"
+	mkdir -p "$APP_INDEX_DIR"
+
+        if [ "$(ls -alhd $APP_INDEX_DIR | awk '{ print $3 }')" != "elasticsearch" ]; then
+		chown -R elasticsearch:elasticsearch "$APP_INDEX_DIR"
         fi
 
 	chown -R elasticsearch:elasticsearch "$LOG_DIR/Index"
-
-
-	for serverID in $(seq 1 ${APP_MONOSERVE_COUNT});
-	do
-		index=$serverID;
-
-		if [ $index == 1 ]; then
-			index="";
-		fi
-
-		service monoserve$index restart
-
-#                (ping_onlyoffice "http://localhost/warmup${index}/auth.aspx") &
-	done
-
-	service monoserveApiSystem restart
 fi
+
+
+# setup xmppserver
+if dpkg -l | grep -q "onlyoffice-xmppserver"; then
+ 	sed '/web\.talk/s/value=\"\S*\"/value=\"true\"/g' -i  ${APP_ROOT_DIR}/web.appsettings.config
+	sed '/web\.chat/s/value=\"\S*\"/value=\"true\"/g' -i  ${APP_ROOT_DIR}/web.appsettings.config
+fi
+
+systemctl stop onlyofficeRadicale
+systemctl stop onlyofficeTelegram
+systemctl stop onlyofficeSocketIO
+systemctl stop onlyofficeThumb
+systemctl stop onlyofficeFeed
+systemctl stop onlyofficeIndex
+systemctl stop onlyofficeJabber
+systemctl stop onlyofficeMailAggregator
+systemctl stop onlyofficeMailWatchdog
+systemctl stop onlyofficeMailCleaner
+systemctl stop onlyofficeNotify
+systemctl stop onlyofficeBackup
+systemctl stop onlyofficeStorageMigrate
+systemctl stop onlyofficeStorageEncryption
+systemctl stop onlyofficeUrlShortener
+
+
+systemctl stop god
+systemctl enable god
+
+systemctl stop elasticsearch
+systemctl stop redis-server
+systemctl stop mysql
+systemctl stop nginx
+
+systemctl stop monoserveApiSystem.service
+systemctl enable monoserveApiSystem.service
+
+for serverID in $(seq 1 ${APP_MONOSERVE_COUNT});
+do
+	index=$serverID;
+
+	if [ $index == 1 ]; then
+		index="";
+	fi
+
+
+        systemctl stop monoserve$index.service
+        systemctl enable monoserve$index.service
+done
 
 if [ "${APP_SERVICES_EXTERNAL}" == "true" ]; then
-	rm -f "${APP_GOD_DIR}"/onlyoffice.god;
-	rm -f "${APP_GOD_DIR}"/elasticsearch.god;
-	rm -f "${APP_GOD_DIR}"/redis.god;
-	rm -f "${APP_GOD_DIR}"/mail.god;
+        rm -f "${APP_GOD_DIR}"/onlyoffice.god;
+        rm -f "${APP_GOD_DIR}"/mail.god;
 
+        systemctl disable onlyofficeRadicale.service
+        systemctl disable onlyofficeTelegram.service
+        systemctl disable onlyofficeSocketIO.service
+        systemctl disable onlyofficeThumb.service
+        systemctl disable onlyofficeFeed.service
+        systemctl disable onlyofficeIndex.service
+        systemctl disable onlyofficeJabber.service
+        systemctl disable onlyofficeMailAggregator.service
+        systemctl disable onlyofficeMailWatchdog.service
+        systemctl disable onlyofficeMailCleaner.service
+        systemctl disable onlyofficeNotify.service
+        systemctl disable onlyofficeBackup.service
+        systemctl disable onlyofficeStorageMigrate.service
+        systemctl disable onlyofficeStorageEncryption.service
+        systemctl disable onlyofficeUrlShortener.service
 
-	service onlyofficeRadicale stop
-	service onlyofficeSocketIO stop
-        service onlyofficeThumb stop
-	service onlyofficeFeed stop
-	service onlyofficeIndex stop
-	service onlyofficeJabber stop
-	service onlyofficeMailAggregator stop
-	service onlyofficeMailWatchdog stop
-	service onlyofficeMailCleaner stop
-	service onlyofficeNotify stop
-	service onlyofficeBackup stop
-	service onlyofficeStorageMigrate stop
-	service onlyofficeUrlShortener stop
-	service elasticsearch stop
-
-
-	rm -f /etc/init.d/elasticsearch
-	rm -f /etc/init.d/onlyofficeRadicale
-	rm -f /etc/init.d/onlyofficeSocketIO
-	rm -f /etc/init.d/onlyofficeThumb
-	rm -f /etc/init.d/onlyofficeFeed
-	rm -f /etc/init.d/onlyofficeIndex
-	rm -f /etc/init.d/onlyofficeJabber
-	rm -f /etc/init.d/onlyofficeMailAggregator
-	rm -f /etc/init.d/onlyofficeMailWatchdog
-	rm -f /etc/init.d/onlyofficeMailCleaner
-	rm -f /etc/init.d/onlyofficeNotify
-	rm -f /etc/init.d/onlyofficeBackup
-	rm -f /etc/init.d/onlyofficeStorageMigrate
-	rm -f /etc/init.d/onlyofficeUrlShortener
+	rm -f /lib/systemd/system/onlyofficeRadicale.service
+	rm -f /lib/systemd/system/onlyofficeTelegram.service
+	rm -f /lib/systemd/system/onlyofficeSocketIO.service
+	rm -f /lib/systemd/system/onlyofficeThumb.service
+	rm -f /lib/systemd/system/onlyofficeFeed.service
+	rm -f /lib/systemd/system/onlyofficeIndex.service
+	rm -f /lib/systemd/system/onlyofficeJabber.service
+	rm -f /lib/systemd/system/onlyofficeMailAggregator.service
+	rm -f /lib/systemd/system/onlyofficeMailWatchdog.service
+	rm -f /lib/systemd/system/onlyofficeMailCleaner.service
+	rm -f /lib/systemd/system/onlyofficeNotify.service
+	rm -f /lib/systemd/system/onlyofficeBackup.service
+	rm -f /lib/systemd/system/onlyofficeStorageMigrate.sevice
+	rm -f /lib/systemd/system/onlyofficeStorageEncryption.sevice
+	rm -f /lib/systemd/system/onlyofficeUrlShortener.service
 
 	sed '/onlyoffice/d' -i ${APP_CRON_PATH}
-
 else
-
-	service onlyofficeRadicale restart
-	service onlyofficeSocketIO restart
-	service onlyofficeThumb restart
-	service onlyofficeFeed restart
-	service onlyofficeIndex restart
-	service onlyofficeJabber restart
-	service onlyofficeMailAggregator restart
-	service onlyofficeMailWatchdog restart
-	service onlyofficeMailCleaner restart
-	service onlyofficeNotify restart
-	service onlyofficeBackup restart
-	service onlyofficeStorageMigrate restart
-	service onlyofficeUrlShortener restart
-	service elasticsearch restart
+        systemctl enable onlyofficeRadicale.service
+        systemctl enable onlyofficeTelegram.service
+        systemctl enable onlyofficeSocketIO.service
+        systemctl enable onlyofficeThumb.service
+        systemctl enable onlyofficeFeed.service
+        systemctl enable onlyofficeIndex.service
+        systemctl enable onlyofficeJabber.service
+        systemctl enable onlyofficeMailAggregator.service
+        systemctl enable onlyofficeMailWatchdog.service
+        systemctl enable onlyofficeMailCleaner.service
+        systemctl enable onlyofficeNotify.service
+        systemctl enable onlyofficeBackup.service
+        systemctl enable onlyofficeStorageMigrate.service
+        systemctl enable onlyofficeStorageEncryption.service
+        systemctl enable onlyofficeUrlShortener.service
 fi
 
-service god restart
-
 if [ "${APP_MODE}" == "SERVER" ]; then
-
-#        wait
-
         mv ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice ${NGINX_CONF_DIR}/onlyoffice
-
-        service nginx reload
-
-        log_debug "reload nginx config";
-        log_debug "FINISH";
-
+        service nginx stop
+        systemctl enable nginx.service
 fi
 
 PID=$(ps auxf | grep cron | grep -v grep | awk '{print $2}')
 
 if [ ${ELASTICSEARCH_SERVER_HOST} ]; then
   service elasticsearch stop
-  service onlyofficeIndex restart
-  service monoserve restart
+  systemctl disable elasticsearch.service
+else
+  systemctl enable elasticsearch.service
 fi
 
 if [ -n "$PID" ]; then
   kill -9 $PID
 fi
 
-cron
-
 if [ "${DOCKER_ENABLED}" == "true" ]; then
-   exec tail -f /dev/null
+   exec /lib/systemd/systemd
 fi
