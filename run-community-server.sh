@@ -1001,6 +1001,8 @@ if [ "${REDIS_SERVER_EXTERNAL}" == "true" ]; then
 
 	service redis-server stop
         systemctl disable redis-server.service
+        rm -f /lib/systemd/system/redis-server.service
+        rm -f /etc/init.d/redis-server
 else
         systemctl enable redis-server.service
 	service redis-server start
@@ -1186,6 +1188,8 @@ PID=$(ps auxf | grep cron | grep -v grep | awk '{print $2}')
 if [ ${ELASTICSEARCH_SERVER_HOST} ]; then
   service elasticsearch stop
   systemctl disable elasticsearch.service
+  rm -f /usr/lib/systemd/system/elasticsearch.service
+  rm -f /etc/init.d/elasticsearch
 else
   systemctl enable elasticsearch.service
 fi
