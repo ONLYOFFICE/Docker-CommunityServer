@@ -2,7 +2,7 @@ version: '3'
 services:
   onlyoffice-mysql-server:
     container_name: onlyoffice-mysql-server
-    image: mysql:5.7.21
+    image: mysql:5.7
     environment:
      - MYSQL_ROOT_PASSWORD=my-secret-pw
     networks:
@@ -16,7 +16,7 @@ services:
      - mysql_data:/var/lib/mysql
   onlyoffice-community-server:
     container_name: onlyoffice-community-server
-    image: onlyoffice4enterprise/communityserver-ee:9.6.3.663
+    image: onlyoffice/communityserver:11.0.0.1458
     depends_on:
      - onlyoffice-mysql-server
      - onlyoffice-document-server
@@ -50,14 +50,17 @@ services:
     stdin_open: true
     tty: true
     restart: always
+    privileged: true
     volumes:
      - community_data:/var/www/onlyoffice/Data
      - community_log:/var/log/onlyoffice
+     - community_letsencrypt:/etc/letsencrypt
      - document_data:/var/www/onlyoffice/DocumentServerData
+     - /sys/fs/cgroup:/sys/fs/cgroup:ro
      - ./certs:/var/www/onlyoffice/Data/certs
   onlyoffice-document-server:
     container_name: onlyoffice-document-server
-    image: onlyoffice4enterprise/documentserver-ee:5.1.5.59
+    image: onlyoffice/documentserver:6.0.2
     stdin_open: true
     tty: true
     restart: always
@@ -107,7 +110,7 @@ services:
      - onlyoffice-document-server
      - onlyoffice-mail-server
      - onlyoffice-community-server
-    image: onlyoffice4enterprise/controlpanel-ee:2.6.0.171
+    image: onlyoffice/controlpanel:2.9.0.351
     environment:
      - ONLYOFFICE_CORE_MACHINEKEY=core_secret
     expose:
@@ -136,6 +139,7 @@ volumes:
   community_mysql:
   community_data:
   community_log:
+  community_letsencrypt:
   controlpanel_data:
   controlpanel_log:
   mysql_data:
