@@ -1078,7 +1078,7 @@ fi
 # setup xmppserver
 if dpkg -l | grep -q "onlyoffice-xmppserver"; then
  	sed '/web\.talk/s/value=\"\S*\"/value=\"true\"/g' -i  ${APP_ROOT_DIR}/web.appsettings.config
-	sed '/web\.chat/s/value=\"\S*\"/value=\"true\"/g' -i  ${APP_ROOT_DIR}/web.appsettings.config
+	sed '/web\.chat/s/value=\"\S*\"/value=\"false\"/g' -i  ${APP_ROOT_DIR}/web.appsettings.config
 fi
 
 systemctl stop onlyofficeRadicale
