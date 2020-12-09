@@ -515,7 +515,7 @@ Official website: [https://www.onlyoffice.com](https://www.onlyoffice.com?utm_so
 
 Code repository: [https://github.com/ONLYOFFICE/CommunityServer](https://github.com/ONLYOFFICE/CommunityServer "https://github.com/ONLYOFFICE/CommunityServer")
 
-License: [GNU GPL v3.0](https://www.gnu.org/copyleft/gpl.html "GNU GPL v3.0")
+License: [Apache 2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
 ONLYOFFICE Workspace: [https://www.onlyoffice.com/workspace.aspx](https://www.onlyoffice.com/workspace.aspx?utm_source=github&utm_medium=cpc&utm_campaign=GitHubDockerCS)
 
