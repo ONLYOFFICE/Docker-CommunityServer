@@ -385,7 +385,17 @@ sudo docker run --init --net onlyoffice --privileged -i -t -d --restart=always -
 
 The additional parameters for mail server are available [here](https://github.com/ONLYOFFICE/Docker-CommunityServer/blob/master/docker-compose.yml#L75).
 
-**STEP 5**: Install ONLYOFFICE Community Server
+**STEP 5**: Install ONLYOFFICE Control Panel
+
+```bash
+docker run --net onlyoffice -i -t -d --restart=always --name onlyoffice-control-panel \
+-v /var/run/docker.sock:/var/run/docker.sock \
+-v /app/onlyoffice/CommunityServer/data:/app/onlyoffice/CommunityServer/data \
+-v /app/onlyoffice/ControlPanel/data:/var/www/onlyoffice/Data \
+-v /app/onlyoffice/ControlPanel/logs:/var/log/onlyoffice onlyoffice/controlpanel
+```
+
+**STEP 6**: Install ONLYOFFICE Community Server
 
 ```bash
 sudo docker run --net onlyoffice -i -t -d --privileged --restart=always --name onlyoffice-community-server -p 80:80 -p 443:443 -p 5222:5222 \
@@ -413,16 +423,7 @@ Where `${MAIL_SERVER_IP}` is the IP address for **ONLYOFFICE Mail Server**. You 
 ```
 docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' onlyoffice-mail-server
 ```
-**STEP 6**: Install ONLYOFFICE Control Panel
-
-```bash
-docker run --net onlyoffice -i -t -d --restart=always --name onlyoffice-control-panel \
--v /var/run/docker.sock:/var/run/docker.sock \
--v /app/onlyoffice/CommunityServer/data:/app/onlyoffice/CommunityServer/data \
--v /app/onlyoffice/ControlPanel/data:/var/www/onlyoffice/Data \
--v /app/onlyoffice/ControlPanel/logs:/var/log/onlyoffice onlyoffice/controlpanel
-```
-Alternatively, you can use an automatic installation script to install the whole ONLYOFFICE Community Edition at once. For the mail server correct work you need to specify its hostname 'yourdomain.com'.
+Alternatively, you can use an automatic installation script to install ONLYOFFICE Workspace at once. For the mail server correct work you need to specify its hostname 'yourdomain.com'.
 
 **STEP 1**: Download the ONLYOFFICE Workspace Docker script file
 
@@ -493,7 +494,7 @@ where
 
 *This will update **Community Server** container only and will not connect **Document Server** and **Mail Server** to it. You will need to use the additional parameters (like those used during installation) to connect them.*
 
-Or you can use the Community Edition script file to upgrade your current installation:
+Or you can use ONLYOFFICE Workspace script file to upgrade your current installation:
 ```
 bash workspace-install.sh -u true
 ```
