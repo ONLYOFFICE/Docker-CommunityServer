@@ -298,13 +298,13 @@ TOTAL_MEMORY=$(free -m | grep -oP '\d+' | head -n 1);
 MEMORY_REQUIREMENTS=12228; #RAM ~4*3Gb
 
 if [ ${TOTAL_MEMORY} -gt ${MEMORY_REQUIREMENTS} ]; then
-	if ! grep -q "-Xms1g" /etc/elasticsearch/jvm.options; then
+	if ! grep -q "[-]Xms1g" /etc/elasticsearch/jvm.options; then
 		echo "-Xms4g" >> /etc/elasticsearch/jvm.options
 	else
 		sed -i "s/-Xms1g/-Xms4g/" /etc/elasticsearch/jvm.options
 	fi
 
-	if ! grep -q "-Xmx1g" /etc/elasticsearch/jvm.options; then
+	if ! grep -q "[-]Xmx1g" /etc/elasticsearch/jvm.options; then
 		echo "-Xmx4g" >> /etc/elasticsearch/jvm.options
 	else
 		sed -i "s/-Xmx1g/-Xmx4g/" /etc/elasticsearch/jvm.options
