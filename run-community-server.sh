@@ -1198,6 +1198,12 @@ if [ -n "$PID" ]; then
   kill -9 $PID
 fi
 
+# clear nginx & mono cache
+rm -dfr /tmp/onlyoffice* || true
+rm -dfr /var/run/onlyoffice/* || true
+rm -dfr /var/cache/nginx/onlyoffice/* || true
+
+
 if [ "${DOCKER_ENABLED}" == "true" ]; then
    exec /lib/systemd/systemd
 fi
