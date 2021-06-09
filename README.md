@@ -174,7 +174,6 @@ sudo docker run --net onlyoffice -i -t -d --privileged --restart=always --name o
  -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
  onlyoffice/communityserver
 ```
-The additional parameters for running the Docker container are available [here](https://github.com/ONLYOFFICE/Docker-CommunityServer/blob/master/docker-compose.yml#L26).
 
 ## Configuring Docker Image
 
