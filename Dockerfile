@@ -80,7 +80,7 @@ RUN apt-get -y update && \
                         jq \
                         openjdk-8-jre-headless \
                         apt-transport-https \
-                        elasticsearch=7.4.0 \
+                        elasticsearch=7.9.0 \
                         mono-webserver-hyperfastcgi=0.4-7 \
                         ${PACKAGE_SYSNAME}-communityserver \
                         ${PACKAGE_SYSNAME}-xmppserver && \

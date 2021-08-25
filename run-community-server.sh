@@ -10,7 +10,7 @@ echo "##########################################################"
 SERVER_HOST=${SERVER_HOST:-""};
 APP_DIR="/var/www/onlyoffice"
 APP_DATA_DIR="${APP_DIR}/Data"
-APP_INDEX_DIR="${APP_DATA_DIR}/Index/v7.4.0"
+APP_INDEX_DIR="${APP_DATA_DIR}/Index/v7.9.0"
 APP_PRIVATE_DATA_DIR="${APP_DATA_DIR}/.private"
 APP_SERVICES_DIR="${APP_DIR}/Services"
 APP_SQL_DIR="${APP_DIR}/Sql"
@@ -1200,6 +1200,12 @@ fi
 if [ -n "$PID" ]; then
   kill -9 $PID
 fi
+
+# clear nginx & mono cache
+rm -dfr /tmp/onlyoffice* || true
+rm -dfr /var/run/onlyoffice/* || true
+rm -dfr /var/cache/nginx/onlyoffice/* || true
+
 
 if [ "${DOCKER_ENABLED}" == "true" ]; then
    exec /lib/systemd/systemd
