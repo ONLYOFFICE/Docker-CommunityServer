@@ -1,0 +1,16 @@
+version: "3.6"
+
+services: 
+  onlyoffice-communityserver-ami:
+    build:
+      context: ./
+      dockerfile: Dockerfile.ami
+      target: communityserver-ami
+    image: "${REPO}/${STATUS}communityserver:${TAG}"
+     
+  onlyoffice-communityserver-alc:
+    build:
+      context: ./
+      dockerfile: Dockerfile.ami
+      target: communityserver-alc
+    image: "${REPO}/${STATUS}communityserver:${TAG}-alc"
