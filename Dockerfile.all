@@ -35,4 +35,3 @@ RUN xmlstarlet ed -L \
     -i "/appSettings/add[not(@*)]" -t attr -n "key" -v "web.ami.meta" \
     -i "/appSettings/add[@key='web.ami.meta']" -t attr -n "value" -v "http://100.100.100.200/latest/meta-data/" \
     $APPSETTING_CONFIG
-    
