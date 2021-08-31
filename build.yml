@@ -14,3 +14,4 @@ services:
       dockerfile: Dockerfile.all
       target: communityserver-alc
     image: "${REPO}/${STATUS}communityserver:${TAG}-alc"
+    
