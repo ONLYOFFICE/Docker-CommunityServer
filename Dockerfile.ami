@@ -31,6 +31,7 @@ FROM communityserver-ami AS communityserver-alc
 ARG APPSETTING_CONFIG=/var/www/onlyoffice/WebStudio/web.appsettings.config
 
 RUN xmlstarlet ed -L \
+    -d "/appSettings/add[@key='web.ami.meta']" \
     -s "/appSettings" -t elem -n "add" \
     -i "/appSettings/add[not(@*)]" -t attr -n "key" -v "web.ami.meta" \
     -i "/appSettings/add[@key='web.ami.meta']" -t attr -n "value" -v "http://100.100.100.200/latest/meta-data/" \
