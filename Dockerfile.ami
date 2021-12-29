@@ -2,6 +2,21 @@ FROM onlyoffice/communityserver:latest AS communityserver-ami
 ARG APPSETTING_CONFIG=/var/www/onlyoffice/WebStudio/web.appsettings.config
 ARG RESOURCE_SQL=/var/www/onlyoffice/Sql/onlyoffice.resources.sql
 
+ARG LOG4J_VER=2.17.1
+ARG LOG4J_BIN=apache-log4j-${LOG4J_VER}-bin
+ARG LOG4J_ARCH=${LOG4J_BIN}.tar.gz
+ARG LOG4J_DIR=./log4j
+
+ARG ELK_LIB_DIR=/usr/share/elasticsearch/lib
+
+RUN rm -v ${ELK_LIB_DIR}/log4j-* && \
+    wget https://dlcdn.apache.org/logging/log4j/${LOG4J_VER}/${LOG4J_ARCH}&& \
+    mkdir ${LOG4J_DIR} && \
+    tar -xf ${LOG4J_ARCH} -C ${LOG4J_DIR} && \
+    cp .${LOG4J_DIR}/${LOG4J_BIN}/log4j-api-${LOG4J_VER}.jar ${ELK_LIB_DIR} && \
+    cp ${LOG4J_DIR}/${LOG4J_BIN}/log4j-core-${LOG4J_VER}.jar ${ELK_LIB_DIR} && \
+    rm -r ${LOG4J_ARCH} ${LOG4J_DIR}
+
 RUN apt-get -y update && \
    apt-get install -yq xmlstarlet
 
