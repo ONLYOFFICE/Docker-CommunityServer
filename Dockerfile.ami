@@ -11,16 +11,16 @@ ARG ELK_DIR=/usr/share/elasticsearch
 ARG ELK_LIB_DIR=${ELK_DIR}/lib
 ARG ELK_MODULE_DIR=${ELK_DIR}/modules
 
-RUN rm -v ${ELK_LIB_DIR}/log4j-* && \
+RUN rm -v ${ELK_LIB_DIR}/log4j-*.jar ${ELK_MODULE_DIR}/*/log4j-*.jar && \
     wget https://dlcdn.apache.org/logging/log4j/${LOG4J_VER}/${LOG4J_ARCH}&& \
     mkdir ${LOG4J_DIR} && \
     tar -xf ${LOG4J_ARCH} -C ${LOG4J_DIR} && \
-    cp .${LOG4J_DIR}/${LOG4J_BIN}/log4j-api-${LOG4J_VER}.jar ${ELK_LIB_DIR} && \
-    cp ${LOG4J_DIR}/${LOG4J_BIN}/log4j-core-${LOG4J_VER}.jar ${ELK_LIB_DIR} && \
-    cp ${LOG4J_DIR}/${LOG4J_BIN}/log4j-1.2-api-${LOG4J_VER}.jar ${ELK_MODULE_DIR}\x-pack-core && \
-    cp ${LOG4J_DIR}/${LOG4J_BIN}/log4j-slf4j-impl-${LOG4J_VER}.jar ${ELK_MODULE_DIR}\x-pack-identity-provider && \
-    cp ${LOG4J_DIR}/${LOG4J_BIN}/log4j-slf4j-impl-${LOG4J_VER}.jar ${ELK_MODULE_DIR}\x-pack-security && \
-    rm -r ${LOG4J_ARCH} ${LOG4J_DIR}
+    cp -v ${LOG4J_DIR}/${LOG4J_BIN}/log4j-api-${LOG4J_VER}.jar ${ELK_LIB_DIR} && \
+    cp -v ${LOG4J_DIR}/${LOG4J_BIN}/log4j-core-${LOG4J_VER}.jar ${ELK_LIB_DIR} && \
+    cp -v ${LOG4J_DIR}/${LOG4J_BIN}/log4j-1.2-api-${LOG4J_VER}.jar ${ELK_MODULE_DIR}/x-pack-core && \
+    cp -v ${LOG4J_DIR}/${LOG4J_BIN}/log4j-slf4j-impl-${LOG4J_VER}.jar ${ELK_MODULE_DIR}/x-pack-identity-provider && \
+    cp -v ${LOG4J_DIR}/${LOG4J_BIN}/log4j-slf4j-impl-${LOG4J_VER}.jar ${ELK_MODULE_DIR}/x-pack-security && \
+    rm -vr ${LOG4J_ARCH} ${LOG4J_DIR}
 
 RUN apt-get -y update && \
    apt-get install -yq xmlstarlet
