@@ -805,6 +805,7 @@ if [ "${MAIL_SERVER_ENABLED}" == "true" ]; then
 
 	if check_ip_is_internal $DOCKER_APP_SUBNET $MAIL_SERVER_API_HOST; then
 		SENDER_IP=$(hostname -i);
+		echo "$(dig +short myip.opendns.com @resolver1.opendns.com) $MAIL_DOMAIN_NAME" >> /etc/hosts
 	elif [[ "$(dig +short myip.opendns.com @resolver1.opendns.com)" =~ $VALID_IP_ADDRESS_REGEX ]]; then
 		SENDER_IP=$(dig +short myip.opendns.com @resolver1.opendns.com);
         	log_debug "External ip $SENDER_IP is valid";
