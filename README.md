@@ -171,7 +171,7 @@ sudo docker run --net onlyoffice -i -t -d --privileged --restart=always --name o
  -v /app/onlyoffice/CommunityServer/data:/var/www/onlyoffice/Data \
  -v /app/onlyoffice/CommunityServer/logs:/var/log/onlyoffice \
  -v /app/onlyoffice/CommunityServer/letsencrypt:/etc/letsencrypt \
- -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
+ -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
  onlyoffice/communityserver
 ```
 
@@ -190,7 +190,7 @@ To get access to your data from outside the container, you need to mount the vol
         -v /app/onlyoffice/CommunityServer/logs:/var/log/onlyoffice \
         -v /app/onlyoffice/CommunityServer/data:/var/www/onlyoffice/Data \
 		-v /app/onlyoffice/CommunityServer/letsencrypt:/etc/letsencrypt \
-        -v /sys/fs/cgroup:/sys/fs/cgroup:ro onlyoffice/communityserver
+        -v /sys/fs/cgroup:/sys/fs/cgroup:rw onlyoffice/communityserver
 
 Storing the data on the host machine allows you to easily update ONLYOFFICE once the new version is released without losing your data.
 
@@ -202,7 +202,7 @@ To change the port, use the -p command. E.g.: to make your portal accessible via
     -v /app/onlyoffice/CommunityServer/logs:/var/log/onlyoffice \
     -v /app/onlyoffice/CommunityServer/data:/var/www/onlyoffice/Data \
  	-v /app/onlyoffice/CommunityServer/letsencrypt:/etc/letsencrypt \
-    -v /sys/fs/cgroup:/sys/fs/cgroup:ro onlyoffice/communityserver
+    -v /sys/fs/cgroup:/sys/fs/cgroup:rw onlyoffice/communityserver
 
 ### Exposing Additional Ports
 
@@ -218,7 +218,7 @@ You can expose ports by specifying the '-p' option in the docker run command.
     -v /app/onlyoffice/CommunityServer/logs:/var/log/onlyoffice \
     -v /app/onlyoffice/CommunityServer/data:/var/www/onlyoffice/Data \
  	-v /app/onlyoffice/CommunityServer/letsencrypt:/etc/letsencrypt \
-    -v /sys/fs/cgroup:/sys/fs/cgroup:ro onlyoffice/communityserver
+    -v /sys/fs/cgroup:/sys/fs/cgroup:rw onlyoffice/communityserver
 
 
 For **outgoing connections** you need to expose the following ports:
@@ -415,7 +415,7 @@ sudo docker run --net onlyoffice -i -t -d --privileged --restart=always --name o
  -v /app/onlyoffice/CommunityServer/data:/var/www/onlyoffice/Data \
  -v /app/onlyoffice/CommunityServer/logs:/var/log/onlyoffice \
  -v /app/onlyoffice/CommunityServer/letsencrypt:/etc/letsencrypt \
- -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
+ -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
  onlyoffice/communityserver
 ```
 Where `${MAIL_SERVER_IP}` is the IP address for **ONLYOFFICE Mail Server**. You can easily get it using the command:
@@ -489,7 +489,7 @@ where
 	-v /app/onlyoffice/CommunityServer/logs:/var/log/onlyoffice  \
 	-v /app/onlyoffice/CommunityServer/data:/var/www/onlyoffice/Data \
 	-v /app/onlyoffice/CommunityServer/letsencrypt:/etc/letsencrypt \
-	-v /sys/fs/cgroup:/sys/fs/cgroup:ro onlyoffice/communityserver
+	-v /sys/fs/cgroup:/sys/fs/cgroup:rw onlyoffice/communityserver
 
 *This will update **Community Server** container only and will not connect **Document Server** and **Mail Server** to it. You will need to use the additional parameters (like those used during installation) to connect them.*
 
