@@ -7,7 +7,7 @@ ARG SOURCE_REPO_URL="deb http://static.teamlab.com.s3.amazonaws.com/repo/debian 
 ARG DEBIAN_FRONTEND=noninteractive
 ARG PACKAGE_SYSNAME="onlyoffice"
 
-ARG LOG4J_VER=2.17.1
+ARG LOG4J_VER=2.17.2
 ARG LOG4J_BIN=apache-log4j-${LOG4J_VER}-bin
 ARG LOG4J_ARCH=${LOG4J_BIN}.tar.gz
 ARG LOG4J_DIR=./log4j
