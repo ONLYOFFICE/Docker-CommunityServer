@@ -64,6 +64,8 @@ RUN apt-get -y update && \
     echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" | tee -a /etc/apt/sources.list.d/elastic-7.x.list && \
     add-apt-repository -y ppa:certbot/certbot && \
     add-apt-repository -y ppa:chris-lea/redis-server && \
+    curl -sSL https://packages.microsoft.com/keys/microsoft.asc | apt-key add - && \
+    echo "deb [arch=amd64] https://packages.microsoft.com/ubuntu/18.04/prod bionic main" >> /etc/apt/sources.list.d/microsoft-prod.list && \
     curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash - && \
     apt-get install -yq gnupg2 \
                         ca-certificates \
@@ -91,6 +93,7 @@ RUN apt-get -y update && \
                         apt-transport-https \
                         elasticsearch=7.9.0 \
                         mono-webserver-hyperfastcgi=0.4-7 \
+                        dotnet-sdk-6.0 \
                         ${PACKAGE_SYSNAME}-communityserver \
                         ${PACKAGE_SYSNAME}-xmppserver && \
     rm -v ${ELK_LIB_DIR}/log4j-*.jar ${ELK_MODULE_DIR}/*/log4j-*.jar && \
