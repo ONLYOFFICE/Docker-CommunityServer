@@ -162,7 +162,7 @@ sudo docker run --net onlyoffice -i -t -d --restart=always --name onlyoffice-mys
 
 Use this command to install **ONLYOFFICE Community Server**:
 ```
-sudo docker run --net onlyoffice -i -t -d --privileged --restart=always --name onlyoffice-community-server -p 80:80 -p 443:443 -p 5222:5222 \
+sudo docker run --net onlyoffice -i -t -d --privileged --restart=always --name onlyoffice-community-server -p 80:80 -p 443:443 -p 5222:5222 --cgroupns=host \
  -e MYSQL_SERVER_ROOT_PASSWORD=my-secret-pw \
  -e MYSQL_SERVER_DB_NAME=onlyoffice \
  -e MYSQL_SERVER_HOST=onlyoffice-mysql-server \
@@ -171,7 +171,7 @@ sudo docker run --net onlyoffice -i -t -d --privileged --restart=always --name o
  -v /app/onlyoffice/CommunityServer/data:/var/www/onlyoffice/Data \
  -v /app/onlyoffice/CommunityServer/logs:/var/log/onlyoffice \
  -v /app/onlyoffice/CommunityServer/letsencrypt:/etc/letsencrypt \
- -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
+ -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
  onlyoffice/communityserver
 ```
 
@@ -186,11 +186,11 @@ All the data are stored in the specially-designated directories, **data volumes*
 
 To get access to your data from outside the container, you need to mount the volumes. It can be done by specifying the '-v' option in the docker run command.
 
-    sudo docker run -i -t -d -p 80:80 \
+    sudo docker run -i -t -d -p 80:80 --cgroupns=host \
         -v /app/onlyoffice/CommunityServer/logs:/var/log/onlyoffice \
         -v /app/onlyoffice/CommunityServer/data:/var/www/onlyoffice/Data \
 		-v /app/onlyoffice/CommunityServer/letsencrypt:/etc/letsencrypt \
-        -v /sys/fs/cgroup:/sys/fs/cgroup:ro onlyoffice/communityserver
+        -v /sys/fs/cgroup:/sys/fs/cgroup:rw onlyoffice/communityserver
 
 Storing the data on the host machine allows you to easily update ONLYOFFICE once the new version is released without losing your data.
 
@@ -198,11 +198,11 @@ Storing the data on the host machine allows you to easily update ONLYOFFICE once
 
 To change the port, use the -p command. E.g.: to make your portal accessible via port 8080 execute the following command:
 
-    sudo docker run -i -t -d --privileged -p 8080:80 \
+    sudo docker run -i -t -d --privileged -p 8080:80 --cgroupns=host \
     -v /app/onlyoffice/CommunityServer/logs:/var/log/onlyoffice \
     -v /app/onlyoffice/CommunityServer/data:/var/www/onlyoffice/Data \
  	-v /app/onlyoffice/CommunityServer/letsencrypt:/etc/letsencrypt \
-    -v /sys/fs/cgroup:/sys/fs/cgroup:ro onlyoffice/communityserver
+    -v /sys/fs/cgroup:/sys/fs/cgroup:rw onlyoffice/communityserver
 
 ### Exposing Additional Ports
 
@@ -214,11 +214,11 @@ The container ports to be exposed for **incoming connections** are the folloing:
 
 You can expose ports by specifying the '-p' option in the docker run command.
 
-    sudo docker run -i -t -d --privileged -p 80:80 -p 443:443 -p 5222:5222 \
+    sudo docker run -i -t -d --privileged -p 80:80 -p 443:443 -p 5222:5222 --cgroupns=host \
     -v /app/onlyoffice/CommunityServer/logs:/var/log/onlyoffice \
     -v /app/onlyoffice/CommunityServer/data:/var/www/onlyoffice/Data \
  	-v /app/onlyoffice/CommunityServer/letsencrypt:/etc/letsencrypt \
-    -v /sys/fs/cgroup:/sys/fs/cgroup:ro onlyoffice/communityserver
+    -v /sys/fs/cgroup:/sys/fs/cgroup:rw onlyoffice/communityserver
 
 
 For **outgoing connections** you need to expose the following ports:
@@ -397,7 +397,7 @@ docker run --net onlyoffice -i -t -d --restart=always --name onlyoffice-control-
 **STEP 6**: Install ONLYOFFICE Community Server
 
 ```bash
-sudo docker run --net onlyoffice -i -t -d --privileged --restart=always --name onlyoffice-community-server -p 80:80 -p 443:443 -p 5222:5222 \
+sudo docker run --net onlyoffice -i -t -d --privileged --restart=always --name onlyoffice-community-server -p 80:80 -p 443:443 -p 5222:5222 --cgroupns=host \
  -e MYSQL_SERVER_ROOT_PASSWORD=my-secret-pw \
  -e MYSQL_SERVER_DB_NAME=onlyoffice \
  -e MYSQL_SERVER_HOST=onlyoffice-mysql-server \
@@ -415,7 +415,7 @@ sudo docker run --net onlyoffice -i -t -d --privileged --restart=always --name o
  -v /app/onlyoffice/CommunityServer/data:/var/www/onlyoffice/Data \
  -v /app/onlyoffice/CommunityServer/logs:/var/log/onlyoffice \
  -v /app/onlyoffice/CommunityServer/letsencrypt:/etc/letsencrypt \
- -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
+ -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
  onlyoffice/communityserver
 ```
 Where `${MAIL_SERVER_IP}` is the IP address for **ONLYOFFICE Mail Server**. You can easily get it using the command:
@@ -480,7 +480,7 @@ where
 
 **STEP 4** Run the new image with the same map paths
 
-	sudo docker run -i -t -d --privileged -p 80:80 \
+	sudo docker run -i -t -d --privileged -p 80:80 --cgroupns=host \
 	-e MYSQL_SERVER_ROOT_PASSWORD=my-secret-pw \
 	-e MYSQL_SERVER_DB_NAME=onlyoffice \
 	-e MYSQL_SERVER_HOST=onlyoffice-mysql-server \
@@ -489,7 +489,7 @@ where
 	-v /app/onlyoffice/CommunityServer/logs:/var/log/onlyoffice  \
 	-v /app/onlyoffice/CommunityServer/data:/var/www/onlyoffice/Data \
 	-v /app/onlyoffice/CommunityServer/letsencrypt:/etc/letsencrypt \
-	-v /sys/fs/cgroup:/sys/fs/cgroup:ro onlyoffice/communityserver
+	-v /sys/fs/cgroup:/sys/fs/cgroup:rw onlyoffice/communityserver
 
 *This will update **Community Server** container only and will not connect **Document Server** and **Mail Server** to it. You will need to use the additional parameters (like those used during installation) to connect them.*
 
