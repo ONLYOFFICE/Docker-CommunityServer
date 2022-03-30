@@ -24,7 +24,8 @@ LABEL ${PACKAGE_SYSNAME}.community.release-date="${RELEASE_DATE}" \
 
 ENV LANG=en_US.UTF-8 \
     LANGUAGE=en_US:en \
-    LC_ALL=en_US.UTF-8
+    LC_ALL=en_US.UTF-8 \
+    ELASTICSEARCH_VERSION=7.10.0
 
 RUN apt-get -y update && \
     apt-get -y upgrade && \
@@ -91,7 +92,7 @@ RUN apt-get -y update && \
                         jq \
                         openjdk-8-jre-headless \
                         apt-transport-https \
-                        elasticsearch=7.10.0 \
+                        elasticsearch=${ELASTICSEARCH_VERSION} \
                         mono-webserver-hyperfastcgi=0.4-7 \
                         dotnet-sdk-6.0 \
                         ${PACKAGE_SYSNAME}-communityserver \
