@@ -10,7 +10,7 @@ echo "##########################################################"
 SERVER_HOST=${SERVER_HOST:-""};
 APP_DIR="/var/www/onlyoffice"
 APP_DATA_DIR="${APP_DIR}/Data"
-APP_INDEX_DIR="${APP_DATA_DIR}/Index/v7.10.0"
+APP_INDEX_DIR="${APP_DATA_DIR}/Index/v${ELASTICSEARCH_VERSION}"
 APP_PRIVATE_DATA_DIR="${APP_DATA_DIR}/.private"
 APP_SERVICES_DIR="${APP_DIR}/Services"
 APP_CONFIG_DIR="/etc/onlyoffice/communityserver"
