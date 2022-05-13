@@ -491,8 +491,8 @@ else
         sed -i '/<\/configSections>/a <elastic scheme="http" host="'${ELASTICSEARCH_SERVER_HOST}'" port="'${ELASTICSEARCH_SERVER_HTTPPORT}'" \/>' ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config
         sed -i 's/<elastic scheme="http" host="'${ELASTICSEARCH_SERVER_HOST}'" port="'${ELASTICSEARCH_SERVER_HTTPPORT}'" \/>/  <elastic scheme="http" host="'${ELASTICSEARCH_SERVER_HOST}'" port="'${ELASTICSEARCH_SERVER_HTTPPORT}'" \/>/' ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config
 
-		sed -i "s/\"Host\": \"127.0.0.1\"/\"Host\": \"${ELASTICSEARCH_SERVER_HOST}\"/g" ${APP_CONFIG_DIR}/elastic.development.json
-		sed -i "s/\"Port\": \"9200\"/\"Port\": \"${ELASTICSEARCH_SERVER_HTTPPORT}\"/g" ${APP_CONFIG_DIR}/elastic.development.json
+		sed -i "s/\"Host\": \"127.0.0.1\"/\"Host\": \"${ELASTICSEARCH_SERVER_HOST}\"/g" ${APP_CONFIG_DIR}/elastic.production.json
+		sed -i "s/\"Port\": \"9200\"/\"Port\": \"${ELASTICSEARCH_SERVER_HTTPPORT}\"/g" ${APP_CONFIG_DIR}/elastic.production.json
     fi
   fi
 fi
