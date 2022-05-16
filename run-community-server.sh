@@ -637,7 +637,7 @@ sed "s!\"user\":.*,!\"user\":\"${MYSQL_SERVER_USER}\",!" -i ${APP_SERVICES_DIR}/
 sed "s!\"password\":.*,!\"password\":\"${MYSQL_SERVER_PASS}\",!" -i ${APP_SERVICES_DIR}/ASC.UrlShortener/config/config.json
 sed "s!\"database\":.*!\"database\":\"${MYSQL_SERVER_DB_NAME}\"!" -i ${APP_SERVICES_DIR}/ASC.UrlShortener/config/config.json
 
-sed -i "s/Server=.*/Server=${MYSQL_SERVER_HOST};Port=${MYSQL_SERVER_PORT};Database=${MYSQL_SERVER_DB_NAME};User ID=${MYSQL_SERVER_USER};Password=${MYSQL_SERVER_PASS};Pooling=true;Character Set=utf8;AutoEnlist=false;SSL Mode=none;AllowPublicKeyRetrieval=true;Connection Timeout=30;Maximum Pool Size=300;\",/g" ${APP_CONFIG_DIR}/appsettings.json
+sed -i "s/Server=.*/Server=${MYSQL_SERVER_HOST};Port=${MYSQL_SERVER_PORT};Database=${MYSQL_SERVER_DB_NAME};User ID=${MYSQL_SERVER_USER};Password=${MYSQL_SERVER_PASS};Pooling=true;Character Set=utf8;AutoEnlist=false;SSL Mode=none;AllowPublicKeyRetrieval=true;Connection Timeout=30;Maximum Pool Size=300;\",/g" ${APP_CONFIG_DIR}/appsettings.production.json
 
 if [ "${DB_TABLES_COUNT}" -eq "0" ]; then
       	mysql_batch_exec ${APP_SQL_DIR}/onlyoffice.sql
@@ -701,7 +701,7 @@ if [ -f "${SSL_CERTIFICATE_PATH}" -a -f "${SSL_KEY_PATH}" ]; then
 	sed '/certificatePassword/s/\(value\s*=\s*\"\).*\"/\1'${SSL_CERTIFICATE_PATH_PFX_PWD}'\"/' -i ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config
 	sed '/startTls/s/\(value\s*=\s*\"\).*\"/\1optional\"/' -i ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config;
 
-	sed "s/\"DefaultApiSchema\": \"http\"/\"DefaultApiSchema\": \"https\"/g" -i ${APP_CONFIG_DIR}/mail.json
+	sed "s/\"DefaultApiSchema\": \"http\"/\"DefaultApiSchema\": \"https\"/g" -i ${APP_CONFIG_DIR}/mail.production.json
 
 else
 	cp ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-common.conf.template ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice;
@@ -911,7 +911,7 @@ do
 		sed "/core\.machinekey/s!\"core\.machinekey\".*!\"core\.machinekey\":\"${APP_CORE_MACHINEKEY}\",!" -i ${APP_SERVICES_DIR}/ASC.Socket.IO/config/config.json
 		sed "s!machine_key\s*=.*!machine_key = ${APP_CORE_MACHINEKEY}!g" -i  ${APP_SERVICES_DIR}/TeamLabSvc/radicale.config
 		sed "s!\"core\.machinekey\":.*,!\"core\.machinekey\":\"${APP_CORE_MACHINEKEY}\",!g" -i ${APP_SERVICES_DIR}/ASC.UrlShortener/config/config.json
-		sed "s!\"machinekey\":.*!\"machinekey\":\"${APP_CORE_MACHINEKEY}\",!" -i ${APP_CONFIG_DIR}/appsettings.json
+		sed "s!\"machinekey\":.*!\"machinekey\":\"${APP_CORE_MACHINEKEY}\",!" -i ${APP_CONFIG_DIR}/appsettings.production.json
 
                 continue;
         fi
