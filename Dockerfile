@@ -90,7 +90,6 @@ RUN apt-get -y update && \
                         iproute2 \
                         ffmpeg \
                         jq \
-                        openjdk-8-jre-headless \
                         apt-transport-https \
                         elasticsearch=${ELASTICSEARCH_VERSION} \
                         mono-webserver-hyperfastcgi=0.4-7 \
