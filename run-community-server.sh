@@ -431,6 +431,7 @@ if [ ${MAIL_SERVER_DB_HOST} ]; then
 	fi
 fi
 
+sed 's_\(\"ImapSyncStartDate":\).*,_\1 "'${MAIL_IMAPSYNC_START_DATE:-$(date +"%Y-%m-%d")}'",_' -i ${APP_CONFIG_DIR}/mail.production.json
 
 if [ ${MAIL_SERVER_API_HOST} ]; then
  if [ ! bash ${SYSCONF_TOOLS_DIR}/wait-for-it.sh  ${MAIL_SERVER_API_HOST}:25 --timeout=300 --quiet -s -- echo "MailServer is up" ]; then
