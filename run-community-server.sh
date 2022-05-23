@@ -432,7 +432,7 @@ if [ ${MAIL_SERVER_DB_HOST} ]; then
 fi
 
 MAIL_IMAPSYNC_START_DATE=${MAIL_IMAPSYNC_START_DATE:-$(date +"%Y-%m-%dT%H:%M:%S")};
-sed 's_\(\"ImapSyncStartDate":\).*,_\1 "'${MAIL_IMAPSYNC_START_DATE//T*/}'",_' -i ${APP_CONFIG_DIR}/mail.production.json
+sed 's_\(\"ImapSyncStartDate":\).*,_\1 "'${MAIL_IMAPSYNC_START_DATE}'",_' -i ${APP_CONFIG_DIR}/mail.production.json
 sed "/mail\.imap-sync-start-date/s/value=\"\S*\"/value=\"${MAIL_IMAPSYNC_START_DATE}\"/g" -i ${APP_ROOT_DIR}/web.appsettings.config
 
 if [ ${MAIL_SERVER_API_HOST} ]; then
