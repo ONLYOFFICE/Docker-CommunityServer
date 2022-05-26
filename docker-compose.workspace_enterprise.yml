@@ -16,11 +16,12 @@ services:
      - mysql_data:/var/lib/mysql
   onlyoffice-community-server:
     container_name: onlyoffice-community-server
-    image: onlyoffice/communityserver:11.0.0.1458
+    image: onlyoffice/communityserver:11.5.4.1582
     depends_on:
      - onlyoffice-mysql-server
      - onlyoffice-document-server
      - onlyoffice-mail-server
+     - onlyoffice-elasticsearch
     environment:
      - ONLYOFFICE_CORE_MACHINEKEY=core_secret
      - CONTROL_PANEL_PORT_80_TCP=80
@@ -41,6 +42,8 @@ services:
      - MAIL_SERVER_DB_NAME=onlyoffice_mailserver
      - MAIL_SERVER_DB_USER=onlyoffice_mailserver_user
      - MAIL_SERVER_DB_PASS=onlyoffice_mailserver_user_pass
+     - ELASTICSEARCH_SERVER_HOST=onlyoffice-elasticsearch
+     - ELASTICSEARCH_SERVER_HTTPPORT=9200
     networks:
      - onlyoffice
     ports:
@@ -58,9 +61,33 @@ services:
      - document_data:/var/www/onlyoffice/DocumentServerData
      - /sys/fs/cgroup:/sys/fs/cgroup:ro
      - ./certs:/var/www/onlyoffice/Data/certs
+  onlyoffice-elasticsearch:
+    image: onlyoffice/elasticsearch:7.10.0
+    container_name: onlyoffice-elasticsearch
+    restart: always
+    environment:
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m -Dlog4j2.formatMsgNoLookups=true"
+      - "indices.fielddata.cache.size=30%"
+      - "indices.memory.index_buffer_size=30%" 
+    networks:
+    - onlyoffice    
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65535
+        hard: 65535
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    expose:
+      - "9200"
+      - "9300"
   onlyoffice-document-server:
     container_name: onlyoffice-document-server
-    image: onlyoffice/documentserver-ee:6.0.2
+    image: onlyoffice/documentserver-ee:6.4.2.6
     stdin_open: true
     tty: true
     restart: always
@@ -110,7 +137,7 @@ services:
      - onlyoffice-document-server
      - onlyoffice-mail-server
      - onlyoffice-community-server
-    image: onlyoffice/controlpanel:2.9.0.351
+    image: onlyoffice/controlpanel:3.0.2.395
     environment:
      - ONLYOFFICE_CORE_MACHINEKEY=core_secret
     expose:
@@ -143,3 +170,4 @@ volumes:
   controlpanel_data:
   controlpanel_log:
   mysql_data:
+  es_data:

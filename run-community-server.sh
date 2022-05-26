@@ -10,9 +10,10 @@ echo "##########################################################"
 SERVER_HOST=${SERVER_HOST:-""};
 APP_DIR="/var/www/onlyoffice"
 APP_DATA_DIR="${APP_DIR}/Data"
-APP_INDEX_DIR="${APP_DATA_DIR}/Index/v7.9.0"
+APP_INDEX_DIR="${APP_DATA_DIR}/Index/v${ELASTICSEARCH_VERSION}"
 APP_PRIVATE_DATA_DIR="${APP_DATA_DIR}/.private"
 APP_SERVICES_DIR="${APP_DIR}/Services"
+APP_CONFIG_DIR="/etc/onlyoffice/communityserver"
 APP_SQL_DIR="${APP_DIR}/Sql"
 APP_ROOT_DIR="${APP_DIR}/WebStudio"
 APP_APISYSTEM_DIR="/var/www/onlyoffice/ApiSystem"
@@ -430,6 +431,9 @@ if [ ${MAIL_SERVER_DB_HOST} ]; then
 	fi
 fi
 
+MAIL_IMAPSYNC_START_DATE=${MAIL_IMAPSYNC_START_DATE:-$(date +"%Y-%m-%dT%H:%M:%S")};
+sed 's_\(\"ImapSyncStartDate":\).*,_\1 "'${MAIL_IMAPSYNC_START_DATE}'",_' -i ${APP_CONFIG_DIR}/mail.production.json
+sed "/mail\.imap-sync-start-date/s/value=\"\S*\"/value=\"${MAIL_IMAPSYNC_START_DATE}\"/g" -i ${APP_ROOT_DIR}/web.appsettings.config
 
 if [ ${MAIL_SERVER_API_HOST} ]; then
  if [ ! bash ${SYSCONF_TOOLS_DIR}/wait-for-it.sh  ${MAIL_SERVER_API_HOST}:25 --timeout=300 --quiet -s -- echo "MailServer is up" ]; then
@@ -482,8 +486,6 @@ else
     sed -i 's/<section name="elastic" type="ASC.ElasticSearch.Config.ElasticSection, ASC.ElasticSearch" \/>/    <section name="elastic" type="ASC.ElasticSearch.Config.ElasticSection, ASC.ElasticSearch" \/>/' ${APP_ROOT_DIR}/Web.config
     sed -i '/<section name="redisCacheClient" type="StackExchange.Redis.Extensions.LegacyConfiguration.RedisCachingSectionHandler, StackExchange.Redis.Extensions.LegacyConfiguration" \/>/a <section name="elastic" type="ASC.ElasticSearch.Config.ElasticSection, ASC.ElasticSearch" \/>' ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config
     sed -i 's/<section name="elastic" type="ASC.ElasticSearch.Config.ElasticSection, ASC.ElasticSearch" \/>/    <section name="elastic" type="ASC.ElasticSearch.Config.ElasticSection, ASC.ElasticSearch" \/>/' ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config
-    sed -i '/<section name="autofac" type="ASC.Common.DependencyInjection.AutofacConfigurationSection, ASC.Common" \/>/a <section name="elastic" type="ASC.ElasticSearch.Config.ElasticSection, ASC.ElasticSearch" \/>' ${APP_SERVICES_DIR}/MailAggregator/ASC.Mail.Aggregator.CollectionService.exe.config
-    sed -i 's/<section name="elastic" type="ASC.ElasticSearch.Config.ElasticSection, ASC.ElasticSearch" \/>/    <section name="elastic" type="ASC.ElasticSearch.Config.ElasticSection, ASC.ElasticSearch" \/>/' ${APP_SERVICES_DIR}/MailAggregator/ASC.Mail.Aggregator.CollectionService.exe.config
 
     if [ ${ELASTICSEARCH_SERVER_HTTPPORT} ]; then
         sed -i '/<\/configSections>/a <elastic scheme="http" host="'${ELASTICSEARCH_SERVER_HOST}'" port="'${ELASTICSEARCH_SERVER_HTTPPORT}'" \/>' ${APP_ROOT_DIR}/Web.config
@@ -492,8 +494,8 @@ else
         sed -i '/<\/configSections>/a <elastic scheme="http" host="'${ELASTICSEARCH_SERVER_HOST}'" port="'${ELASTICSEARCH_SERVER_HTTPPORT}'" \/>' ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config
         sed -i 's/<elastic scheme="http" host="'${ELASTICSEARCH_SERVER_HOST}'" port="'${ELASTICSEARCH_SERVER_HTTPPORT}'" \/>/  <elastic scheme="http" host="'${ELASTICSEARCH_SERVER_HOST}'" port="'${ELASTICSEARCH_SERVER_HTTPPORT}'" \/>/' ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config
 
-        sed -i '/<storage file/a <elastic scheme="http" host="'${ELASTICSEARCH_SERVER_HOST}'" port="'${ELASTICSEARCH_SERVER_HTTPPORT}'" \/>' ${APP_SERVICES_DIR}/MailAggregator/ASC.Mail.Aggregator.CollectionService.exe.config
-        sed -i 's/<elastic scheme="http" host="'${ELASTICSEARCH_SERVER_HOST}'" port="'${ELASTICSEARCH_SERVER_HTTPPORT}'" \/>/  <elastic scheme="http" host="'${ELASTICSEARCH_SERVER_HOST}'" port="'${ELASTICSEARCH_SERVER_HTTPPORT}'" \/>/' ${APP_SERVICES_DIR}/MailAggregator/ASC.Mail.Aggregator.CollectionService.exe.config
+		sed -i "s/\"Host\": \"127.0.0.1\"/\"Host\": \"${ELASTICSEARCH_SERVER_HOST}\"/g" ${APP_CONFIG_DIR}/elastic.production.json
+		sed -i "s/\"Port\": \"9200\"/\"Port\": \"${ELASTICSEARCH_SERVER_HTTPPORT}\"/g" ${APP_CONFIG_DIR}/elastic.production.json
     fi
   fi
 fi
@@ -631,16 +633,14 @@ change_connections "default" "${APP_ROOT_DIR}/web.connections.config";
 change_connections "teamlabsite" "${APP_ROOT_DIR}/web.connections.config";
 change_connections "default" "${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config";
 change_connections "default" "${APP_SERVICES_DIR}/Jabber/ASC.Xmpp.Server.Launcher.exe.config";
-change_connections "default" "${APP_SERVICES_DIR}/MailAggregator/ASC.Mail.Aggregator.CollectionService.exe.config";
-change_connections "default" "${APP_SERVICES_DIR}/MailAggregator/ASC.Mail.EmlDownloader.exe.config";
-change_connections "default" "${APP_SERVICES_DIR}/MailWatchdog/ASC.Mail.Watchdog.Service.exe.config";
-change_connections "default" "${APP_SERVICES_DIR}/MailCleaner/ASC.Mail.StorageCleaner.exe.config";
 change_connections "default" "${APP_APISYSTEM_DIR}/Web.config";
 
 sed "s!\"host\":.*,!\"host\":\"${MYSQL_SERVER_HOST}\",!" -i ${APP_SERVICES_DIR}/ASC.UrlShortener/config/config.json
 sed "s!\"user\":.*,!\"user\":\"${MYSQL_SERVER_USER}\",!" -i ${APP_SERVICES_DIR}/ASC.UrlShortener/config/config.json
 sed "s!\"password\":.*,!\"password\":\"${MYSQL_SERVER_PASS}\",!" -i ${APP_SERVICES_DIR}/ASC.UrlShortener/config/config.json
 sed "s!\"database\":.*!\"database\":\"${MYSQL_SERVER_DB_NAME}\"!" -i ${APP_SERVICES_DIR}/ASC.UrlShortener/config/config.json
+
+sed -i "s/Server=.*/Server=${MYSQL_SERVER_HOST};Port=${MYSQL_SERVER_PORT};Database=${MYSQL_SERVER_DB_NAME};User ID=${MYSQL_SERVER_USER};Password=${MYSQL_SERVER_PASS};Pooling=true;Character Set=utf8;AutoEnlist=false;SSL Mode=none;AllowPublicKeyRetrieval=true;Connection Timeout=30;Maximum Pool Size=300;\",/g" ${APP_CONFIG_DIR}/appsettings.production.json
 
 if [ "${DB_TABLES_COUNT}" -eq "0" ]; then
       	mysql_batch_exec ${APP_SQL_DIR}/onlyoffice.sql
@@ -704,7 +704,7 @@ if [ -f "${SSL_CERTIFICATE_PATH}" -a -f "${SSL_KEY_PATH}" ]; then
 	sed '/certificatePassword/s/\(value\s*=\s*\"\).*\"/\1'${SSL_CERTIFICATE_PATH_PFX_PWD}'\"/' -i ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config
 	sed '/startTls/s/\(value\s*=\s*\"\).*\"/\1optional\"/' -i ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config;
 
-	sed '/mail\.default-api-scheme/s/\(value\s*=\s*\"\).*\"/\1https\"/' -i ${APP_SERVICES_DIR}/MailAggregator/ASC.Mail.Aggregator.CollectionService.exe.config;
+	sed "s/\"DefaultApiSchema\": \"http\"/\"DefaultApiSchema\": \"https\"/g" -i ${APP_CONFIG_DIR}/mail.production.json
 
 else
 	cp ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-common.conf.template ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice;
@@ -805,6 +805,9 @@ if [ "${MAIL_SERVER_ENABLED}" == "true" ]; then
 
 	if check_ip_is_internal $DOCKER_APP_SUBNET $MAIL_SERVER_API_HOST; then
 		SENDER_IP=$(hostname -i);
+		if [[ -n ${MAIL_DOMAIN_NAME} ]]; then
+		  echo "$(dig +short myip.opendns.com @resolver1.opendns.com) ${MAIL_DOMAIN_NAME}" >> /etc/hosts
+		fi
 	elif [[ "$(dig +short myip.opendns.com @resolver1.opendns.com)" =~ $VALID_IP_ADDRESS_REGEX ]]; then
 		SENDER_IP=$(dig +short myip.opendns.com @resolver1.opendns.com);
         	log_debug "External ip $SENDER_IP is valid";
@@ -911,9 +914,7 @@ do
 		sed "/core\.machinekey/s!\"core\.machinekey\".*!\"core\.machinekey\":\"${APP_CORE_MACHINEKEY}\",!" -i ${APP_SERVICES_DIR}/ASC.Socket.IO/config/config.json
 		sed "s!machine_key\s*=.*!machine_key = ${APP_CORE_MACHINEKEY}!g" -i  ${APP_SERVICES_DIR}/TeamLabSvc/radicale.config
 		sed "s!\"core\.machinekey\":.*,!\"core\.machinekey\":\"${APP_CORE_MACHINEKEY}\",!g" -i ${APP_SERVICES_DIR}/ASC.UrlShortener/config/config.json
-                sed "/core.machinekey/s!value=\".*\"!value=\"${APP_CORE_MACHINEKEY}\"!g" -i  ${APP_SERVICES_DIR}/MailAggregator/ASC.Mail.EmlDownloader.exe.config
-                sed "/core.machinekey/s!value=\".*\"!value=\"${APP_CORE_MACHINEKEY}\"!g" -i  ${APP_SERVICES_DIR}/MailAggregator/ASC.Mail.Aggregator.CollectionService.exe.config
-		sed "/core.machinekey/s!value=\".*\"!value=\"${APP_CORE_MACHINEKEY}\"!g" -i  ${APP_SERVICES_DIR}/MailCleaner/ASC.Mail.StorageCleaner.exe.config
+		sed "s!\"machinekey\":.*!\"machinekey\":\"${APP_CORE_MACHINEKEY}\",!" -i ${APP_CONFIG_DIR}/appsettings.production.json
 
                 continue;
         fi
@@ -1091,12 +1092,14 @@ systemctl stop onlyofficeJabber
 systemctl stop onlyofficeMailAggregator
 systemctl stop onlyofficeMailWatchdog
 systemctl stop onlyofficeMailCleaner
+systemctl stop onlyofficeMailImap
 systemctl stop onlyofficeNotify
 systemctl stop onlyofficeBackup
 systemctl stop onlyofficeStorageMigrate
 systemctl stop onlyofficeStorageEncryption
 systemctl stop onlyofficeUrlShortener
 systemctl stop onlyofficeThumbnailBuilder
+systemctl stop onlyofficeAutoCleanUp
 
 systemctl stop god
 systemctl enable god
@@ -1136,12 +1139,14 @@ if [ "${APP_SERVICES_EXTERNAL}" == "true" ]; then
         systemctl disable onlyofficeMailAggregator.service
         systemctl disable onlyofficeMailWatchdog.service
         systemctl disable onlyofficeMailCleaner.service
+        systemctl disable onlyofficeMailImap.service
         systemctl disable onlyofficeNotify.service
         systemctl disable onlyofficeBackup.service
         systemctl disable onlyofficeStorageMigrate.service
         systemctl disable onlyofficeStorageEncryption.service
         systemctl disable onlyofficeUrlShortener.service
         systemctl disable onlyofficeThumbnailBuilder.service
+        systemctl disable onlyofficeAutoCleanUp.service
 
 	rm -f /lib/systemd/system/onlyofficeRadicale.service
 	rm -f /lib/systemd/system/onlyofficeTelegram.service
@@ -1153,12 +1158,14 @@ if [ "${APP_SERVICES_EXTERNAL}" == "true" ]; then
 	rm -f /lib/systemd/system/onlyofficeMailAggregator.service
 	rm -f /lib/systemd/system/onlyofficeMailWatchdog.service
 	rm -f /lib/systemd/system/onlyofficeMailCleaner.service
+	rm -f /lib/systemd/system/onlyofficeMailImap.service
 	rm -f /lib/systemd/system/onlyofficeNotify.service
 	rm -f /lib/systemd/system/onlyofficeBackup.service
 	rm -f /lib/systemd/system/onlyofficeStorageMigrate.sevice
 	rm -f /lib/systemd/system/onlyofficeStorageEncryption.sevice
 	rm -f /lib/systemd/system/onlyofficeUrlShortener.service
 	rm -f /lib/systemd/system/onlyofficeThumbnailBuilder.service
+	rm -f /lib/systemd/system/onlyofficeAutoCleanUp.service
 
 	sed '/onlyoffice/d' -i ${APP_CRON_PATH}
 else
@@ -1172,12 +1179,14 @@ else
         systemctl enable onlyofficeMailAggregator.service
         systemctl enable onlyofficeMailWatchdog.service
         systemctl enable onlyofficeMailCleaner.service
+        systemctl enable onlyofficeMailImap.service
         systemctl enable onlyofficeNotify.service
         systemctl enable onlyofficeBackup.service
         systemctl enable onlyofficeStorageMigrate.service
         systemctl enable onlyofficeStorageEncryption.service
         systemctl enable onlyofficeUrlShortener.service
         systemctl enable onlyofficeThumbnailBuilder.service
+        systemctl enable onlyofficeAutoCleanUp.service
 fi
 
 if [ "${APP_MODE}" == "SERVER" ]; then

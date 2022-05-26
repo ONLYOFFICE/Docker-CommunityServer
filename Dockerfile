@@ -7,6 +7,15 @@ ARG SOURCE_REPO_URL="deb http://static.teamlab.com.s3.amazonaws.com/repo/debian 
 ARG DEBIAN_FRONTEND=noninteractive
 ARG PACKAGE_SYSNAME="onlyoffice"
 
+ARG LOG4J_VER=2.17.2
+ARG LOG4J_BIN=apache-log4j-${LOG4J_VER}-bin
+ARG LOG4J_ARCH=${LOG4J_BIN}.tar.gz
+ARG LOG4J_DIR=./log4j
+
+ARG ELK_DIR=/usr/share/elasticsearch
+ARG ELK_LIB_DIR=${ELK_DIR}/lib
+ARG ELK_MODULE_DIR=${ELK_DIR}/modules
+
 LABEL ${PACKAGE_SYSNAME}.community.release-date="${RELEASE_DATE}" \
       ${PACKAGE_SYSNAME}.community.version="${VERSION}" \
       description="Community Server is a free open-source collaborative system developed to manage documents, projects, customer relationship and emails, all in one place." \
@@ -15,7 +24,8 @@ LABEL ${PACKAGE_SYSNAME}.community.release-date="${RELEASE_DATE}" \
 
 ENV LANG=en_US.UTF-8 \
     LANGUAGE=en_US:en \
-    LC_ALL=en_US.UTF-8
+    LC_ALL=en_US.UTF-8 \
+    ELASTICSEARCH_VERSION=7.10.0
 
 RUN apt-get -y update && \
     apt-get -y upgrade && \
@@ -55,6 +65,8 @@ RUN apt-get -y update && \
     echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" | tee -a /etc/apt/sources.list.d/elastic-7.x.list && \
     add-apt-repository -y ppa:certbot/certbot && \
     add-apt-repository -y ppa:chris-lea/redis-server && \
+    curl -sSL https://packages.microsoft.com/keys/microsoft.asc | apt-key add - && \
+    echo "deb [arch=amd64] https://packages.microsoft.com/ubuntu/18.04/prod bionic main" >> /etc/apt/sources.list.d/microsoft-prod.list && \
     curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash - && \
     apt-get install -yq gnupg2 \
                         ca-certificates \
@@ -78,12 +90,23 @@ RUN apt-get -y update && \
                         iproute2 \
                         ffmpeg \
                         jq \
-                        openjdk-8-jre-headless \
                         apt-transport-https \
-                        elasticsearch=7.9.0 \
+                        elasticsearch=${ELASTICSEARCH_VERSION} \
                         mono-webserver-hyperfastcgi=0.4-7 \
+                        dotnet-sdk-6.0 \
                         ${PACKAGE_SYSNAME}-communityserver \
                         ${PACKAGE_SYSNAME}-xmppserver && \
+    rm -v ${ELK_LIB_DIR}/log4j-*.jar ${ELK_MODULE_DIR}/*/log4j-*.jar && \
+    wget https://dlcdn.apache.org/logging/log4j/${LOG4J_VER}/${LOG4J_ARCH}&& \
+    mkdir ${LOG4J_DIR} && \
+    tar -xf ${LOG4J_ARCH} -C ${LOG4J_DIR} && \
+    cp -v ${LOG4J_DIR}/${LOG4J_BIN}/log4j-api-${LOG4J_VER}.jar ${ELK_LIB_DIR} && \
+    cp -v ${LOG4J_DIR}/${LOG4J_BIN}/log4j-core-${LOG4J_VER}.jar ${ELK_LIB_DIR} && \
+    cp -v ${LOG4J_DIR}/${LOG4J_BIN}/log4j-1.2-api-${LOG4J_VER}.jar ${ELK_MODULE_DIR}/x-pack-core && \
+    cp -v ${LOG4J_DIR}/${LOG4J_BIN}/log4j-slf4j-impl-${LOG4J_VER}.jar ${ELK_MODULE_DIR}/x-pack-identity-provider && \
+    cp -v ${LOG4J_DIR}/${LOG4J_BIN}/log4j-slf4j-impl-${LOG4J_VER}.jar ${ELK_MODULE_DIR}/x-pack-security && \
+    rm -vr ${LOG4J_ARCH} ${LOG4J_DIR} && \
+    zip -q -d ${ELK_LIB_DIR}/log4j-core-*.jar org/apache/logging/log4j/core/lookup/JndiLookup.class && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
