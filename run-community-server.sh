@@ -1203,6 +1203,8 @@ if [ ${ELASTICSEARCH_SERVER_HOST} ]; then
   rm -f /usr/lib/systemd/system/elasticsearch.service
   rm -f /etc/init.d/elasticsearch
 else
+  sed "s,\(\TimeoutStartSec=\).*,\1"300"," -i /usr/lib/systemd/system/elasticsearch.service #Fix error 'Failed with result timeout'
+  systemctl daemon-reload
   systemctl enable elasticsearch.service
 fi
 
