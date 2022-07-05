@@ -25,7 +25,7 @@ LABEL ${PACKAGE_SYSNAME}.community.release-date="${RELEASE_DATE}" \
 ENV LANG=en_US.UTF-8 \
     LANGUAGE=en_US:en \
     LC_ALL=en_US.UTF-8 \
-    ELASTICSEARCH_VERSION=7.10.0
+    ELASTICSEARCH_VERSION=7.16.3
 
 RUN apt-get -y update && \
     apt-get -y upgrade && \
