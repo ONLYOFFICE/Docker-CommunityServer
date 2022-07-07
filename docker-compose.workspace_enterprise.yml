@@ -62,7 +62,7 @@ services:
      - /sys/fs/cgroup:/sys/fs/cgroup:ro
      - ./certs:/var/www/onlyoffice/Data/certs
   onlyoffice-elasticsearch:
-    image: onlyoffice/elasticsearch:7.10.0
+    image: onlyoffice/elasticsearch:7.16.3
     container_name: onlyoffice-elasticsearch
     restart: always
     environment:
