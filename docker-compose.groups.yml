@@ -2,7 +2,7 @@ version: '3'
 services:
   onlyoffice-mysql-server:
     container_name: onlyoffice-mysql-server
-    image: mysql:5.7
+    image: mysql:8.0.29
     environment:
      - MYSQL_ROOT_PASSWORD=my-secret-pw
     networks:
@@ -10,13 +10,14 @@ services:
     stdin_open: true
     tty: true
     restart: always
+    tmpfs: /var/log/mysql/
     volumes:
      - ./config/mysql/conf.d:/etc/mysql/conf.d
      - ./config/mysql/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
      - mysql_data:/var/lib/mysql
   onlyoffice-community-server:
     container_name: onlyoffice-community-server
-    image: onlyoffice/communityserver:11.5.4.1582
+    image: onlyoffice/communityserver:latest
     depends_on:
      - onlyoffice-mysql-server
      - onlyoffice-elasticsearch
@@ -48,13 +49,13 @@ services:
      - /sys/fs/cgroup:/sys/fs/cgroup:ro
      - ./certs:/var/www/onlyoffice/Data/certs
   onlyoffice-elasticsearch:
-    image: onlyoffice/elasticsearch:7.10.0
+    image: onlyoffice/elasticsearch:7.16.3
     container_name: onlyoffice-elasticsearch
     restart: always
     environment:
       - discovery.type=single-node
       - bootstrap.memory_lock=true
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m -Dlog4j2.formatMsgNoLookups=true"
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g -Dlog4j2.formatMsgNoLookups=true"
       - "indices.fielddata.cache.size=30%"
       - "indices.memory.index_buffer_size=30%" 
     networks:
@@ -75,7 +76,7 @@ services:
     container_name: onlyoffice-control-panel
     depends_on:
      - onlyoffice-community-server
-    image: onlyoffice/controlpanel:3.0.2.395
+    image: onlyoffice/controlpanel:latest
     environment:
      - ONLYOFFICE_CORE_MACHINEKEY=core_secret
     expose:
