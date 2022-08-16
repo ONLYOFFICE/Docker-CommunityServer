@@ -10,6 +10,7 @@ services:
     stdin_open: true
     tty: true
     restart: always
+    tmpfs: /var/log/mysql/
     volumes:
      - ./config/mysql/conf.d:/etc/mysql/conf.d
      - ./config/mysql/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
