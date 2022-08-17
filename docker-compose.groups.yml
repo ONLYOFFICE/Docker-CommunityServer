@@ -17,7 +17,7 @@ services:
      - mysql_data:/var/lib/mysql
   onlyoffice-community-server:
     container_name: onlyoffice-community-server
-    image: onlyoffice/communityserver:latest
+    image: onlyoffice/communityserver:12.0.1.1748
     depends_on:
      - onlyoffice-mysql-server
      - onlyoffice-elasticsearch
@@ -76,7 +76,7 @@ services:
     container_name: onlyoffice-control-panel
     depends_on:
      - onlyoffice-community-server
-    image: onlyoffice/controlpanel:latest
+    image: onlyoffice/controlpanel:3.1.1.467
     environment:
      - ONLYOFFICE_CORE_MACHINEKEY=core_secret
     expose:
