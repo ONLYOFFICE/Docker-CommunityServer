@@ -71,7 +71,7 @@ RUN apt-get -y update && \
     curl -s https://deb.nodesource.com/gpgkey/nodesource.gpg.key | apt-key add - && \
     apt -y update && \
     apt-get -y update && \
-    && apt-get install -yq gnupg2 \
+    apt-get install -yq gnupg2 \
                         ca-certificates \
                         software-properties-common \
                         cron \
