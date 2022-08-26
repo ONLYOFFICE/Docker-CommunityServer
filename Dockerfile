@@ -95,16 +95,16 @@ RUN apt-get -y update && \
                         jq \
                         apt-transport-https \
                         elasticsearch=${ELASTICSEARCH_VERSION} && \
-    mkdir -p /var/www/onlyoffice/Data/Index/v7.16.3 && \
-    mkdir -p /var/log/onlyoffice/Index && \
+    mkdir -p ${ELK_INDEX_DIR} && \
+    mkdir -p ${ELK_LOG_DIR} && \
     chmod -R u=rwx /var/www/onlyoffice && \
     chmod -R g=rx /var/www/onlyoffice && \
     chmod -R o=rx /var/www/onlyoffice && \
-    chown -R elasticsearch:elasticsearch /var/www/onlyoffice/Data/Index/v7.16.3 && \
-    chown -R elasticsearch:elasticsearch /var/log/onlyoffice/Index && \
-    chmod -R u=rwx /var/www/onlyoffice/Data/Index/v7.16.3 && \
-    chmod -R g=rs /var/www/onlyoffice/Data/Index/v7.16.3 && \
-    chmod -R o= /var/www/onlyoffice/Data/Index/v7.16.3 && \
+    chown -R elasticsearch:elasticsearch ${ELK_INDEX_DIR} && \
+    chown -R elasticsearch:elasticsearch ${ELK_INDEX_DIR} && \
+    chmod -R u=rwx ${ELK_INDEX_DIR} && \
+    chmod -R g=rs ${ELK_INDEX_DIR} && \
+    chmod -R o= ${ELK_INDEX_DIR} && \
     apt-get install -yq \
                         mono-webserver-hyperfastcgi=0.4-8 \
                         dotnet-sdk-6.0 \
