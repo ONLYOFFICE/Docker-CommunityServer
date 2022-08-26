@@ -101,7 +101,7 @@ RUN apt-get -y update && \
     chmod -R g=rx /var/www/onlyoffice && \
     chmod -R o=rx /var/www/onlyoffice && \
     chown -R elasticsearch:elasticsearch ${ELK_INDEX_DIR} && \
-    chown -R elasticsearch:elasticsearch ${ELK_INDEX_DIR} && \
+    chown -R elasticsearch:elasticsearch ${ELK_LOG_DIR} && \
     chmod -R u=rwx ${ELK_INDEX_DIR} && \
     chmod -R g=rs ${ELK_INDEX_DIR} && \
     chmod -R o= ${ELK_INDEX_DIR} && \
