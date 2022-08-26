@@ -8,7 +8,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 ARG PACKAGE_SYSNAME="onlyoffice"
 
 ARG ELK_DIR=/usr/share/elasticsearch
-ARG ELK_INDEX_DIR=/var/www/onlyoffice/Data/Index/v7.16.3
+ARG ELK_INDEX_DIR=/var/www/onlyoffice/Data/Index
 ARG ELK_LOG_DIR=/var/log/onlyoffice/Index
 ARG ELK_LIB_DIR=${ELK_DIR}/lib
 ARG ELK_MODULE_DIR=${ELK_DIR}/modules
@@ -95,16 +95,16 @@ RUN apt-get -y update && \
                         jq \
                         apt-transport-https \
                         elasticsearch=${ELASTICSEARCH_VERSION} && \
-    mkdir -p ${ELK_INDEX_DIR} && \
+    mkdir -p ${ELK_INDEX_DIR}/v${ELASTICSEARCH_VERSION} && \
     mkdir -p ${ELK_LOG_DIR} && \
     chmod -R u=rwx /var/www/onlyoffice && \
     chmod -R g=rx /var/www/onlyoffice && \
     chmod -R o=rx /var/www/onlyoffice && \
-    chown -R elasticsearch:elasticsearch ${ELK_INDEX_DIR} && \
+    chown -R elasticsearch:elasticsearch ${ELK_INDEX_DIR}/v${ELASTICSEARCH_VERSION} && \
     chown -R elasticsearch:elasticsearch ${ELK_LOG_DIR} && \
-    chmod -R u=rwx ${ELK_INDEX_DIR} && \
-    chmod -R g=rs ${ELK_INDEX_DIR} && \
-    chmod -R o= ${ELK_INDEX_DIR} && \
+    chmod -R u=rwx ${ELK_INDEX_DIR}/v${ELASTICSEARCH_VERSION} && \
+    chmod -R g=rs ${ELK_INDEX_DIR}/v${ELASTICSEARCH_VERSION} && \
+    chmod -R o= ${ELK_INDEX_DIR}/v${ELASTICSEARCH_VERSION} && \
     apt-get install -yq \
                         mono-webserver-hyperfastcgi=0.4-8 \
                         dotnet-sdk-6.0 \
