@@ -8,8 +8,8 @@ ARG DEBIAN_FRONTEND=noninteractive
 ARG PACKAGE_SYSNAME="onlyoffice"
 
 ARG ELK_DIR=/usr/share/elasticsearch
-ARG ELK_INDEX_DIR=/var/www/onlyoffice/Data/Index
-ARG ELK_LOG_DIR=/var/log/onlyoffice/Index
+ARG ELK_INDEX_DIR=/var/www/${PACKAGE_SYSNAME}/Data/Index
+ARG ELK_LOG_DIR=/var/log/${PACKAGE_SYSNAME}/Index
 ARG ELK_LIB_DIR=${ELK_DIR}/lib
 ARG ELK_MODULE_DIR=${ELK_DIR}/modules
 
@@ -55,22 +55,17 @@ RUN apt-get -y update && \
     echo "deb https://d2nlctn12v279m.cloudfront.net/repo/mono/ubuntu focal main" | tee /etc/apt/sources.list.d/mono-extra.list && \
     apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys CB2DE8E5 && \
     apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF && \
-    wget http://nginx.org/keys/nginx_signing.key && \
-    apt-key add nginx_signing.key && \
-    echo "deb http://nginx.org/packages/ubuntu/ focal nginx" | tee /etc/apt/sources.list.d/nginx.list && \
     wget http://archive.ubuntu.com/ubuntu/pool/main/g/glibc/multiarch-support_2.27-3ubuntu1_amd64.deb && \
     apt-get install ./multiarch-support_2.27-3ubuntu1_amd64.deb && \
     rm -f ./multiarch-support_2.27-3ubuntu1_amd64.deb && \
     wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | apt-key add - && \
-    echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" | tee /etc/apt/sources.list.d/elastic-7.x.list && \
-    curl https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -O && \
-    dpkg -i packages-microsoft-prod.deb && \
+    echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" | tee -a /etc/apt/sources.list.d/elastic-7.x.list && \
+    wget https://packages.microsoft.com/config/ubuntu/22.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb && \
+    sudo dpkg -i packages-microsoft-prod.deb && \
     rm packages-microsoft-prod.deb && \
-    echo "deb https://deb.nodesource.com/node_12.x focal main" | tee /etc/apt/sources.list.d/nodesource.list && \
-    echo "deb-src https://deb.nodesource.com/node_12.x focal main" >> /etc/apt/sources.list.d/nodesource.list && \
-    curl -s https://deb.nodesource.com/gpgkey/nodesource.gpg.key | apt-key add - && \
+    printf "Package: * \nPin: origin \"packages.microsoft.com\"\nPin-Priority: 1001"> /etc/apt/preferences && \
+    curl -sL https://deb.nodesource.com/setup_18.x | sudo -E bash - && \
     apt -y update && \
-    apt-get -y update && \
     apt-get install -yq gnupg2 \
                         ca-certificates \
                         software-properties-common \
@@ -79,7 +74,7 @@ RUN apt-get -y update && \
 			ruby-dev \
 			ruby-god \
                         nodejs \
-                        nginx-extras \
+                        nginx \
                         gdb \
                         mono-complete \
                         ca-certificates-mono \
@@ -97,9 +92,9 @@ RUN apt-get -y update && \
                         elasticsearch=${ELASTICSEARCH_VERSION} && \
     mkdir -p ${ELK_INDEX_DIR}/v${ELASTICSEARCH_VERSION} && \
     mkdir -p ${ELK_LOG_DIR} && \
-    chmod -R u=rwx /var/www/onlyoffice && \
-    chmod -R g=rx /var/www/onlyoffice && \
-    chmod -R o=rx /var/www/onlyoffice && \
+    chmod -R u=rwx /var/www/${PACKAGE_SYSNAME} && \
+    chmod -R g=rx /var/www/${PACKAGE_SYSNAME} && \
+    chmod -R o=rx /var/www/${PACKAGE_SYSNAME} && \
     chown -R elasticsearch:elasticsearch ${ELK_INDEX_DIR}/v${ELASTICSEARCH_VERSION} && \
     chown -R elasticsearch:elasticsearch ${ELK_LOG_DIR} && \
     chmod -R u=rwx ${ELK_INDEX_DIR}/v${ELASTICSEARCH_VERSION} && \
