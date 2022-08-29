@@ -147,15 +147,16 @@ FLUSH PRIVILEGES;" > /app/onlyoffice/mysql/initdb/setup.sql
 
 *Please note, that the above script will set permissions to access SQL server from any domains (`%`). If you want to limit the access, you can specify hosts which will have access to SQL server.*
 
-Now you can create MySQL container setting MySQL version to 5.7:
+Now you can create MySQL container setting MySQL version to 8.0.29:
 ```
 sudo docker run --net onlyoffice -i -t -d --restart=always --name onlyoffice-mysql-server \
  -v /app/onlyoffice/mysql/conf.d:/etc/mysql/conf.d \
  -v /app/onlyoffice/mysql/data:/var/lib/mysql \
  -v /app/onlyoffice/mysql/initdb:/docker-entrypoint-initdb.d \
+ --tmpfs /var/log/mysql \
  -e MYSQL_ROOT_PASSWORD=my-secret-pw \
  -e MYSQL_DATABASE=onlyoffice \
- mysql:5.7
+ mysql:8.0.29
  ```
 
 ## Installing Community Server
