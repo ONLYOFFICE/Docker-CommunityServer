@@ -65,7 +65,6 @@ RUN apt-get -y update && \
     rm packages-microsoft-prod.deb && \
     printf "Package: * \nPin: origin \"packages.microsoft.com\"\nPin-Priority: 1001" > /etc/apt/preferences && \
     curl -sL https://deb.nodesource.com/setup_18.x | sudo -E bash - && \
-    apt -y update && \
     apt-get install -yq gnupg2 \
                         ca-certificates \
                         software-properties-common \
