@@ -63,7 +63,7 @@ RUN apt-get -y update && \
     wget https://packages.microsoft.com/config/ubuntu/22.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb && \
     sudo dpkg -i packages-microsoft-prod.deb && \
     rm packages-microsoft-prod.deb && \
-    printf "Package: * \nPin: origin \"packages.microsoft.com\"\nPin-Priority: 1001"> /etc/apt/preferences && \
+    printf "Package: * \nPin: origin \"packages.microsoft.com\"\nPin-Priority: 1001" > /etc/apt/preferences && \
     curl -sL https://deb.nodesource.com/setup_18.x | sudo -E bash - && \
     apt -y update && \
     apt-get install -yq gnupg2 \
