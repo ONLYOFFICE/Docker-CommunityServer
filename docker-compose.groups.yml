@@ -46,7 +46,7 @@ services:
      - community_data:/var/www/onlyoffice/Data
      - community_log:/var/log/onlyoffice
      - community_letsencrypt:/etc/letsencrypt
-     - /sys/fs/cgroup:/sys/fs/cgroup:ro
+     - /sys/fs/cgroup:/sys/fs/cgroup:rw
      - ./certs:/var/www/onlyoffice/Data/certs
   onlyoffice-elasticsearch:
     image: onlyoffice/elasticsearch:7.16.3
