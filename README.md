@@ -437,7 +437,7 @@ wget https://download.onlyoffice.com/install/workspace-install.sh
 workspace-install.sh -md yourdomain.com
 ```
 
-Or, use [docker-compose](https://docs.docker.com/compose/install "docker-compose"). `Temporarily does not work on Ubuntu 22.04 and Debian 11.`
+Or use [docker-compose](https://docs.docker.com/compose/install "docker-compose"). `Temporarily does not work on Ubuntu 22.04 and Debian 11.`
 
 First you need to clone this [GitHub repository](https://github.com/ONLYOFFICE/Docker-CommunityServer/):
 
