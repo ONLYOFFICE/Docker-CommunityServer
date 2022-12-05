@@ -404,14 +404,14 @@ sudo docker run --net onlyoffice -i -t -d --privileged --restart=always --name o
  -e MYSQL_SERVER_DB_NAME=onlyoffice \
  -e MYSQL_SERVER_HOST=onlyoffice-mysql-server \
  -e MYSQL_SERVER_USER=onlyoffice_user \
- -e MYSQL_SERVER_PASS=onlyoffice_pass \ 
- -e DOCUMENT_SERVER_PORT_80_TCP_ADDR=onlyoffice-document-server \ 
+ -e MYSQL_SERVER_PASS=onlyoffice_pass \
+ -e DOCUMENT_SERVER_PORT_80_TCP_ADDR=onlyoffice-document-server \
  -e MAIL_SERVER_API_HOST=${MAIL_SERVER_IP} \
  -e MAIL_SERVER_DB_HOST=onlyoffice-mysql-server \
  -e MAIL_SERVER_DB_NAME=onlyoffice_mailserver \
  -e MAIL_SERVER_DB_PORT=3306 \
  -e MAIL_SERVER_DB_USER=root \
- -e MAIL_SERVER_DB_PASS=my-secret-pw \ 
+ -e MAIL_SERVER_DB_PASS=my-secret-pw \
  -e CONTROL_PANEL_PORT_80_TCP=80 \
  -e CONTROL_PANEL_PORT_80_TCP_ADDR=onlyoffice-control-panel \
  -v /app/onlyoffice/CommunityServer/data:/var/www/onlyoffice/Data \
@@ -422,7 +422,7 @@ sudo docker run --net onlyoffice -i -t -d --privileged --restart=always --name o
 ```
 Where `${MAIL_SERVER_IP}` is the IP address for **ONLYOFFICE Mail Server**. You can easily get it using the command:
 ```
-docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' onlyoffice-mail-server
+MAIL_SERVER_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' onlyoffice-mail-server)
 ```
 Alternatively, you can use an automatic installation script to install ONLYOFFICE Workspace at once. For the mail server correct work you need to specify its hostname 'yourdomain.com'.
 
