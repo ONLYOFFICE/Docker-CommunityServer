@@ -131,8 +131,7 @@ echo "[mysqld]
 sql_mode = 'NO_ENGINE_SUBSTITUTION'
 max_connections = 1000
 max_allowed_packet = 1048576000
-group_concat_max_len = 2048
-log-error = /var/log/mysql/error.log" > /app/onlyoffice/mysql/conf.d/onlyoffice.cnf
+group_concat_max_len = 2048" > /app/onlyoffice/mysql/conf.d/onlyoffice.cnf
 ```
 
 Create the SQL script which will generate the users and issue the rights to them. The `onlyoffice_user` is required for **ONLYOFFICE Community Server**, and the `mail_admin` is required for **ONLYOFFICE Mail Server** in case it is going to be installed:
@@ -154,7 +153,6 @@ sudo docker run --net onlyoffice -i -t -d --restart=always --name onlyoffice-mys
  -v /app/onlyoffice/mysql/conf.d:/etc/mysql/conf.d \
  -v /app/onlyoffice/mysql/data:/var/lib/mysql \
  -v /app/onlyoffice/mysql/initdb:/docker-entrypoint-initdb.d \
- --tmpfs /var/log/mysql \
  -e MYSQL_ROOT_PASSWORD=my-secret-pw \
  -e MYSQL_DATABASE=onlyoffice \
  mysql:8.0.29
