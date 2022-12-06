@@ -3,10 +3,10 @@ CREATE DATABASE IF NOT EXISTS onlyoffice_mailserver CHARACTER SET "utf8" COLLATE
 
 ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY 'my-secret-pw';
 CREATE USER IF NOT EXISTS 'onlyoffice_user'@'%' IDENTIFIED WITH mysql_native_password BY 'onlyoffice_pass';
-CREATE USER IF NOT EXISTS 'mail_admin'@'%' IDENTIFIED WITH mysql_native_password BY 'Isadmin123';
+CREATE USER IF NOT EXISTS 'onlyoffice_mailserver_user'@'%' IDENTIFIED WITH mysql_native_password BY 'onlyoffice_mailserver_user_pass';
 
 GRANT ALL PRIVILEGES ON *.* TO 'root'@'%';
 GRANT ALL PRIVILEGES ON *.* TO 'onlyoffice_user'@'%';
-GRANT ALL PRIVILEGES ON *.* TO 'mail_admin'@'%';
+GRANT ALL PRIVILEGES ON *.* TO 'onlyoffice_mailserver_user'@'%';
 
 FLUSH PRIVILEGES;
