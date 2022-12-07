@@ -71,6 +71,7 @@ services:
       - "ES_JAVA_OPTS=-Xms1g -Xmx1g -Dlog4j2.formatMsgNoLookups=true"
       - "indices.fielddata.cache.size=30%"
       - "indices.memory.index_buffer_size=30%" 
+      - "ingest.geoip.downloader.enabled=false"
     networks:
     - onlyoffice    
     ulimits:
