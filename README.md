@@ -355,6 +355,9 @@ Follow [these steps](#installing-mysql) to install MySQL server.
 
 ```bash
 sudo docker run --net onlyoffice -i -t -d --restart=always --name onlyoffice-document-server \
+ -e JWT_ENABLED=true \
+ -e JWT_SECRET=jwt_secret \
+ -e JWT_HEADER=AuthorizationJwt \
  -v /app/onlyoffice/DocumentServer/logs:/var/log/onlyoffice  \
  -v /app/onlyoffice/DocumentServer/data:/var/www/onlyoffice/Data  \
  -v /app/onlyoffice/DocumentServer/fonts:/usr/share/fonts/truetype/custom \
@@ -404,6 +407,9 @@ sudo docker run --net onlyoffice -i -t -d --privileged --restart=always --name o
  -e MYSQL_SERVER_USER=onlyoffice_user \
  -e MYSQL_SERVER_PASS=onlyoffice_pass \
  -e DOCUMENT_SERVER_PORT_80_TCP_ADDR=onlyoffice-document-server \
+ -e DOCUMENT_SERVER_JWT_ENABLED=true \
+ -e DOCUMENT_SERVER_JWT_SECRET=jwt_secret \
+ -e DOCUMENT_SERVER_JWT_HEADER=AuthorizationJwt \
  -e MAIL_SERVER_API_HOST=${MAIL_SERVER_IP} \
  -e MAIL_SERVER_DB_HOST=onlyoffice-mysql-server \
  -e MAIL_SERVER_DB_NAME=onlyoffice_mailserver \
