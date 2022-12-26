@@ -356,13 +356,17 @@ Follow [these steps](#installing-mysql) to install MySQL server.
 ```bash
 sudo docker run --net onlyoffice -i -t -d --restart=always --name onlyoffice-document-server \
  -e JWT_ENABLED=true \
- -e JWT_SECRET=jwt_secret \
+ -e JWT_SECRET=${JWT_SECRET} \
  -e JWT_HEADER=AuthorizationJwt \
  -v /app/onlyoffice/DocumentServer/logs:/var/log/onlyoffice  \
  -v /app/onlyoffice/DocumentServer/data:/var/www/onlyoffice/Data  \
  -v /app/onlyoffice/DocumentServer/fonts:/usr/share/fonts/truetype/custom \
  -v /app/onlyoffice/DocumentServer/forgotten:/var/lib/onlyoffice/documentserver/App_Data/cache/files/forgotten \
  onlyoffice/documentserver
+```
+Where `${JWT_SECRET}` defines the secret key to validate the JSON Web Token in the request to the **ONLYOFFICE Document Server**. You can specify it yourself or easily get it using the command:
+```
+JWT_SECRET=$(cat /dev/urandom | tr -dc A-Za-z0-9 | head -c 12);
 ```
 To learn more, refer to the [ONLYOFFICE Document Server documentation](https://github.com/ONLYOFFICE/Docker-DocumentServer "ONLYOFFICE Document Server documentation").
 
@@ -408,7 +412,7 @@ sudo docker run --net onlyoffice -i -t -d --privileged --restart=always --name o
  -e MYSQL_SERVER_PASS=onlyoffice_pass \
  -e DOCUMENT_SERVER_PORT_80_TCP_ADDR=onlyoffice-document-server \
  -e DOCUMENT_SERVER_JWT_ENABLED=true \
- -e DOCUMENT_SERVER_JWT_SECRET=jwt_secret \
+ -e DOCUMENT_SERVER_JWT_SECRET=${JWT_SECRET} \
  -e DOCUMENT_SERVER_JWT_HEADER=AuthorizationJwt \
  -e MAIL_SERVER_API_HOST=${MAIL_SERVER_IP} \
  -e MAIL_SERVER_DB_HOST=onlyoffice-mysql-server \
