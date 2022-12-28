@@ -74,7 +74,7 @@ else
    APP_CORE_MACHINEKEY=$(head -n 1 ${APP_PRIVATE_DATA_DIR}/machinekey)
 fi
 
-RELEASE_DATE="$(sudo sed -n '/"version.release-date"/s!.*value\s*=\s*"\([^"]*\)".*!\1!p' ${APP_ROOT_DIR}/web.appsettings.config)";
+RELEASE_DATE="$(sudo sed -n '/"version.number"/s!.*value\s*=\s*"\([^"]*\)".*!\1!p' ${APP_ROOT_DIR}/web.appsettings.config)";
 RELEASE_DATE_SIGN="$(CreateAuthToken "${RELEASE_DATE}" "${APP_CORE_MACHINEKEY}" )";
 
 sed -i '/version.release-date.sign/s!value="[^"]*"!value=\"'"$RELEASE_DATE_SIGN"'\"!g' ${APP_ROOT_DIR}/web.appsettings.config
