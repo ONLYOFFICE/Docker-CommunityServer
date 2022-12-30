@@ -351,7 +351,14 @@ Then launch containers on it using the 'docker run --net onlyoffice' option:
 
 Follow [these steps](#installing-mysql) to install MySQL server.
 
-**STEP 3**: Install ONLYOFFICE Document Server.
+**STEP 3**: Generate JWT Secret
+
+JWT secret defines the secret key to validate the JSON Web Token in the request to the **ONLYOFFICE Document Server**. You can specify it yourself or easily get it using the command:
+```
+JWT_SECRET=$(cat /dev/urandom | tr -dc A-Za-z0-9 | head -c 12);
+```
+
+**STEP 4**: Install ONLYOFFICE Document Server.
 
 ```bash
 sudo docker run --net onlyoffice -i -t -d --restart=always --name onlyoffice-document-server \
@@ -364,13 +371,9 @@ sudo docker run --net onlyoffice -i -t -d --restart=always --name onlyoffice-doc
  -v /app/onlyoffice/DocumentServer/forgotten:/var/lib/onlyoffice/documentserver/App_Data/cache/files/forgotten \
  onlyoffice/documentserver
 ```
-Where `${JWT_SECRET}` defines the secret key to validate the JSON Web Token in the request to the **ONLYOFFICE Document Server**. You can specify it yourself or easily get it using the command:
-```
-JWT_SECRET=$(cat /dev/urandom | tr -dc A-Za-z0-9 | head -c 12);
-```
 To learn more, refer to the [ONLYOFFICE Document Server documentation](https://github.com/ONLYOFFICE/Docker-DocumentServer "ONLYOFFICE Document Server documentation").
 
-**STEP 4**: Install ONLYOFFICE Mail Server. 
+**STEP 5**: Install ONLYOFFICE Mail Server. 
 
 For the mail server correct work you need to specify its hostname 'yourdomain.com'.
 To learn more, refer to the [ONLYOFFICE Mail Server documentation](https://github.com/ONLYOFFICE/Docker-MailServer "ONLYOFFICE Mail Server documentation").
@@ -391,7 +394,7 @@ sudo docker run --init --net onlyoffice --privileged -i -t -d --restart=always -
 
 The additional parameters for mail server are available [here](https://github.com/ONLYOFFICE/Docker-CommunityServer/blob/master/docker-compose.yml#L75).
 
-**STEP 5**: Install ONLYOFFICE Control Panel
+**STEP 6**: Install ONLYOFFICE Control Panel
 
 ```bash
 docker run --net onlyoffice -i -t -d --restart=always --name onlyoffice-control-panel \
@@ -401,7 +404,7 @@ docker run --net onlyoffice -i -t -d --restart=always --name onlyoffice-control-
 -v /app/onlyoffice/ControlPanel/logs:/var/log/onlyoffice onlyoffice/controlpanel
 ```
 
-**STEP 6**: Install ONLYOFFICE Community Server
+**STEP 7**: Install ONLYOFFICE Community Server
 
 ```bash
 sudo docker run --net onlyoffice -i -t -d --privileged --restart=always --name onlyoffice-community-server -p 80:80 -p 443:443 -p 5222:5222 --cgroupns=host \
