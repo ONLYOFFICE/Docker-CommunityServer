@@ -355,7 +355,7 @@ Follow [these steps](#installing-mysql) to install MySQL server.
 
 JWT secret defines the secret key to validate the JSON Web Token in the request to the **ONLYOFFICE Document Server**. You can specify it yourself or easily get it using the command:
 ```
-JWT_SECRET=$(cat /dev/urandom | tr -dc A-Za-z0-9 | head -c 12);
+JWT_SECRET=$(cat /dev/urandom | tr -dc A-Za-z0-9 | head -c 32);
 ```
 
 **STEP 4**: Install ONLYOFFICE Document Server.
