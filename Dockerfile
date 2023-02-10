@@ -101,7 +101,7 @@ RUN apt-get -y update && \
     chmod -R o= ${ELK_INDEX_DIR}/v${ELASTICSEARCH_VERSION} && \
     apt-get install -yq \
                         mono-webserver-hyperfastcgi=0.4-8 \
-                        dotnet-sdk-6.0 \
+                        dotnet-sdk-7.0 \
                         ${PACKAGE_SYSNAME}-communityserver \
                         ${PACKAGE_SYSNAME}-xmppserver && \
     apt-get clean && \
