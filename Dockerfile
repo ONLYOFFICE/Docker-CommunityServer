@@ -3,7 +3,7 @@ FROM ubuntu:22.04
 ARG RELEASE_DATE="2016-06-21"
 ARG RELEASE_DATE_SIGN=""
 ARG VERSION="8.9.0.190"
-ARG SOURCE_REPO_URL="deb http://static.teamlab.com.s3.amazonaws.com/repo/debian squeeze main"
+ARG SOURCE_REPO_URL="deb [signed-by=/usr/share/keyrings/onlyoffice.gpg] https://download.onlyoffice.com/repo/debian squeeze main"
 ARG DEBIAN_FRONTEND=noninteractive
 ARG PACKAGE_SYSNAME="onlyoffice"
 
@@ -51,10 +51,14 @@ RUN apt-get -y update && \
     locale-gen en_US.UTF-8 && \
     echo "#!/bin/sh\nexit 0" > /usr/sbin/policy-rc.d && \
     echo "${SOURCE_REPO_URL}" >> /etc/apt/sources.list && \
-    echo "deb https://download.mono-project.com/repo/ubuntu stable-focal/snapshots/6.8.0.123 main" | tee /etc/apt/sources.list.d/mono-official.list && \
-    echo "deb https://d2nlctn12v279m.cloudfront.net/repo/mono/ubuntu focal main" | tee /etc/apt/sources.list.d/mono-extra.list && \
-    apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys CB2DE8E5 && \
-    apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF && \
+    echo "deb [signed-by=/usr/share/keyrings/xamarin.gpg] https://download.mono-project.com/repo/ubuntu stable-focal/snapshots/6.8.0.123 main" | tee /etc/apt/sources.list.d/mono-official.list && \
+    echo "deb [signed-by=/usr/share/keyrings/mono-extra.gpg] https://d2nlctn12v279m.cloudfront.net/repo/mono/ubuntu focal main" | tee /etc/apt/sources.list.d/mono-extra.list && \
+    curl -fsSL https://download.onlyoffice.com/GPG-KEY-ONLYOFFICE | gpg --no-default-keyring --keyring gnupg-ring:/usr/share/keyrings/onlyoffice.gpg --import && \
+	chmod 644 /usr/share/keyrings/onlyoffice.gpg && \
+    curl -fsSL https://download.mono-project.com/repo/xamarin.gpg | gpg --no-default-keyring --keyring gnupg-ring:/usr/share/keyrings/xamarin.gpg --import && \
+	chmod 644 /usr/share/keyrings/xamarin.gpg && \
+	curl -fsSL https://d2nlctn12v279m.cloudfront.net/repo/mono/mono.key | gpg --no-default-keyring --keyring gnupg-ring:/usr/share/keyrings/mono-extra.gpg --import && \
+	chmod 644 /usr/share/keyrings/mono-extra.gpg && \
     wget http://archive.ubuntu.com/ubuntu/pool/main/g/glibc/multiarch-support_2.27-3ubuntu1_amd64.deb && \
     apt-get install ./multiarch-support_2.27-3ubuntu1_amd64.deb && \
     rm -f ./multiarch-support_2.27-3ubuntu1_amd64.deb && \
