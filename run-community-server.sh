@@ -908,6 +908,9 @@ do
 	 if [ $serverID == 1 ]; then
                 sed '/web.warmup.count/s/value=\"\S*\"/value=\"'${APP_MONOSERVE_COUNT}'\"/g' -i  ${APP_ROOT_DIR}/web.appsettings.config
                 sed '/web.warmup.domain/s/value=\"\S*\"/value=\"localhost\/warmup\"/g' -i  ${APP_ROOT_DIR}/web.appsettings.config
+
+				sed "s^\(machine_key\)\s*=.*^\1 = ${APP_CORE_MACHINEKEY}^g" -i /var/www/onlyoffice/Services/TeamLabSvc/radicale.config
+
                 binDirs=("$APP_DIR" "$APP_CONFIG_DIR")
                 for i in "${!binDirs[@]}"; do
                     find "${binDirs[$i]}" -type f -name "*.[cC]onfig" -exec sed -i "/core.\machinekey/s_\(value\s*=\s*\"\)[^\"]*\"_\1${APP_CORE_MACHINEKEY}\"_" {} \;
