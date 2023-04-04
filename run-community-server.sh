@@ -635,10 +635,11 @@ change_connections "default" "${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.conf
 change_connections "default" "${APP_SERVICES_DIR}/Jabber/ASC.Xmpp.Server.Launcher.exe.config";
 change_connections "default" "${APP_APISYSTEM_DIR}/Web.config";
 
-sed "s!\"host\":.*,!\"host\":\"${MYSQL_SERVER_HOST}\",!" -i ${APP_SERVICES_DIR}/ASC.UrlShortener/config/config.json
-sed "s!\"user\":.*,!\"user\":\"${MYSQL_SERVER_USER}\",!" -i ${APP_SERVICES_DIR}/ASC.UrlShortener/config/config.json
-sed "s!\"password\":.*,!\"password\":\"${MYSQL_SERVER_PASS}\",!" -i ${APP_SERVICES_DIR}/ASC.UrlShortener/config/config.json
-sed "s!\"database\":.*!\"database\":\"${MYSQL_SERVER_DB_NAME}\"!" -i ${APP_SERVICES_DIR}/ASC.UrlShortener/config/config.json
+find "${APP_SERVICES_DIR}/ASC.UrlShortener/config" -type f -name "*.json" -exec sed -i \
+-e "s!\(\"host\":\).*,!\1 \"${MYSQL_SERVER_HOST}\",!" \
+-e "s!\(\"user\":\).*,!\1 \"${MYSQL_SERVER_USER}\",!" \
+-e "s!\(\"password\":\).*,!\1 \"${MYSQL_SERVER_PASS//!/\\!}\",!" \
+-e "s!\(\"database\":\).*!\1 \"${MYSQL_SERVER_DB_NAME}\"!" {} \;
 
 sed -i "s/Server=.*/Server=${MYSQL_SERVER_HOST};Port=${MYSQL_SERVER_PORT};Database=${MYSQL_SERVER_DB_NAME};User ID=${MYSQL_SERVER_USER};Password=${MYSQL_SERVER_PASS};Pooling=true;Character Set=utf8;AutoEnlist=false;SSL Mode=none;AllowPublicKeyRetrieval=true;Connection Timeout=30;Maximum Pool Size=300;\",/g" ${APP_CONFIG_DIR}/appsettings.production.json
 
