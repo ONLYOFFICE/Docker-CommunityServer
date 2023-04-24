@@ -54,6 +54,7 @@ services:
     tty: true
     restart: always
     privileged: true
+#    cgroup: host
     volumes:
      - community_data:/var/www/onlyoffice/Data
      - community_log:/var/log/onlyoffice
