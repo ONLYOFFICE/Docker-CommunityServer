@@ -148,6 +148,8 @@ DOCUMENT_SERVER_HOST_IP="";
 CONTROL_PANEL_ENABLED=false
 MAIL_SERVER_ENABLED=false
 
+set +x
+
 MYSQL_SERVER_ROOT_PASSWORD=${MYSQL_SERVER_ROOT_PASSWORD:-""}
 MYSQL_SERVER_HOST=${MYSQL_SERVER_HOST:-"127.0.0.1"}
 MYSQL_SERVER_PORT=${MYSQL_SERVER_PORT:-"3306"}
@@ -155,6 +157,28 @@ MYSQL_SERVER_DB_NAME=${MYSQL_SERVER_DB_NAME:-"onlyoffice"}
 MYSQL_SERVER_USER=${MYSQL_SERVER_USER:-"root"}
 MYSQL_SERVER_PASS=${MYSQL_SERVER_PASS:-${MYSQL_SERVER_ROOT_PASSWORD}}
 MYSQL_SERVER_EXTERNAL=${MYSQL_SERVER_EXTERNAL:-false};
+
+MYSQL_CLIENT_CONFIG="/etc/mysql/conf.d/client.cnf"
+MYSQL_ROOT_CONFIG="/etc/mysql/conf.d/root.cnf"
+MYSQL_MAIL_CONFIG="/etc/mysql/conf.d/mail.cnf"
+
+cat << EOF > $MYSQL_CLIENT_CONFIG
+[client]
+host=${MYSQL_SERVER_HOST}
+port=${MYSQL_SERVER_PORT}
+user=${MYSQL_SERVER_USER}
+password=${MYSQL_SERVER_PASS}
+EOF
+
+cat << EOF > $MYSQL_ROOT_CONFIG
+[client]
+host=${MYSQL_SERVER_HOST}
+port=${MYSQL_SERVER_PORT}
+user=root
+password=${MYSQL_SERVER_ROOT_PASSWORD}
+EOF
+
+set -x
 
 mkdir -p "${SSL_CERTIFICATES_DIR}/.well-known/acme-challenge"
 
@@ -377,11 +401,19 @@ fi
 
 if [ ${MYSQL_SERVER_PORT_3306_TCP} ]; then
 	MYSQL_SERVER_EXTERNAL=true;
+
+	set +x
+
 	MYSQL_SERVER_HOST=${MYSQL_SERVER_PORT_3306_TCP_ADDR};
 	MYSQL_SERVER_PORT=${MYSQL_SERVER_PORT_3306_TCP_PORT};
 	MYSQL_SERVER_DB_NAME=${MYSQL_SERVER_ENV_MYSQL_DATABASE:-${MYSQL_SERVER_DB_NAME}};
 	MYSQL_SERVER_USER=${MYSQL_SERVER_ENV_MYSQL_USER:-${MYSQL_SERVER_USER}};
 	MYSQL_SERVER_PASS=${MYSQL_SERVER_ENV_MYSQL_PASSWORD:-${MYSQL_SERVER_ENV_MYSQL_ROOT_PASSWORD:-${MYSQL_SERVER_PASS}}};
+
+	sed -i "s/host=\(.*\)/host=$MYSQL_SERVER_HOST/g; s/port=\(.*\)/port=$MYSQL_SERVER_PORT/g; s/user=\(.*\)/user=$MYSQL_SERVER_USER/g; s/password=\(.*\)/password=$MYSQL_SERVER_PASS/g" $MYSQL_CLIENT_CONFIG
+	sed -i "s/host=\(.*\)/host=$MYSQL_SERVER_HOST/g; s/port=\(.*\)/port=$MYSQL_SERVER_PORT/g" $MYSQL_ROOT_CONFIG
+
+	set -x
 
 	if [ ${LOG_DEBUG} ]; then
 		log_debug "MYSQL_SERVER_HOST: ${MYSQL_SERVER_HOST}";
@@ -397,6 +429,8 @@ if [ ${CONTROL_PANEL_PORT_80_TCP} ]; then
 	CONTROL_PANEL_ENABLED=true;
 fi
 
+set +x
+
 MAIL_SERVER_API_PORT=${MAIL_SERVER_API_PORT:-${MAIL_SERVER_PORT_8081_TCP_PORT:-8081}};
 MAIL_SERVER_API_HOST=${MAIL_SERVER_API_HOST:-${MAIL_SERVER_PORT_8081_TCP_ADDR}};
 MAIL_SERVER_DB_HOST=${MAIL_SERVER_DB_HOST:-${MAIL_SERVER_PORT_3306_TCP_ADDR}};
@@ -404,6 +438,16 @@ MAIL_SERVER_DB_PORT=${MAIL_SERVER_DB_PORT:-${MAIL_SERVER_PORT_3306_TCP_PORT:-330
 MAIL_SERVER_DB_NAME=${MAIL_SERVER_DB_NAME:-"onlyoffice_mailserver"};
 MAIL_SERVER_DB_USER=${MAIL_SERVER_DB_USER:-"mail_admin"};
 MAIL_SERVER_DB_PASS=${MAIL_SERVER_DB_PASS:-"Isadmin123"};
+
+cat << EOF > $MYSQL_MAIL_CONFIG
+[client]
+host=${MAIL_SERVER_DB_HOST}
+port=${MAIL_SERVER_DB_PORT}
+user=root
+password=${MAIL_SERVER_DB_PASS}
+EOF
+
+set -x
 
 if [ ${MAIL_SERVER_DB_HOST} ]; then
 	MAIL_SERVER_ENABLED=true;
@@ -505,9 +549,9 @@ mysql_scalar_exec(){
 	local queryResult="";
 
 	if [ "$2" == "opt_ignore_db_name" ]; then
-		queryResult=$(mysql --silent --skip-column-names -h ${MYSQL_SERVER_HOST} -P ${MYSQL_SERVER_PORT} -u ${MYSQL_SERVER_USER} --password=${MYSQL_SERVER_PASS} -e "$1");
+		queryResult=$(mysql --defaults-extra-file="$MYSQL_CLIENT_CONFIG" --skip-column-names -e "$1");
 	else
-		queryResult=$(mysql --silent --skip-column-names -h ${MYSQL_SERVER_HOST} -P ${MYSQL_SERVER_PORT} -u ${MYSQL_SERVER_USER} --password=${MYSQL_SERVER_PASS} -D ${MYSQL_SERVER_DB_NAME} -e "$1");
+		queryResult=$(mysql --defaults-extra-file="$MYSQL_CLIENT_CONFIG" --skip-column-names -D ${MYSQL_SERVER_DB_NAME} -e "$1");
 	fi
 	echo $queryResult;
 }
@@ -516,9 +560,9 @@ mysql_list_exec(){
 	local queryResult="";
 
 	if [ "$2" == "opt_ignore_db_name" ]; then
-		queryResult=$(mysql --silent --skip-column-names -h ${MYSQL_SERVER_HOST} -P ${MYSQL_SERVER_PORT} -u ${MYSQL_SERVER_USER} --password=${MYSQL_SERVER_PASS} -e "$1");
+		queryResult=$(mysql --defaults-extra-file="$MYSQL_CLIENT_CONFIG" --skip-column-names -e "$1");
 	else
-		queryResult=$(mysql --silent --skip-column-names -h ${MYSQL_SERVER_HOST} -P ${MYSQL_SERVER_PORT} -u ${MYSQL_SERVER_USER} --password=${MYSQL_SERVER_PASS} -D ${MYSQL_SERVER_DB_NAME} -e "$1");
+		queryResult=$(mysql --defaults-extra-file="$MYSQL_CLIENT_CONFIG" --skip-column-names -D ${MYSQL_SERVER_DB_NAME} -e "$1");
 	fi
 
 	read -ra vars <<< ${queryResult};
@@ -528,7 +572,7 @@ mysql_list_exec(){
 }
 
 mysql_batch_exec(){
-	mysql --silent --skip-column-names -h ${MYSQL_SERVER_HOST} -P ${MYSQL_SERVER_PORT} -u ${MYSQL_SERVER_USER} --password=${MYSQL_SERVER_PASS} -D ${MYSQL_SERVER_DB_NAME} < "$1";
+	mysql --defaults-extra-file="$MYSQL_CLIENT_CONFIG" --skip-column-names -D ${MYSQL_SERVER_DB_NAME} < "$1";
 }
 
 mysql_check_connection() {
@@ -538,14 +582,16 @@ mysql_check_connection() {
 	fi
 	
 
-	while ! mysqladmin ping -h ${MYSQL_SERVER_HOST} -P ${MYSQL_SERVER_PORT} -u ${MYSQL_SERVER_USER} --password=${MYSQL_SERVER_PASS} --silent; do
+	while ! mysqladmin --defaults-extra-file="$MYSQL_CLIENT_CONFIG" ping; do
     		sleep 1
 	done
 }
 
 
 change_connections(){
+	set +x
 	sed '/'${1}'/s/\(connectionString\s*=\s*\"\)[^\"]*\"/\1Server='${MYSQL_SERVER_HOST}';Port='${MYSQL_SERVER_PORT}';Database='${MYSQL_SERVER_DB_NAME}';User ID='${MYSQL_SERVER_USER}';Password='${MYSQL_SERVER_PASS}';Pooling=true;Character Set=utf8;AutoEnlist=false;SSL Mode=none;AllowPublicKeyRetrieval=true;Connection Timeout=30;Maximum Pool Size=300;\"/' -i ${2}
+	set -x
 }
 
 if [ "${MYSQL_SERVER_EXTERNAL}" == "false" ]; then
@@ -560,8 +606,8 @@ if [ "${MYSQL_SERVER_EXTERNAL}" == "false" ]; then
         systemctl enable mysql.service
 	service mysql start
 
-	if [ -n "$MYSQL_SERVER_ROOT_PASSWORD" ] && mysqladmin --silent ping -u root | grep -q "mysqld is alive" ; then
-mysql <<EOF
+	if [ -n "$MYSQL_SERVER_ROOT_PASSWORD" ] && mysqladmin --defaults-extra-file="$MYSQL_ROOT_CONFIG" ping | grep -q "mysqld is alive" ; then
+mysql --defaults-extra-file="$MYSQL_ROOT_CONFIG" <<EOF
 ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY "$MYSQL_SERVER_ROOT_PASSWORD";
 DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
 DELETE FROM mysql.user WHERE User='';
@@ -572,7 +618,7 @@ EOF
 
 
 		if [ "$MYSQL_SERVER_USER" != "root" ]; then
-mysql "-p${MYSQL_SERVER_ROOT_PASSWORD}" <<EOF
+mysql --defaults-extra-file="$MYSQL_ROOT_CONFIG" <<EOF
 CREATE USER IF NOT EXISTS "$MYSQL_SERVER_USER"@"localhost" IDENTIFIED WITH mysql_native_password BY "$MYSQL_SERVER_PASS";
 GRANT ALL PRIVILEGES ON *.* TO "$MYSQL_SERVER_USER"@'localhost';
 FLUSH PRIVILEGES;
@@ -583,6 +629,7 @@ EOF
 
 	DEBIAN_SYS_MAINT_PASS=$(grep "password" /etc/mysql/debian.cnf | head -1 | sed 's/password\s*=\s*//' | tr -d '[[:space:]]');
 	mysql_scalar_exec "GRANT ALL PRIVILEGES ON *.* TO 'debian-sys-maint'@'localhost';"
+	set -x
 else
 	mysqladmin shutdown
 	systemctl disable mysql.service
@@ -614,6 +661,8 @@ change_connections "default" "${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.conf
 change_connections "default" "${APP_SERVICES_DIR}/Jabber/ASC.Xmpp.Server.Launcher.exe.config";
 change_connections "default" "${APP_APISYSTEM_DIR}/Web.config";
 
+set +x
+
 find "${APP_SERVICES_DIR}/ASC.UrlShortener/config" -type f -name "*.json" -exec sed -i \
 -e "s!\(\"host\":\).*,!\1 \"${MYSQL_SERVER_HOST}\",!" \
 -e "s!\(\"user\":\).*,!\1 \"${MYSQL_SERVER_USER}\",!" \
@@ -621,6 +670,8 @@ find "${APP_SERVICES_DIR}/ASC.UrlShortener/config" -type f -name "*.json" -exec 
 -e "s!\(\"database\":\).*!\1 \"${MYSQL_SERVER_DB_NAME}\"!" {} \;
 
 sed -i "s/Server=.*/Server=${MYSQL_SERVER_HOST};Port=${MYSQL_SERVER_PORT};Database=${MYSQL_SERVER_DB_NAME};User ID=${MYSQL_SERVER_USER};Password=${MYSQL_SERVER_PASS};Pooling=true;Character Set=utf8;AutoEnlist=false;SSL Mode=none;AllowPublicKeyRetrieval=true;Connection Timeout=30;Maximum Pool Size=300;\",/g" ${APP_CONFIG_DIR}/appsettings.production.json
+
+set -x
 
 if [ "${DB_TABLES_COUNT}" -eq "0" ]; then
       	mysql_batch_exec ${APP_SQL_DIR}/onlyoffice.sql
@@ -735,7 +786,7 @@ if [ "${DOCUMENT_SERVER_ENABLED}" == "true" ]; then
 
          if [ ! -f ${LICENSE_FILE_PATH} ]; then
 
-mysql --silent --skip-column-names -h ${MYSQL_SERVER_HOST} -P ${MYSQL_SERVER_PORT} -u ${MYSQL_SERVER_USER} --password=${MYSQL_SERVER_PASS} -D ${MYSQL_SERVER_DB_NAME} <<EOF || true
+mysql --defaults-extra-file="$MYSQL_CLIENT_CONFIG" --skip-column-names -D ${MYSQL_SERVER_DB_NAME} <<EOF || true
 INSERT IGNORE INTO tenants_quota (tenant, name, max_file_size, max_total_size, active_users, features)
 SELECT -1000, 'start_trial', max_file_size, max_total_size, active_users, CONCAT(features, ',trial')
 FROM tenants_quota
@@ -758,9 +809,8 @@ if [ "${MAIL_SERVER_ENABLED}" == "true" ]; then
     while [ "$interval" -lt "$timeout" ] ; do
         interval=$((${interval} + 10));
 
-        MAIL_SERVER_HOSTNAME=$(mysql --silent --skip-column-names -h ${MAIL_SERVER_DB_HOST} \
-            --port=${MAIL_SERVER_DB_PORT} -u "${MAIL_SERVER_DB_USER}" \
-            --password="${MAIL_SERVER_DB_PASS}" -D "${MAIL_SERVER_DB_NAME}" -e "SELECT Comment from greylisting_whitelist where Source='SenderIP:${MAIL_SERVER_API_HOST}' limit 1;");
+        MAIL_SERVER_HOSTNAME=$(mysql --defaults-extra-file="$MYSQL_MAIL_CONFIG" --skip-column-names \
+            -D "${MAIL_SERVER_DB_NAME}" -e "SELECT Comment from greylisting_whitelist where Source='SenderIP:${MAIL_SERVER_API_HOST}' limit 1;");
         if [[ "$?" -eq "0" ]] && [[ -n ${MAIL_SERVER_HOSTNAME} ]]; then
             break;
         fi
@@ -796,14 +846,10 @@ if [ "${MAIL_SERVER_ENABLED}" == "true" ]; then
 	fi
 
 
-        mysql --silent --skip-column-names -h ${MAIL_SERVER_DB_HOST} \
-            --port=${MAIL_SERVER_DB_PORT} -u "${MAIL_SERVER_DB_USER}" \
-            --password="${MAIL_SERVER_DB_PASS}" -D "${MAIL_SERVER_DB_NAME}" \
+        mysql --defaults-extra-file="$MYSQL_MAIL_CONFIG" --skip-column-names -D "${MAIL_SERVER_DB_NAME}" \
 	    -e "DELETE FROM greylisting_whitelist WHERE Comment='onlyoffice-community-server';";
 
-        mysql --silent --skip-column-names -h ${MAIL_SERVER_DB_HOST} \
-            --port=${MAIL_SERVER_DB_PORT} -u "${MAIL_SERVER_DB_USER}" \
-            --password="${MAIL_SERVER_DB_PASS}" -D "${MAIL_SERVER_DB_NAME}" \
+        mysql --defaults-extra-file="$MYSQL_MAIL_CONFIG" --skip-column-names -D "${MAIL_SERVER_DB_NAME}" \
             -e "REPLACE INTO greylisting_whitelist (Source, Comment, Disabled) VALUES (\"SenderIP:${SENDER_IP}\", 'onlyoffice-community-server', 0);";
 
     if [ -z ${MYSQL_MAIL_SERVER_ID} ]; then
@@ -846,10 +892,8 @@ END
     while [ "$interval" -lt "$timeout" ] ; do
         interval=$((${interval} + 10));
 
-        MYSQL_MAIL_SERVER_ACCESS_TOKEN=$(mysql --silent --skip-column-names -h ${MAIL_SERVER_DB_HOST} \
-            --port=${MAIL_SERVER_DB_PORT} -u "${MAIL_SERVER_DB_USER}" \
-            --password="${MAIL_SERVER_DB_PASS}" -D "${MAIL_SERVER_DB_NAME}" \
-            -e "select access_token from api_keys where id=1;");
+        MYSQL_MAIL_SERVER_ACCESS_TOKEN=$(mysql --defaults-extra-file="$MYSQL_MAIL_CONFIG" --skip-column-names  \
+			-D "${MAIL_SERVER_DB_NAME}" -e "select access_token from api_keys where id=1;");
         if [[ "$?" -eq "0" ]] && [[ -n ${MYSQL_MAIL_SERVER_ACCESS_TOKEN} ]]; then
             break;
         fi
