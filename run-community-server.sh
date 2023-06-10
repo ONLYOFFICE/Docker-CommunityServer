@@ -889,12 +889,12 @@ do
                 sed '/web.warmup.count/s/value=\"\S*\"/value=\"'${APP_MONOSERVE_COUNT}'\"/g' -i  ${APP_ROOT_DIR}/web.appsettings.config
                 sed '/web.warmup.domain/s/value=\"\S*\"/value=\"localhost\/warmup\"/g' -i  ${APP_ROOT_DIR}/web.appsettings.config
 
-				sed "s^\(machine_key\)\s*=.*^\1 = ${APP_CORE_MACHINEKEY}^g" -i ${APP_SERVICES_DIR}/TeamLabSvc/radicale.config
+				sed "s^\(machine_key\)\s*=.*^\1 = ${APP_CORE_MACHINEKEY//^/\\^}^g" -i ${APP_SERVICES_DIR}/TeamLabSvc/radicale.config
 
                 binDirs=("$APP_APISYSTEM_DIR" "$APP_SERVICES_DIR" "$APP_ROOT_DIR" "$APP_CONFIG_DIR")
                 for i in "${!binDirs[@]}"; do
-                    find "${binDirs[$i]}" -type f -name "*.[cC]onfig" -exec sed -i "/core.\machinekey/s_\(value\s*=\s*\"\)[^\"]*\"_\1${APP_CORE_MACHINEKEY}\"_" {} \;
-                    find "${binDirs[$i]}" -type f -name "*.json" -exec sed -i "s_\(\"core.machinekey\":\|\"machinekey\":\).*,_\1 \"${APP_CORE_MACHINEKEY}\",_" {} \;
+                    find "${binDirs[$i]}" -type f -name "*.[cC]onfig" -exec sed -i "/core.\machinekey/s_\(value\s*=\s*\"\)[^\"]*\"_\1${APP_CORE_MACHINEKEY//_/\\_}\"_" {} \;
+                    find "${binDirs[$i]}" -type f -name "*.json" -exec sed -i "s_\(\"core.machinekey\":\|\"machinekey\":\).*,_\1 \"${APP_CORE_MACHINEKEY//_/\\_}\",_" {} \;
                 done
 
                 continue;
