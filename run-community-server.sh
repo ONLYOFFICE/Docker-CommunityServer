@@ -1102,7 +1102,7 @@ systemctl stop onlyofficeStorageMigrate
 systemctl stop onlyofficeStorageEncryption
 systemctl stop onlyofficeUrlShortener
 systemctl stop onlyofficeThumbnailBuilder
-systemctl stop onlyofficeAutoCleanUp
+systemctl stop onlyofficeFilesTrashCleaner
 
 systemctl stop god
 systemctl enable god
@@ -1149,7 +1149,7 @@ if [ "${APP_SERVICES_EXTERNAL}" == "true" ]; then
         systemctl disable onlyofficeStorageEncryption.service
         systemctl disable onlyofficeUrlShortener.service
         systemctl disable onlyofficeThumbnailBuilder.service
-        systemctl disable onlyofficeAutoCleanUp.service
+        systemctl disable onlyofficeFilesTrashCleaner.service
 
 	rm -f /lib/systemd/system/onlyofficeRadicale.service
 	rm -f /lib/systemd/system/onlyofficeTelegram.service
@@ -1168,7 +1168,7 @@ if [ "${APP_SERVICES_EXTERNAL}" == "true" ]; then
 	rm -f /lib/systemd/system/onlyofficeStorageEncryption.sevice
 	rm -f /lib/systemd/system/onlyofficeUrlShortener.service
 	rm -f /lib/systemd/system/onlyofficeThumbnailBuilder.service
-	rm -f /lib/systemd/system/onlyofficeAutoCleanUp.service
+	rm -f /lib/systemd/system/onlyofficeFilesTrashCleaner.service
 
 	sed '/onlyoffice/d' -i ${APP_CRON_PATH}
 else
@@ -1189,7 +1189,7 @@ else
         systemctl enable onlyofficeStorageEncryption.service
         systemctl enable onlyofficeUrlShortener.service
         systemctl enable onlyofficeThumbnailBuilder.service
-        systemctl enable onlyofficeAutoCleanUp.service
+        systemctl enable onlyofficeFilesTrashCleaner.service
 fi
 
 if [ "${APP_MODE}" == "SERVER" ]; then
