@@ -549,34 +549,16 @@ change_connections(){
 }
 
 if [ "${MYSQL_SERVER_EXTERNAL}" == "false" ]; then
-	chown -R mysql:mysql /var/lib/mysql/
-	chmod -R 755 /var/lib/mysql/
-
 	if [ ! -f /var/lib/mysql/ibdata1 ]; then
-		# cp /etc/mysql/my.cnf /usr/share/mysql/my-default.cnf
 		mysql_install_db || true
-		# mysqld --initialize-insecure --user=mysql || true
 	fi
 
 	if [ ${LOG_DEBUG} ]; then
 		log_debug "Fix docker bug volume mapping for mysql";
 	fi
 
-	myisamchk -q -r /var/lib/mysql/mysql/proc || true
-
         systemctl enable mysql.service
 	service mysql start
-
-	if [ ! -f /var/lib/mysql/mysql_upgrade_info ]; then
-		if mysqladmin --silent ping -u root | grep -q "mysqld is alive" ; then
-			mysql_upgrade
-		else
-			mysql_upgrade --password=${MYSQL_SERVER_ROOT_PASSWORD};
-		fi
-	
-		service mysql restart;
-	fi
-
 
 	if [ -n "$MYSQL_SERVER_ROOT_PASSWORD" ] && mysqladmin --silent ping -u root | grep -q "mysqld is alive" ; then
 mysql <<EOF
@@ -600,14 +582,10 @@ EOF
 	fi
 
 	DEBIAN_SYS_MAINT_PASS=$(grep "password" /etc/mysql/debian.cnf | head -1 | sed 's/password\s*=\s*//' | tr -d '[[:space:]]');
-	mysql_scalar_exec "GRANT ALL PRIVILEGES ON *.* TO 'debian-sys-maint'@'localhost' IDENTIFIED BY '${DEBIAN_SYS_MAINT_PASS}'"
-
-
-	#mysql_scalar_exec "GRANT ALL PRIVILEGES ON *.* TO 'debian-sys-maint'@'localhost'" "opt_ignore_db_name";
-
+	mysql_scalar_exec "GRANT ALL PRIVILEGES ON *.* TO 'debian-sys-maint'@'localhost';"
 else
-	service mysql stop
-        systemctl disable mysql.service
+	mysqladmin shutdown
+	systemctl disable mysql.service
 fi
 
 mysql_check_connection;
@@ -1109,7 +1087,7 @@ systemctl enable god
 
 systemctl stop elasticsearch
 systemctl stop redis-server
-systemctl stop mysql
+mysqladmin shutdown
 systemctl stop nginx
 
 systemctl stop monoserveApiSystem.service
