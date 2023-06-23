@@ -136,9 +136,9 @@ group_concat_max_len = 2048" > /app/onlyoffice/mysql/conf.d/onlyoffice.cnf
 
 Create the SQL script which will generate the users and issue the rights to them. The `onlyoffice_user` is required for **ONLYOFFICE Community Server**, and the `mail_admin` is required for **ONLYOFFICE Mail Server** in case it is going to be installed:
 ```
-echo "ALTER USER 'root'@'%' IDENTIFIED WITH caching_sha2_password BY 'my-secret-pw';
-CREATE USER IF NOT EXISTS 'onlyoffice_user'@'%' IDENTIFIED WITH caching_sha2_password BY 'onlyoffice_pass';
-CREATE USER IF NOT EXISTS 'mail_admin'@'%' IDENTIFIED WITH caching_sha2_password BY 'Isadmin123';
+echo "ALTER USER 'root'@'%' IDENTIFIED BY 'my-secret-pw';
+CREATE USER IF NOT EXISTS 'onlyoffice_user'@'%' IDENTIFIED BY 'onlyoffice_pass';
+CREATE USER IF NOT EXISTS 'mail_admin'@'%' IDENTIFIED BY 'Isadmin123';
 GRANT ALL PRIVILEGES ON *.* TO 'root'@'%';
 GRANT ALL PRIVILEGES ON *.* TO 'onlyoffice_user'@'%';
 GRANT ALL PRIVILEGES ON *.* TO 'mail_admin'@'%';
