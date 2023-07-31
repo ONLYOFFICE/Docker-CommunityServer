@@ -40,8 +40,8 @@ services:
      - MAIL_SERVER_DB_HOST=onlyoffice-mysql-server
      - MAIL_SERVER_DB_PORT=3306
      - MAIL_SERVER_DB_NAME=onlyoffice_mailserver
-     - MAIL_SERVER_DB_USER=onlyoffice_mailserver_user
-     - MAIL_SERVER_DB_PASS=onlyoffice_mailserver_user_pass
+     - MAIL_SERVER_DB_USER=mail_admin
+     - MAIL_SERVER_DB_PASS=Isadmin123
      - ELASTICSEARCH_SERVER_HOST=onlyoffice-elasticsearch
      - ELASTICSEARCH_SERVER_HTTPPORT=9200
     networks:
@@ -54,6 +54,7 @@ services:
     tty: true
     restart: always
     privileged: true
+#    cgroup: host
     volumes:
      - community_data:/var/www/onlyoffice/Data
      - community_log:/var/log/onlyoffice
@@ -115,8 +116,8 @@ services:
     environment:
        - MYSQL_SERVER=onlyoffice-mysql-server
        - MYSQL_SERVER_PORT=3306
-       - MYSQL_ROOT_USER=onlyoffice_mailserver_user
-       - MYSQL_ROOT_PASSWD=onlyoffice_mailserver_user_pass
+       - MYSQL_ROOT_USER=mail_admin
+       - MYSQL_ROOT_PASSWD=Isadmin123
        - MYSQL_SERVER_DB_NAME=onlyoffice_mailserver
     networks:
       - onlyoffice
