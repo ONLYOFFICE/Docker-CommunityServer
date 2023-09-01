@@ -497,14 +497,13 @@ if [ ${REDIS_SERVER_HOST} ]; then
         sed 's/<add\s*host=".*"\s*cachePort="[0-9]*"\s*\/>/<add host="'${REDIS_SERVER_HOST}'" cachePort="'${REDIS_SERVER_CACHEPORT}'" \/>/' -i ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config
         sed -E 's/<redisCacheClient\s*ssl="(false|true)"\s*connectTimeout="[0-9]*"\s*syncTimeout="[0-9]*"\s*database="[0-9]*"\s*password=".*">/<redisCacheClient ssl="'${REDIS_SERVER_SSL}'" connectTimeout="'${REDIS_SERVER_CONNECT_TIMEOUT}'" syncTimeout="'${REDIS_SERVER_SYNC_TIMEOUT}'"  database="'${REDIS_SERVER_DATABASE}'" password="'${REDIS_SERVER_PASSWORD}'">/' -i ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config
 
-		sed -e "s/\"Host\": \"[^\"]*\"/\"Host\": \"${REDIS_SERVER_HOST}\"/" -e "s/\"Port\": \"[^\"]*\"/\"Port\": \"${REDIS_SERVER_CACHEPORT}\"/" -e "s/\"Ssl\": [^,]*,/\"Ssl\": ${REDIS_SERVER_SSL},/" -e "s/\"Database\": [^,]*,/\"Database\": ${REDIS_SERVER_DATABASE},/" -e "s/\"ConnectTimeout\": [^,]*,/\"ConnectTimeout\": ${REDIS_SERVER_CONNECT_TIMEOUT},/" -e "s/\"SyncTimeout\": [^,]*,/\"SyncTimeout\": ${REDIS_SERVER_SYNC_TIMEOUT},/" -i ${APP_CONFIG_DIR}/mail.json
-		
-		[ -n "$REDIS_SERVER_PASSWORD" ] && sed "/\"Port\": \"${REDIS_SERVER_CACHEPORT}\"/a \          \"Password\": \"${REDIS_SERVER_PASSWORD}\"," -i  "${APP_CONFIG_DIR}/mail.json"
+        sed -e "s/\"Host\": \"[^\"]*\"/\"Host\": \"${REDIS_SERVER_HOST}\"/" -e "s/\"Port\": \"[^\"]*\"/\"Port\": \"${REDIS_SERVER_CACHEPORT}\"/" -e "s/\"Ssl\": [^,]*,/\"Ssl\": ${REDIS_SERVER_SSL},/" -e "s/\"Database\": [^,]*,/\"Database\": ${REDIS_SERVER_DATABASE},/" -e "s/\"ConnectTimeout\": [^,]*,/\"ConnectTimeout\": ${REDIS_SERVER_CONNECT_TIMEOUT},/" -e "s/\"SyncTimeout\": [^,]*,/\"SyncTimeout\": ${REDIS_SERVER_SYNC_TIMEOUT},/" -i ${APP_CONFIG_DIR}/mail.json
+        
+        [ -n "$REDIS_SERVER_PASSWORD" ] && sed "/\"Port\": \"${REDIS_SERVER_CACHEPORT}\"/a \          \"Password\": \"${REDIS_SERVER_PASSWORD}\"," -i  "${APP_CONFIG_DIR}/mail.json"
 
-	APP_SERVICES_SOCKET_IO_PATH=${APP_SERVICES_DIR}/ASC.Socket.IO/config/config.json;
+        APP_SERVICES_SOCKET_IO_PATH=${APP_SERVICES_DIR}/ASC.Socket.IO/config/config.UNIX.SERVER.json
 
-	jq '.redis |= . + {"host":"'${REDIS_SERVER_HOST}'","port":'${REDIS_SERVER_CACHEPORT}',"db":'${REDIS_SERVER_DATABASE}',"pass":"'${REDIS_SERVER_PASSWORD}'"}'\
-	 ${APP_SERVICES_SOCKET_IO_PATH} > ${APP_SERVICES_SOCKET_IO_PATH}.tmp && mv ${APP_SERVICES_SOCKET_IO_PATH}.tmp ${APP_SERVICES_SOCKET_IO_PATH}
+        jq '.redis |= . + {"host":"'"$REDIS_SERVER_HOST"'","port":'"$REDIS_SERVER_CACHEPORT"',"db":"'"$REDIS_SERVER_DATABASE"'","pass":"'"$REDIS_SERVER_PASSWORD"'"}' ${APP_SERVICES_SOCKET_IO_PATH} > ${APP_SERVICES_SOCKET_IO_PATH}.tmp && mv ${APP_SERVICES_SOCKET_IO_PATH}.tmp ${APP_SERVICES_SOCKET_IO_PATH}
 
         REDIS_SERVER_EXTERNAL=true;
 fi
