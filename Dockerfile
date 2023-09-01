@@ -68,7 +68,10 @@ RUN apt-get -y update && \
     sudo dpkg -i packages-microsoft-prod.deb && \
     rm packages-microsoft-prod.deb && \
     printf "Package: * \nPin: origin \"packages.microsoft.com\"\nPin-Priority: 1001" > /etc/apt/preferences && \
-    curl -sL https://deb.nodesource.com/setup_18.x | sudo -E bash - && \
+    echo "deb [signed-by=/usr/share/keyrings/nodesource.gpg] https://deb.nodesource.com/node_18.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list && \
+    curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --no-default-keyring --keyring gnupg-ring:/usr/share/keyrings/nodesource.gpg --import && \
+    chmod 644 /usr/share/keyrings/nodesource.gpg && \
+    apt-get -y update && \
     apt-get install -yq gnupg2 \
                         ca-certificates \
                         software-properties-common \
