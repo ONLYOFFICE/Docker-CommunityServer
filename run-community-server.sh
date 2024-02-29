@@ -34,6 +34,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 NGINX_CONF_DIR="/etc/nginx/sites-enabled"
 CPU_PROCESSOR_COUNT=${CPU_PROCESSOR_COUNT:-$(cat /proc/cpuinfo | grep -i processor | awk '{print $1}' | grep -i processor | wc -l)};
 NGINX_WORKER_CONNECTIONS=${NGINX_WORKER_CONNECTIONS:-$(ulimit -n)};
+NGINX_WORKER_PROCESSES=${NGINX_WORKER_PROCESSES:-1}
 SERVICE_SSO_AUTH_HOST_ADDR=${SERVICE_SSO_AUTH_HOST_ADDR:-${CONTROL_PANEL_PORT_80_TCP_ADDR}};
 DEFAULT_APP_CORE_MACHINEKEY="$(sudo sed -n '/"core.machinekey"/s!.*value\s*=\s*"\([^"]*\)".*!\1!p' ${APP_ROOT_DIR}/web.appsettings.config)";
 IS_UPDATE="false"
@@ -286,7 +287,7 @@ fi
 
 cp ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-nginx.conf.template ${NGINX_ROOT_DIR}/nginx.conf
 
-sed 's/^worker_processes.*/'"worker_processes ${CPU_PROCESSOR_COUNT};"'/' -i ${NGINX_ROOT_DIR}/nginx.conf
+sed 's/^worker_processes.*/'"worker_processes ${NGINX_WORKER_PROCESSES};"'/' -i ${NGINX_ROOT_DIR}/nginx.conf
 sed 's/worker_connections.*/'"worker_connections ${NGINX_WORKER_CONNECTIONS};"'/' -i ${NGINX_ROOT_DIR}/nginx.conf
 
 cp ${NGINX_ROOT_DIR}/includes/onlyoffice-communityserver-common-init.conf.template ${NGINX_CONF_DIR}/onlyoffice
@@ -497,10 +498,13 @@ if [ ${REDIS_SERVER_HOST} ]; then
         sed 's/<add\s*host=".*"\s*cachePort="[0-9]*"\s*\/>/<add host="'${REDIS_SERVER_HOST}'" cachePort="'${REDIS_SERVER_CACHEPORT}'" \/>/' -i ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config
         sed -E 's/<redisCacheClient\s*ssl="(false|true)"\s*connectTimeout="[0-9]*"\s*syncTimeout="[0-9]*"\s*database="[0-9]*"\s*password=".*">/<redisCacheClient ssl="'${REDIS_SERVER_SSL}'" connectTimeout="'${REDIS_SERVER_CONNECT_TIMEOUT}'" syncTimeout="'${REDIS_SERVER_SYNC_TIMEOUT}'"  database="'${REDIS_SERVER_DATABASE}'" password="'${REDIS_SERVER_PASSWORD}'">/' -i ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config
 
-	APP_SERVICES_SOCKET_IO_PATH=${APP_SERVICES_DIR}/ASC.Socket.IO/config/config.json;
+        sed -e "s/\"Host\": \"[^\"]*\"/\"Host\": \"${REDIS_SERVER_HOST}\"/" -e "s/\"Port\": \"[^\"]*\"/\"Port\": \"${REDIS_SERVER_CACHEPORT}\"/" -e "s/\"Ssl\": [^,]*,/\"Ssl\": ${REDIS_SERVER_SSL},/" -e "s/\"Database\": [^,]*,/\"Database\": ${REDIS_SERVER_DATABASE},/" -e "s/\"ConnectTimeout\": [^,]*,/\"ConnectTimeout\": ${REDIS_SERVER_CONNECT_TIMEOUT},/" -e "s/\"SyncTimeout\": [^,]*,/\"SyncTimeout\": ${REDIS_SERVER_SYNC_TIMEOUT},/" -i ${APP_CONFIG_DIR}/mail.json
+        
+        [ -n "$REDIS_SERVER_PASSWORD" ] && sed "/\"Port\": \"${REDIS_SERVER_CACHEPORT}\"/a \          \"Password\": \"${REDIS_SERVER_PASSWORD}\"," -i  "${APP_CONFIG_DIR}/mail.json"
 
-	jq '.redis |= . + {"host":"'${REDIS_SERVER_HOST}'","port":'${REDIS_SERVER_CACHEPORT}',"db":'${REDIS_SERVER_DATABASE}',"pass":"'${REDIS_SERVER_PASSWORD}'"}'\
-	 ${APP_SERVICES_SOCKET_IO_PATH} > ${APP_SERVICES_SOCKET_IO_PATH}.tmp && mv ${APP_SERVICES_SOCKET_IO_PATH}.tmp ${APP_SERVICES_SOCKET_IO_PATH}
+        APP_SERVICES_SOCKET_IO_PATH=${APP_SERVICES_DIR}/ASC.Socket.IO/config/config.UNIX.SERVER.json
+
+        jq '.redis |= . + {"host":"'"$REDIS_SERVER_HOST"'","port":'"$REDIS_SERVER_CACHEPORT"',"db":"'"$REDIS_SERVER_DATABASE"'","pass":"'"$REDIS_SERVER_PASSWORD"'"}' ${APP_SERVICES_SOCKET_IO_PATH} > ${APP_SERVICES_SOCKET_IO_PATH}.tmp && mv ${APP_SERVICES_SOCKET_IO_PATH}.tmp ${APP_SERVICES_SOCKET_IO_PATH}
 
         REDIS_SERVER_EXTERNAL=true;
 fi
