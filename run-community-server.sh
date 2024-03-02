@@ -603,7 +603,7 @@ if [ "${MYSQL_SERVER_EXTERNAL}" == "false" ]; then
 
 	if [ -n "$MYSQL_SERVER_ROOT_PASSWORD" ] && mysqladmin --defaults-extra-file="$MYSQL_ROOT_CONFIG" ping | grep -q "mysqld is alive" ; then
 mysql --defaults-extra-file="$MYSQL_ROOT_CONFIG" <<EOF
-ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY "$MYSQL_SERVER_ROOT_PASSWORD";
+ALTER USER 'root'@'localhost' IDENTIFIED BY "$MYSQL_SERVER_ROOT_PASSWORD";
 DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
 DELETE FROM mysql.user WHERE User='';
 DELETE FROM mysql.db WHERE Db='test' OR Db='test_%';
@@ -614,7 +614,7 @@ EOF
 
 		if [ "$MYSQL_SERVER_USER" != "root" ]; then
 mysql --defaults-extra-file="$MYSQL_ROOT_CONFIG" <<EOF
-CREATE USER IF NOT EXISTS "$MYSQL_SERVER_USER"@"localhost" IDENTIFIED WITH mysql_native_password BY "$MYSQL_SERVER_PASS";
+CREATE USER IF NOT EXISTS "$MYSQL_SERVER_USER"@"localhost" IDENTIFIED BY "$MYSQL_SERVER_PASS";
 GRANT ALL PRIVILEGES ON *.* TO "$MYSQL_SERVER_USER"@'localhost';
 FLUSH PRIVILEGES;
 EOF
