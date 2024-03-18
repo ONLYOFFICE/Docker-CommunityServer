@@ -660,6 +660,7 @@ set +x
 
 find "${APP_SERVICES_DIR}/ASC.UrlShortener/config" -type f -name "*.json" -exec sed -i \
 -e "s!\(\"host\":\).*,!\1 \"${MYSQL_SERVER_HOST}\",!" \
+-e "/\"sql\": {/,/}/ s!\(\"port\":\).*,!\1 ${MYSQL_SERVER_PORT},!" \
 -e "s!\(\"user\":\).*,!\1 \"${MYSQL_SERVER_USER}\",!" \
 -e "s!\(\"password\":\).*,!\1 \"${MYSQL_SERVER_PASS//!/\\!}\",!" \
 -e "s!\(\"database\":\).*!\1 \"${MYSQL_SERVER_DB_NAME}\"!" {} \;
