@@ -1,4 +1,3 @@
-version: '3'
 services:
   onlyoffice-mysql-server:
     container_name: onlyoffice-mysql-server
