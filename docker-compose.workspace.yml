@@ -1,4 +1,3 @@
-version: '3'
 services:
   onlyoffice-mysql-server:
     container_name: onlyoffice-mysql-server
@@ -54,7 +53,7 @@ services:
     tty: true
     restart: always
     privileged: true
-#    cgroup: host
+    cgroup: host
     volumes:
      - community_data:/var/www/onlyoffice/Data
      - community_log:/var/log/onlyoffice

@@ -463,20 +463,23 @@ After that switch to the repository folder:
 cd Docker-CommunityServer
 ```
 
-For the mail server correct work, open one of the files depending on the product you use:
-
-* [docker-compose.yml](https://github.com/ONLYOFFICE/Docker-CommunityServer/blob/master/docker-compose.groups.yml) for Community Server (distributed as ONLYOFFICE Groups)
-* [docker-compose.yml](https://github.com/ONLYOFFICE/Docker-CommunityServer/blob/master/docker-compose.workspace.yml) for ONLYOFFICE Workspace Community Edition 
-* [docker-compose.yml](https://github.com/ONLYOFFICE/Docker-CommunityServer/blob/master/docker-compose.workspace_enterprise.yml) for ONLYOFFICE Workspace Enterprise Edition
-
-For working on `Ubuntu 22.04` and `Debian 11` or later, you need to use docker-compose versions v2.16.0 or later and uncomment the cgroup line in the yml file
-
-Then replace the `${MAIL_SERVER_HOSTNAME}` variable with your own hostname for the **Mail Server**. After that, assuming you have docker-compose installed, execute the following command:
+For the mail server correct work, you need to set a variable with your own hostname for the **Mail Server**:
 
 ```bash
-cd link-to-your-modified-docker-compose
-docker-compose up -d
+export MAIL_SERVER_HOSTNAME="your-own-hostname"
 ```
+
+After that, assuming you have docker-compose version 2.16.0 or later installed, execute the following command:
+
+```bash
+docker-compose -f docker-compose.workspace_enterprise.yml up -d
+```
+
+The instructions for running ONLYOFFICE Workspace Enterprise Edition are used as an example, if you need to run a different version, specify a different file:
+
+* [docker-compose.groups.yml](https://github.com/ONLYOFFICE/Docker-CommunityServer/blob/master/docker-compose.groups.yml) for Community Server (distributed as ONLYOFFICE Groups)
+* [docker-compose.workspace.yml](https://github.com/ONLYOFFICE/Docker-CommunityServer/blob/master/docker-compose.workspace.yml) for ONLYOFFICE Workspace Community Edition 
+* [docker-compose.workspace_enterprise.yml](https://github.com/ONLYOFFICE/Docker-CommunityServer/blob/master/docker-compose.workspace_enterprise.yml) for ONLYOFFICE Workspace Enterprise Edition
 
 ## Upgrading ONLYOFFICE Community Server
 
