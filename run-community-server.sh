@@ -1077,7 +1077,9 @@ else
 	done
 
 	chown -R onlyoffice:onlyoffice /var/log/onlyoffice
-	chown -R onlyoffice:onlyoffice ${APP_DIR}/DocumentServerData
+	if ! grep -qsF " ${APP_DIR}/DocumentServerData " /proc/mounts; then
+	  chown -R onlyoffice:onlyoffice "${APP_DIR}/DocumentServerData"
+	fi
 
         if [ "$(ls -alhd ${APP_DATA_DIR} | awk '{ print $3 }')" != "onlyoffice" ]; then
               chown -R onlyoffice:onlyoffice ${APP_DATA_DIR}
