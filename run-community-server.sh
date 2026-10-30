@@ -76,6 +76,22 @@ else
    APP_CORE_MACHINEKEY=$(head -n 1 ${APP_PRIVATE_DATA_DIR}/machinekey)
 fi
 
+set +x
+if [ ! -s "${APP_PRIVATE_DATA_DIR}/ssosecret" ]; then
+   mkdir -p ${APP_PRIVATE_DATA_DIR};
+
+   # accept only a safe custom value, it is substituted into sed, JSON and XML
+   APP_CORE_SSO_SECRET=${ONLYOFFICE_CORE_SSO_SECRET:-${APP_CORE_SSO_SECRET:-""}};
+   if [[ ! "${APP_CORE_SSO_SECRET}" =~ ^[A-Za-z0-9.+=~-]{16,}$ ]]; then
+      [ -n "${APP_CORE_SSO_SECRET}" ] && echo "Custom SSO secret ignored: use 16+ characters from A-Za-z0-9.+=~-";
+      APP_CORE_SSO_SECRET=$(tr -dc A-Za-z0-9 < /dev/urandom | head -c 32);
+   fi
+   echo "${APP_CORE_SSO_SECRET}" > ${APP_PRIVATE_DATA_DIR}/ssosecret
+else
+   APP_CORE_SSO_SECRET=$(head -n 1 ${APP_PRIVATE_DATA_DIR}/ssosecret)
+fi
+set -x
+
 RELEASE_DATE="$(sudo sed -n '/"version.number"/s!.*value\s*=\s*"\([^"]*\)".*!\1!p' ${APP_ROOT_DIR}/web.appsettings.config)";
 RELEASE_DATE_SIGN="$(CreateAuthToken "${RELEASE_DATE}" "${APP_CORE_MACHINEKEY}" )";
 
@@ -91,6 +107,7 @@ fi
 
 
 chmod -R 444 ${APP_PRIVATE_DATA_DIR}
+find ${APP_PRIVATE_DATA_DIR} -maxdepth 1 -type f \( -name ssosecret -o -name web.machinekey.config \) -exec chmod 400 {} \;
 
 if cat /proc/1/cgroup | grep -qE "docker|lxc|kubepods|libpod"; then
         DOCKER_ENABLED=true;
@@ -919,6 +936,29 @@ if [ "${CONTROL_PANEL_ENABLED}" == "true" ]; then
 	# change web.appsettings link to controlpanel
 	sed '/web\.controlpanel\.url/s/\(value\s*=\s*\"\)[^\"]*\"/\1\/controlpanel\/\"/' -i  ${APP_ROOT_DIR}/web.appsettings.config;
 	sed '/web\.controlpanel\.url/s/\(value\s*=\s*\"\)[^\"]*\"/\1\/controlpanel\/\"/' -i ${APP_SERVICES_DIR}/TeamLabSvc/TeamLabSvc.exe.config;
+fi
+
+set +x
+sed -i "/core.sso.secret/s_\(value\s*=\s*\"\)[^\"]*\"_\1${APP_CORE_SSO_SECRET}\"_" ${APP_ROOT_DIR}/web.appsettings.config
+[ -d "${APP_SERVICES_DIR}/ASC.SsoAuth/config" ] && find "${APP_SERVICES_DIR}/ASC.SsoAuth/config" -type f -name "*.json" -exec sed -i "s_\(\"ssosecret\":\).*,_\1 \"${APP_CORE_SSO_SECRET}\",_" {} \;
+set -x
+
+if [ -f "${APP_DIR}/Tools/web-machinekey.sh" ]; then
+	WEB_MACHINEKEY_FILE="${APP_PRIVATE_DATA_DIR}/web.machinekey.config"
+
+	if [ -s "${WEB_MACHINEKEY_FILE}" ]; then
+		cp -f "${WEB_MACHINEKEY_FILE}" "${APP_CONFIG_DIR}/web.machinekey.config"
+	else
+		# a key baked into the image would be shared by all its users
+		rm -f "${APP_CONFIG_DIR}/web.machinekey.config"
+	fi
+
+	bash "${APP_DIR}/Tools/web-machinekey.sh"
+
+	if [ ! -s "${WEB_MACHINEKEY_FILE}" ]; then
+		cp -f "${APP_CONFIG_DIR}/web.machinekey.config" "${WEB_MACHINEKEY_FILE}"
+		chmod 400 "${WEB_MACHINEKEY_FILE}"
+	fi
 fi
 
 if [ "${APP_MODE}" == "SERVER" ]; then
