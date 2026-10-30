@@ -996,7 +996,8 @@ fi
 
 sed 's/{{APP_NIGNX_KEEPLIVE}}/'$((32*${APP_MONOSERVE_COUNT}))'/g' -i ${SYSCONF_TEMPLATES_DIR}/nginx/prepare-onlyoffice;
 
-bash -c 'echo "onlyoffice ALL=(ALL) NOPASSWD: /usr/sbin/service" | (EDITOR="tee -a" visudo)'
+## Scope sudo to the exact service+action pairs the app restarts, not any argument (Bugzilla #84731 path-traversal-to-root)
+bash -c 'echo "onlyoffice ALL=(ALL) NOPASSWD: /usr/sbin/service onlyofficeJabber restart, /usr/sbin/service onlyofficeMailAggregator restart, /usr/sbin/service nginx reload, /usr/sbin/service nginx restart" | (EDITOR="tee -a" visudo)'
 
 
 ping_onlyoffice() {
