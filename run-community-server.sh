@@ -940,7 +940,7 @@ fi
 
 set +x
 sed -i "/core.sso.secret/s_\(value\s*=\s*\"\)[^\"]*\"_\1${APP_CORE_SSO_SECRET}\"_" ${APP_ROOT_DIR}/web.appsettings.config
-[ -d "${APP_SERVICES_DIR}/ASC.SsoAuth/config" ] && find "${APP_SERVICES_DIR}/ASC.SsoAuth/config" -type f -name "*.json" -exec sed -i "s_\(\"ssosecret\":\).*,_\1 \"${APP_CORE_SSO_SECRET}\",_" {} \;
+[ -d "${APP_SERVICES_DIR}/ASC.SsoAuth/config" ] && find "${APP_SERVICES_DIR}/ASC.SsoAuth/config" -type f -name "*.json" -exec sed -i -E "s/(\"ssosecret\"[[:space:]]*:[[:space:]]*)\"[^\"]*\"/\1\"${APP_CORE_SSO_SECRET}\"/" {} \;
 set -x
 
 if [ -f "${APP_DIR}/Tools/web-machinekey.sh" ]; then
