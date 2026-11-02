@@ -111,6 +111,7 @@ RUN apt-get -y update && \
                         dotnet-sdk-8.0 \
                         ${PACKAGE_SYSNAME}-communityserver \
                         ${PACKAGE_SYSNAME}-xmppserver && \
+    rm -f /etc/${PACKAGE_SYSNAME}/communityserver/sso.secret /etc/${PACKAGE_SYSNAME}/communityserver/web.machinekey.config && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
